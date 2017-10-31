@@ -376,7 +376,7 @@ function Playlist(guild, client) {
 	this.size = () => list.length;
 	this.empty = () => list.length == 0;
 	this.musicInfo = index => list[index].info();
-	this.looping => () => loop;
+	this.looping = () => loop;
 	var interval = client.setInterval(this.loop, 1000);
 }
 
