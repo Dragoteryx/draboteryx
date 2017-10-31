@@ -296,6 +296,7 @@ function Playlist(guild, client) {
 	}
 	this.skip = () => {
 		this.emit("skipped", guild, current.info());
+		loop = false;
 		dispatcher.end();
 	}
 	this.playNext = () => {
