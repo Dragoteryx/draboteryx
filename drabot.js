@@ -33,10 +33,12 @@ music.on("leaved", guild => {
 	musicChannels.get(guild.id).send("Goodbye o/")
 });
 music.on("next", (guild, musik) => {
-	if (!musik.file)
-		musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "`` by ``" + musik.author.name + "``. (requested by " + musik.member +")");
-	else
-		musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "``. (requested by " + musik.member +")");
+	if (!music.isLooping(guild)) {
+		if (!musik.file)
+			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "`` by ``" + musik.author.name + "``. (requested by " + musik.member +")");
+		else
+			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "``. (requested by " + musik.member +")");
+	}
 });
 music.on("empty", guild => {
 	musicChannels.get(guild.id).send("The playlist is empty.");
