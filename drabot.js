@@ -67,7 +67,7 @@ music.on("volumechange", (guild, volume) => {
 });
 music.on("looping", (guild, musik, loop) => {
 	if (loop)
-		musicChannels.get(guild.id).send("The current music (``" + musik.title + "``) will now loop. Use ``" + config.prefix + "loop`` to stop looping.");
+		musicChannels.get(guild.id).send("The current music (``" + musik.title + "``) will now loop. Use ``" + config.prefix + "loop`` again to stop looping.");
 	else
 		musicChannels.get(guild.id).send("The current music (``" + musik.title + "``) won't loop anymore.");
 });
