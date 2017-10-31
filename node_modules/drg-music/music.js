@@ -190,6 +190,14 @@ exports.MusicHandler = function(client) {
 		playlists.get(guild.id).volume(volume);
 		this.emit("volumechange", guild, volume);
 	}
+	this.toggleLooping = guild => {
+		if (guild == undefined)
+			throw new Error("missingParameter: guild");
+		if (!this.isPlaying(guild))
+			throw new Error("notPlayingMusic");
+		playlists.get(guild.id).toggleLoop();
+		this.emit("looping", guild, this.currentInfo(guild), this.isLooping(guild));
+	}
 
 	// INFOS PLAYLIST
 	this.isConnected = guild => playlists.has(guild.id);
@@ -206,6 +214,13 @@ exports.MusicHandler = function(client) {
 		if (!this.isPlaying(guild))
 			throw new Error("notPlayingMusic");
 		return playlists.get(guild.id).paused();
+	}
+	this.isLooping = guild => {
+		if (guild == undefined)
+			throw new Error("missingParameter: guild");
+		if (!this.isPlaying(guild))
+			throw new Error("notPlayingMusic");
+		return playlists.get(guild.id).looping();
 	}
 	this.playlistInfo = guild => {
 		if (guild == undefined)
@@ -260,11 +275,15 @@ function Playlist(guild, client) {
 	var toNext = false;
 	var volume = 100;
 	var client = client;
+	var loop = false;
 
 	// METHODES
 	this.loop = () => {
 		if (toNext)
 			this.playNext();
+	}
+	this.toggleLoop = () => {
+		loop = !loop;
 	}
 	this.add = music => {
 		list.push(music);
@@ -282,7 +301,8 @@ function Playlist(guild, client) {
 	this.playNext = () => {
 		toNext = false;
 		dispatcher = null;
-		current = list.shift();
+		if (!loop)
+			current = list.shift();
 		if (current != undefined) {
 			dispatcher = current.play();
 			dispatcher.setVolume(volume/100.0);
@@ -356,6 +376,7 @@ function Playlist(guild, client) {
 	this.size = () => list.length;
 	this.empty = () => list.length == 0;
 	this.musicInfo = index => list[index].info();
+	this.looping => () => loop;
 	var interval = client.setInterval(this.loop, 1000);
 }
 
