@@ -510,7 +510,7 @@ bot.on("message", msg => {
 bot.on("ready", () => {
 	if (!ready) {
 		ready = true;
-		let jour = "" + date.getDate() + (date.getMonth()+1);
+		let jour = "" + date.getDate() + "/" + (date.getMonth()+1);
 		switch (jour) {
 			case "31/10":
 				bot.user.setGame("Trick or Treat !");
@@ -531,6 +531,7 @@ bot.on("ready", () => {
 			console.log("(local launch)");
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
+		console.log("Current day => " + jour);
 	}
 });
 
