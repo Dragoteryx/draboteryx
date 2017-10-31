@@ -9,12 +9,12 @@ const sha1 = require("sha1");
 const qrcode = require("qrcode");
 const twitter = require("twitter");
 const youtubeSearch = require("youtube-search");
+const drgMusic = require("drg-music");
 
 
 // FILES
 const config = require("./config.js");
 const shitpost = require("./shitpost.js");
-const musicPackage = require("./music.js");
 const crypt = require("./crypt.js");
 const tools = require("./tools.js");
 const funcs = require("./funcs.js");
@@ -24,7 +24,7 @@ const types = require("./types.js");
 
 // CONSTS
 const bot = new discord.Client();
-const music = new musicPackage.MusicHandler(bot);
+const music = new drgMusic.MusicHandler(bot);
 music.on("joined", guild => {
 	console.log("[MUSICBOT] Joined guild " + guild.name + " (" + guild.id + ")");
 	musicChannels.get(guild.id).send("I'm here !");
@@ -71,7 +71,7 @@ const utilityType = new types.CommandType("utility", ":wrench: Utility commands"
 const funType = new types.CommandType("fun", ":bowling: Fun commands")
 const musicType = new types.CommandType("music", ":microphone: Music commands")
 const nsfwType = new types.CommandType("nsfw", ":cucumber: NSFW commands")
-const commandTypes = [ownerType, utilityType, funType, musicType, nsfwType];
+const commandTypes = [utilityType, funType, musicType, nsfwType];
 let enableMusic = true;
 const commands = [
 	new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true),
