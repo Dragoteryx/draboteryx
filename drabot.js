@@ -389,7 +389,7 @@ bot.on("message", msg => {
 
 				// retirer une musique
 				if (funcs.check(command, "remove", 1))
-					music.removeMusic(msg.guild, Number(command.replace("request ","")));
+					music.removeMusic(msg.guild, Number(command.replace("request ",""))-1);
 
 				// toggle la playlist (pause/resume)
 				if (funcs.check(command, "toggle", 0))
@@ -496,6 +496,7 @@ bot.on("message", msg => {
 		else if (err.message == "notPlayingMusic") msg.channel.send("I'm not playing any music at the moment. Use ``" + config.prefix + "request [link]``.");
 		else if (err.message == "invalidVolume") msg.channel.send("The volume must be over 0%.");
 		else if (err.message == "emptyPlaylist") msg.channel.send("You can't do that while the playlist is empty.");
+		else if (err.message == "invalidIndex") msg.channel.send("There is no music with that ID in the playlist.");
 		else console.error(err);
 	}
 
