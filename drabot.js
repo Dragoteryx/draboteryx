@@ -67,44 +67,35 @@ music.on("volumechange", (guild, volume) => {
 	musicChannels.get(guild.id).send("The volume has been set to " + volume + "%.");
 });
 const heroku = process.env.HEROKU != undefined;
-const ownerType = new types.CommandType("owner", ":keyboard: Owner commands")
 const utilityType = new types.CommandType("utility", ":wrench: Utility commands");
 const funType = new types.CommandType("fun", ":bowling: Fun commands")
 const musicType = new types.CommandType("music", ":microphone: Music commands")
 const nsfwType = new types.CommandType("nsfw", ":cucumber: NSFW commands")
 const commandTypes = [ownerType, utilityType, funType, musicType, nsfwType];
-let showCrypt = true;
-let showMusic = true;
 let enableMusic = true;
 const commands = [
-	new types.Command("setName [name]", "change my name", ownerType, true),
-	new types.Command("setAvatar [link]", "change my avatar", ownerType, true),
-	new types.Command("setGame [name]", "change the game I'm playingly playing", ownerType, true),
-	new types.Command("uncrypt [message]", "decrypts a message without its key", ownerType, true),
 	new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true),
 	new types.Command("roll ([dice size])", "rolls a dice (6 by default)", funType, true),
 	new types.Command("rolls", "gives you rolls stats (resets when the bot restarts)", funType, true),
 	new types.Command("shitpost", "generates a random shitpost", funType, true),
-	new types.Command("crypt (k:[key]) [message]", "crypts a message and generates a random key", funType, showCrypt),
-	new types.Command("decrypt [key] [message]", "decrypts a crypted message using its key", funType, showCrypt),
-	new types.Command("join", "join a voice channel", musicType, showMusic),
-	new types.Command("leave", "leave the voice channel", musicType, showMusic),
-	new types.Command("request [youtube link]", "request a video", musicType, showMusic),
-	new types.Command("search [youtube query]", "request a video", musicType, showMusic),
-	new types.Command("remove [nb]", "remove a music from the playlist", musicType, showMusic),
-	new types.Command("toggle", "pause/resume the playlist", musicType, showMusic),
-	new types.Command("volume [0 or more]", "change the volume of the bot", musicType, showMusic),
-	new types.Command("skip", "skip a music", musicType, showMusic),
-	new types.Command("playlist", "show the playlist", musicType, showMusic),
-	new types.Command("playing", "show information about the current music", musicType, showMusic),
-	new types.Command("plshuffle", "shuffle the playlist", musicType, showMusic),
-	new types.Command("plclear", "clear the playlist", musicType, showMusic),
+	new types.Command("crypt (k:[key]) [message]", "crypts a message and generates a random key", funType, true),
+	new types.Command("decrypt [key] [message]", "decrypts a crypted message using its key", funType, true),
+	new types.Command("join", "join a voice channel", musicType, true),
+	new types.Command("leave", "leave the voice channel", musicType, true),
+	new types.Command("request [youtube link]", "request a video", musicType, true),
+	new types.Command("search [youtube query]", "request a video", musicType, true),
+	new types.Command("remove [nb]", "remove a music from the playlist", musicType, true),
+	new types.Command("toggle", "pause/resume the playlist", musicType, true),
+	new types.Command("volume [0 or more]", "change the volume of the bot", musicType, true),
+	new types.Command("skip", "skip a music", musicType, true),
+	new types.Command("playlist", "show the playlist", musicType, true),
+	new types.Command("playing", "show information about the current music", musicType, true),
+	new types.Command("plshuffle", "shuffle the playlist", musicType, true),
+	new types.Command("plclear", "clear the playlist", musicType, true),
 	new types.Command("rule34", "mandatory on a Discord bot...", nsfwType, true),
 	new types.Command("cahrcg", "random Cyanide and Happiness comic", funType, true),
 	new types.Command("z0r", "random z0r.de", funType, true),
 	new types.Command("rdscp", "random SCP Object", funType, true),
-	new types.Command("exec", "execute JavaScript code for the bot", ownerType, true),
-	new types.Command("value", "obtain a variable playing value", ownerType, true),
 	new types.Command("serverinfo", "info about this server", utilityType, true),
 	new types.Command("channelinfo ([channelname])", "info about a channel", utilityType, true),
 	new types.Command("memberinfo ([membername])", "info about a member", utilityType, true),
@@ -231,7 +222,6 @@ bot.on("message", msg => {
 			// affiche le menu d'aide
 			if (funcs.check(command, "help", 0)) {
 				let i = 0;
-				if (!config.owners.includes(msg.author.id)) i++;
 				for (i; i < commandTypes.length; i++) {
 					let help = new discord.RichEmbed();
 					for (let h = 0; h < commands.length; h++) {
