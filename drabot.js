@@ -11,7 +11,6 @@ const twitter = require("twitter");
 const youtubeSearch = require("youtube-search");
 const drgMusic = require("drg-music");
 
-
 // FILES
 const config = require("./config.js");
 const shitpost = require("./shitpost.js");
@@ -211,6 +210,10 @@ bot.on("message", msg => {
 				msg.delete();
 			}
 
+			// remove music test
+			if (funcs.check(command, "removetest", 0))
+				music.removeMusic(msg.guild, 2);
+
 		}
 
 		// NORMAL COMMANDS
@@ -389,7 +392,7 @@ bot.on("message", msg => {
 
 				// retirer une musique
 				if (funcs.check(command, "remove", 1))
-					music.removeMusic(msg.guild, Number(command.replace("request ",""))-1);
+					music.removeMusic(msg.guild, Number(command.replace("remove ",""))-1);
 
 				// toggle la playlist (pause/resume)
 				if (funcs.check(command, "toggle", 0))
@@ -495,7 +498,7 @@ bot.on("message", msg => {
 		else if (err.message == "unknownOrNotSupportedVideoWebsite") msg.channel.send("Sorry, but I don't know this website.")
 		else if (err.message == "notPlayingMusic") msg.channel.send("I'm not playing any music at the moment. Use ``" + config.prefix + "request [link]``.");
 		else if (err.message == "invalidVolume") msg.channel.send("The volume must be over 0%.");
-		else if (err.message == "emptyPlaylist") msg.channel.send("You can't do that while the playlist is empty.");
+		else if (err.message == "emptyPlaylist") msg.channel.send("You can't do that when the playlist is empty.");
 		else if (err.message == "invalidIndex") msg.channel.send("There is no music with that ID in the playlist.");
 		else console.error(err);
 	}
