@@ -64,8 +64,8 @@ music.on("shuffled", guild => {
 music.on("cleared", guild => {
 	musicChannels.get(guild.id).send("The playlist has been cleared.");
 });
-music.on("volumechange", (guild, volume) => {
-	musicChannels.get(guild.id).send("The volume has been set to " + volume + "%.");
+music.on("volumechange", (guild, newVolume, oldVolume) => {
+	musicChannels.get(guild.id).send("The volume has been set to " + newVolume + "%.");
 });
 music.on("looping", (guild, musik, loop) => {
 	if (loop)
