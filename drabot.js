@@ -65,6 +65,12 @@ music.on("cleared", guild => {
 music.on("volumechange", (guild, volume) => {
 	musicChannels.get(guild.id).send("The volume has been set to " + volume + "%.");
 });
+music.on("looping", (guild, musik, loop) => {
+	if (loop)
+		musicChannels.get(guild.id).send("The current music (``" + musik.title + "``) will now loop. Use ``" + config.prefix + "loop`` to stop looping.");
+	else
+		musicChannels.get(guild.id).send("The current music (``" + musik.title + "``) won't loop anymore.");
+});
 const heroku = process.env.HEROKU != undefined;
 const utilityType = new types.CommandType("utility", ":wrench: Utility commands");
 const funType = new types.CommandType("fun", ":bowling: Fun commands")
@@ -477,6 +483,10 @@ bot.on("message", msg => {
 						}
 					});
 				}
+
+				// permettre de jouer une musique en boucle
+				if (funcs.check(command, "loop", 0))
+					music.toggleLooping(msg.guild);
 
 			}
 
