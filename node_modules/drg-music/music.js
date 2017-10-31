@@ -196,7 +196,7 @@ exports.MusicHandler = function(client) {
 		if (!this.isPlaying(guild))
 			throw new Error("notPlayingMusic");
 		playlists.get(guild.id).toggleLoop();
-		this.emit("looping", guild, this.currentInfo(guild), this.isLooping(guild));
+		this.emit("looping", guild, this.playingInfo(guild), this.isLooping(guild));
 	}
 
 	// INFOS PLAYLIST
