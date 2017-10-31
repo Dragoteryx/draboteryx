@@ -114,6 +114,7 @@ let dicePlayers = new Map();
 let vars = new Map();
 let musicChannels = new Map();
 let follow = false;
+let date = new Date();
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -509,7 +510,19 @@ bot.on("message", msg => {
 bot.on("ready", () => {
 	if (!ready) {
 		ready = true;
-		bot.user.setGame(tools.randTab(shitpost.games));
+		let jour = "" + date.getDate() + (date.getMonth()+1);
+		switch (jour) {
+			case "31/10":
+				bot.user.setGame("Trick or Treat !");
+				break;
+			case "25/12":
+				bot.user.setGame("Merry Christmas !");
+				break;
+			case "3/1":
+				bot.user.setGame("Happy birthday Senpai !");
+			default:
+				bot.user.setGame(tools.randTab(shitpost.games));
+		}
 		console.log("[DRABOT] I'm ready Senpai !");
 		if (heroku) {
 			console.log("(Heroku launch)");
