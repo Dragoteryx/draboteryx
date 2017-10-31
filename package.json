@@ -1,0 +1,22 @@
+{
+  "name": "draboteryx",
+  "version": "1.0.0",
+  "description": "The best Discord bot ever (jk)",
+  "main": "drabot.js",
+  "dependencies": {
+    "discord.js": "^11.2.1",
+    "dotenv": "^4.0.0",
+    "opusscript": "0.0.4",
+    "qrcode": "^0.9.0",
+    "sha1": "^1.1.1",
+    "twitter": "^1.7.1",
+    "youtube-search": "^1.0.10",
+    "ytdl-core": "^0.18.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "console.log(\"[GIT] Ça fonctionne\")"
+  },
+  "author": "Dragoteryx",
+  "license": "ISC"
+}
