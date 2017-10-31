@@ -520,6 +520,7 @@ bot.on("ready", () => {
 				break;
 			case "3/1":
 				bot.user.setGame("Happy birthday Senpai !");
+				break;
 			default:
 				bot.user.setGame(tools.randTab(shitpost.games));
 		}
