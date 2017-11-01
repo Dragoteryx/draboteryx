@@ -329,10 +329,8 @@ bot.on("message", msg => {
 				for (i; i < commandTypes.length; i++) {
 					let help = new discord.RichEmbed();
 					for (let h = 0; h < commands.length; h++) {
-						if (commands[h].type.equals(commandTypes[i]) && commands[h].show) {
-							if (i == 0) help.addField(config.ownerPrefix + commands[h].name,commands[h].desc);
-							else help.addField(config.prefix + commands[h].name,commands[h].desc);
-						}
+						if (commands[h].type.equals(commandTypes[i]) && commands[h].show)
+							help.addField(config.prefix + commands[h].name,commands[h].desc);
 					} msg.author.send(commandTypes[i].title + " (" + help.fields.length + ")", help);
 				}
 			}
@@ -497,7 +495,7 @@ bot.on("message", msg => {
 			if (funcs.check(command, "story", 0))
 				msg.channel.send(shitpost.genStory());
 
-			// waifu
+			// waifu (SECRET COMMAND UNLESS YOU ARE READING THIS)
 			if (funcs.check(command, "waifu", 0)) {
 				if (msg.channel.type != "dm")
 					msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");

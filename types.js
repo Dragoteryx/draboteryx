@@ -2,11 +2,10 @@ const discord = require("discord.js")
 const tools = require("./tools.js");
 
 exports.Command = function(name, desc, type, show) {
-	this.name = name; // String
-	this.desc = desc; // String
+	this.name = name;
+	this.desc = desc;
 	this.type = type; // CommandType
-	this.show = show; // boolean
-	// toString
+	this.show = show;
 	this.toString = function() {
 		let str = "visible";
 		if (!this.show) str = "hidden";
@@ -17,7 +16,7 @@ exports.Command = function(name, desc, type, show) {
 exports.CommandType = function(name, title) {
 	this.name = name;
 	this.title = title;
-	// equals
+	this.embed;
 	this.equals = function(other) {
 		return this.name == other.name;
 	}
