@@ -525,15 +525,28 @@ bot.on("ready", () => {
 		let jour = "" + date.getDate() + "/" + (date.getMonth()+1);
 		switch (jour) {
 			case "31/10":
+				bot.user.setName("Spoopy Drabot");
+				bot.user.setAvatar("./files/avatar_spoopy.png");
 				bot.user.setGame("Trick or Treat !");
 				break;
 			case "25/12":
+				bot.user.setName("Snowy Drabot");
+				bot.user.setAvatar("./files/avatar_normal.png");
 				bot.user.setGame("Merry Christmas !");
 				break;
+			case "1/4":
+				bot.user.setName("Weird Drabot");
+				bot.user.setAvatar("./files/avatar_weird.png");
+				bot.user.setGame("Fishing");
+				break;
 			case "3/1":
+				bot.user.setName("Happy Drabot");
+				bot.user.setAvatar("./files/avatar_birthday.png");
 				bot.user.setGame("Happy birthday Senpai !");
 				break;
 			default:
+				bot.user.setName("Drabot");
+				bot.user.setAvatar("./files/avatar_normal.png");
 				bot.user.setGame(tools.randTab(shitpost.games));
 		}
 		console.log("[DRABOT] I'm ready Senpai !");
