@@ -531,7 +531,7 @@ bot.on("ready", () => {
 				break;
 			case "25/12":
 				bot.user.setUsername("Snowy Drabot");
-				bot.user.setAvatar("./files/avatar_normal.png");
+				bot.user.setAvatar("./files/avatar_classic.png");
 				bot.user.setGame("Merry Christmas !");
 				break;
 			case "1/4":
@@ -546,7 +546,7 @@ bot.on("ready", () => {
 				break;
 			default:
 				bot.user.setUsername("Drabot");
-				bot.user.setAvatar("./files/avatar_normal.png");
+				bot.user.setAvatar("./files/avatar_classic.png");
 				bot.user.setGame(tools.randTab(shitpost.games));
 		}
 		console.log("[DRABOT] I'm ready Senpai !");
