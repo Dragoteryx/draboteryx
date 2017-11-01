@@ -2,6 +2,7 @@
 
 ## Overview
 Current version : 0.2.0
+
 My Discord bot created using Discord.js.
 Use /help to know the commands.
 
