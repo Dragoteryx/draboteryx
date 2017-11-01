@@ -520,7 +520,7 @@ bot.on("message", msg => {
 		else if (err.message == "notPlayingMusic") msg.channel.send("I'm not playing any music at the moment. Use ``" + config.prefix + "request [link]``.");
 		else if (err.message == "invalidVolume") msg.channel.send("The volume must be over 0%.");
 		else if (err.message == "emptyPlaylist") msg.channel.send("You can't do that when the playlist is empty.");
-		else if (err.message == "invalidIndex") msg.channel.send("There is no music with that ID in the playlist.");
+		else if (err.message == "invalidPlaylistIndex") msg.channel.send("There is no music with that ID in the playlist.");
 		else console.error(err);
 	}
 

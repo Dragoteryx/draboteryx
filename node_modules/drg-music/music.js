@@ -135,7 +135,7 @@ exports.MusicHandler = function(client) {
 		if (playlists.get(guild.id).size() == 0)
 			throw new Error("emptyPlaylist");
 		if (index < 0 || index >= playlists.get(guild.id).size())
-			throw new Error("invalidIndex");
+			throw new Error("invalidPlaylistIndex");
 		playlists.get(guild.id).remove(index);
 	}
 	this.nextMusic = guild => {
@@ -259,7 +259,7 @@ exports.MusicHandler = function(client) {
 		if (playlists.get(guild.id).size() == 0)
 			throw new Error("emptyPlaylist");
 		if (index < 0 || index >= playlists.get(guild.id).size())
-			throw new Error("invalidIndex");
+			throw new Error("invalidPlaylistIndex");
 		return playlists.get(guild.id).musicInfo(index);
 	}
 }
