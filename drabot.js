@@ -496,6 +496,14 @@ bot.on("message", msg => {
 			if (funcs.check(command, "story", 0))
 				msg.channel.send(shitpost.genStory());
 
+			// waifu
+			if (funcs.check(command, "waifu", 0)) {
+				if (msg.channel.type != "dm")
+					msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");
+				else
+					msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
+			}
+
 		}
 
 	} catch (err) {
