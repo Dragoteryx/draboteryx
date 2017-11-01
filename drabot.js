@@ -82,6 +82,7 @@ const commandTypes = [utilityType, funType, musicType, nsfwType];
 let enableMusic = true;
 const commands = [
 	new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true),
+	new types.Command("info", "info about me", utilityType, true),
 	new types.Command("roll ([dice size])", "rolls a dice (6 by default)", funType, true),
 	new types.Command("rolls", "gives you rolls stats (resets when the bot restarts)", funType, true),
 	new types.Command("shitpost", "generates a random shitpost", funType, true),
@@ -170,17 +171,6 @@ bot.on("message", msg => {
 			if (funcs.check(command, "value", 1))
 				msg.channel.send(command.replace("value ", "") + tools.toBlock(eval(command.replace("value ", "")).toString()));
 
-			// déconnecter puis reconnecter le bot
-			if (funcs.check(command, "reboot", 0)) {
-				bot.destroy();
-				ready = false;
-				bot.login(process.env.DISCORDTOKEN);
-			}
-
-			// éteindre le bot
-			if (funcs.check(command, "kill", 0))
-				bot.destroy();
-
 			// connecter/déconnecter babybot
 			if (funcs.check(command, "babybot", 0)) {
 				if (!babyReady) {
@@ -205,23 +195,11 @@ bot.on("message", msg => {
 					msg.reply("I'll stay here in case you need me.")
 			}
 
-			// courte vidéo test pour MUSICBOT
-			if (funcs.check(command, "musictest", 0))
-				music.addMusic(msg.member, "https://www.youtube.com/watch?v=B7bqAsxee4I");
-
-			// add file test
-			if (funcs.check(command, "filetest", 0))
-				music.addFile(msg.guild.me, "./files/test.oga");
-
-			// mode péroquet
+			// mode perroquet
 			if (funcs.check(command, "say", 1)) {
 				msg.channel.send(command.replace("say ",""));
 				msg.delete();
 			}
-
-			// remove music test
-			if (funcs.check(command, "removetest", 0))
-				music.removeMusic(msg.guild, 2);
 
 		}
 
@@ -230,155 +208,6 @@ bot.on("message", msg => {
 			let command = msg.content.replace(config.prefix, "");
 			let args = command.split(" ").slice(1);
 			funcs.log(msg, "", "command");
-
-			// affiche le menu d'aide
-			if (funcs.check(command, "help", 0)) {
-				let i = 0;
-				for (i; i < commandTypes.length; i++) {
-					let help = new discord.RichEmbed();
-					for (let h = 0; h < commands.length; h++) {
-						if (commands[h].type.equals(commandTypes[i]) && commands[h].show) {
-							if (i == 0) help.addField(config.ownerPrefix + commands[h].name,commands[h].desc);
-							else help.addField(config.prefix + commands[h].name,commands[h].desc);
-						}
-					} msg.author.send(commandTypes[i].title + " (" + help.fields.length + ")", help);
-				}
-			}
-
-			// voir ses stats de lancer de dé
-			if (funcs.check(command, "rolls", 0)) {
-				if (!dicePlayers.has(msg.author.id)) {
-					msg.channel.send("You didn't do any rolls");
-					return;
-				} let str = "Your rolls:```";
-				let dicesArray = Array.from(dicePlayers.get(msg.author.id).dices.values());
-				for (let i = 0; i < dicesArray.length; i++)
-					str += "\n" + dicesArray[i].toString();
-				msg.channel.std(str + "```");
-			}
-
-			// lancer un dé
-			else if (funcs.check(command, "roll", 2)) {
-				if (!dicePlayers.has(msg.author.id)) dicePlayers.set(msg.author.id, new types.DicePlayer());
-				let max = 6;
-				if (args.length == 1) max = Number(args[0]);
-				if (!dicePlayers.get(msg.author.id).dices.has(max)) dicePlayers.get(msg.author.id).dices.set(max, new types.Dice(max));
-				msg.reply(dicePlayers.get(msg.author.id).roll(max) + "/" + max + " (:game_die:)");
-			}
-
-			// envoyer un shitpost
-			if (funcs.check(command, "shitpost", 2)) {
-				if (args.length == 0)
-					msg.channel.send(shitpost.genShitpost());
-				else
-					msg.channel.send(shitpost.findShitpost(command.replace("shitpost ","").split(" && ")));
-			}
-
-			// chiffer un message
-			if (funcs.check(command, "crypt", 1)) {
-				let message;
-				if (args[0].startsWith("k:"))
-					message = crypt.getHandler().crypt(command.replace("crypt " + args[0] + " ",""), args[0].replace("k:",""));
-				else message = crypt.getHandler().randomCrypt(command.replace("crypt ",""));
-				msg.channel.send("Crypted message: " + tools.toCodeBlock(message.getCrypted()) + "Key: " + message.requestKey());
-			}
-
-			// déchiffer un message
-			if (funcs.check(command, "decrypt", 1)) {
-				let decrypted = crypt.getHandler().decrypt(command.replace("decrypt " + args[0] + " ",""), args[0]);
-				msg.channel.send("Decrypted message: " + tools.toCodeBlock(decrypted));
-			}
-
-			// spurrious correlations
-			if (funcs.check(command, "cor", 0)) {
-				console.log("not implemented");
-			}
-
-			// rule34
-			if (funcs.check(command, "r34", false) || funcs.check(command, "rule34", 1)) {
-				if (!msg.channel.nsfw)
-					msg.reply("what are you doing ? D:");
-				else {
-					let search = command.replace("r34 ","").replace("rule34 ","").toLowerCase();
-					while (search.includes(" "))
-						search = search.replace(" ", "_");
-					snekfetch.get("https://rule34.paheal.net/post/list/" + search + "/1").then(rep => {
-						let nbPagesTab = rep.text.replace('">Last</a>',"//LAST//").split("//LAST//")[0].split("/post/list/" + search + "/");
-						let nbPages = nbPagesTab[nbPagesTab.length-1];
-						let searchLink = "https://rule34.paheal.net/post/list/" + search + "/" + (tools.randomValue(nbPages-1)+1);
-						snekfetch.get(searchLink).then(rep2 => {
-							let html = rep2.text;
-							for (let i = 0; i <= 100; i++)
-								html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
-							let htmlTab = html.split("<-SPLIT->-");
-							let imgs = [];
-							for (let i = 0; i < htmlTab.length; i++)
-								if (htmlTab[i].includes("_images")) imgs.push("http://rule34-data-" + htmlTab[i]);
-							if (imgs.length != 0)
-								msg.channel.send("Search: " + tools.toBlock(search), {file:tools.randTab(imgs)});
-							else
-								msg.channel.send("Sorry, I didn't find anything about '" + search + "'");
-						});
-					}, function() {
-						msg.reply("sorry, I didn't find anything about '" + search + "'");
-					});
-				}
-			}
-
-			// random cyanide and happiness
-			if (funcs.check(command, "cahrcg", 0)) {
-				snekfetch.get("http://explosm.net/rcg").then(rep => {
-					msg.channel.send({file:rep.text.split('<meta property="og:image" content="')[1].split('">')[0]});
-				});
-			}
-
-			//random z0rde
-			if (funcs.check(command, "z0r", 0)) {
-				msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
-			}
-
-			// random scp
-			if (funcs.check(command, "rdscp", 0)) {
-				let d = tools.randomValue(3)+1;
-				let url;
-				let nb;
-				if (d == 1) {
-					url = "http://www.scp-wiki.net/scp-series";
-					nb = 0;
-				} else {
-					url = "http://www.scp-wiki.net/scp-series-" + d;
-					nb = d-1;
-				} snekfetch.get(url).then(rep => {
-					let htmltab = rep.text.split("<ul>").slice(1);
-					let trouve = false;
-					while (!trouve) {
-						let htmlSCPtab = htmltab[tools.randomValue(9)+19].split("</li>");
-						let tabSCPs = [];
-						for (let i = 0; i <= 99; i++) {
-							if (!htmlSCPtab[i].includes("newpage")) {
-								trouve = true;
-								tabSCPs.push(htmlSCPtab[i]);
-							}
-						}
-						let SCPhtml = tools.randTab(tabSCPs);
-						let numero = SCPhtml.split("SCP-")[1].split("</a>")[0];
-						let name = SCPhtml.split("</a> - ")[1];
-						msg.channel.send("SCP-" + numero + " | " + name + " => http://www.scp-wiki.net/scp-" + numero);
-					}
-				});
-			}
-
-			// générer un QRCode
-			if (funcs.check(command, "qrcode", 1)) {
-				qrcode.toFile("./temp/qrcode.png", command.replace("qrcode ", ""), {margin : 1, scale : 8, color : {dark : "#202225FF", light : "#36393EFF"}}, function (err) {
-					if (err) throw err;
-					try {
-						msg.channel.send("QRCode: " + tools.toBlock(command.replace("qrcode ", "")), {"file":"./temp/qrcode.png"});
-					} catch (err) {
-						console.error(err);
-					}
-				});
-			}
 
 			// commandes musicales
 			if (enableMusic) {
@@ -492,6 +321,178 @@ bot.on("message", msg => {
 
 			}
 
+			// -----------------------------------------------------------------------------------------------------------------------------------
+
+			// affiche le menu d'aide
+			if (funcs.check(command, "help", 0)) {
+				let i = 0;
+				for (i; i < commandTypes.length; i++) {
+					let help = new discord.RichEmbed();
+					for (let h = 0; h < commands.length; h++) {
+						if (commands[h].type.equals(commandTypes[i]) && commands[h].show) {
+							if (i == 0) help.addField(config.ownerPrefix + commands[h].name,commands[h].desc);
+							else help.addField(config.prefix + commands[h].name,commands[h].desc);
+						}
+					} msg.author.send(commandTypes[i].title + " (" + help.fields.length + ")", help);
+				}
+			}
+
+			// guild info
+			if (funcs.check(command, "serverinfo", 0))
+				msg.channel.send("", funcs.showGuildInfo(msg.guild));
+
+			// channel info
+			if (funcs.check(command, "channelinfo", 2)) {
+				msg.channel.send("", funcs.showChannelInfo(msg.channel));
+			}
+
+			// member info
+			if (funcs.check(command, "memberinfo", 2)) {
+				msg.channel.send("", funcs.showMemberInfo(msg.member));
+			}
+
+			// role info
+			if (funcs.check(command, "roleinfo", 2)) {
+				msg.channel.send("", funcs.showRoleInfo(msg.member.highestRole));
+			}
+
+			// bot info
+			if (funcs.check(command, "info", 0)) {
+				msg.channel.send("", funcs.botInfo(bot));
+			}
+
+			// -----------------------------------------------------------------------------------------------------------------------------------
+
+			// voir ses stats de lancer de dé
+			if (funcs.check(command, "rolls", 0)) {
+				if (!dicePlayers.has(msg.author.id)) {
+					msg.channel.send("You didn't do any rolls");
+					return;
+				} let str = "Your rolls:```";
+				let dicesArray = Array.from(dicePlayers.get(msg.author.id).dices.values());
+				for (let i = 0; i < dicesArray.length; i++)
+					str += "\n" + dicesArray[i].toString();
+				msg.channel.std(str + "```");
+			}
+
+			// lancer un dé
+			else if (funcs.check(command, "roll", 2)) {
+				if (!dicePlayers.has(msg.author.id)) dicePlayers.set(msg.author.id, new types.DicePlayer());
+				let max = 6;
+				if (args.length == 1) max = Number(args[0]);
+				if (!dicePlayers.get(msg.author.id).dices.has(max)) dicePlayers.get(msg.author.id).dices.set(max, new types.Dice(max));
+				msg.reply(dicePlayers.get(msg.author.id).roll(max) + "/" + max + " (:game_die:)");
+			}
+
+			// envoyer un shitpost
+			if (funcs.check(command, "shitpost", 2)) {
+				if (args.length == 0)
+					msg.channel.send(shitpost.genShitpost());
+				else
+					msg.channel.send(shitpost.findShitpost(command.replace("shitpost ","").split(" && ")));
+			}
+
+			// chiffer un message
+			if (funcs.check(command, "crypt", 1)) {
+				let message;
+				if (args[0].startsWith("k:"))
+					message = crypt.getHandler().crypt(command.replace("crypt " + args[0] + " ",""), args[0].replace("k:",""));
+				else message = crypt.getHandler().randomCrypt(command.replace("crypt ",""));
+				msg.channel.send("Crypted message: " + tools.toCodeBlock(message.getCrypted()) + "Key: " + message.requestKey());
+			}
+
+			// déchiffer un message
+			if (funcs.check(command, "decrypt", 1)) {
+				let decrypted = crypt.getHandler().decrypt(command.replace("decrypt " + args[0] + " ",""), args[0]);
+				msg.channel.send("Decrypted message: " + tools.toCodeBlock(decrypted));
+			}
+
+			// rule34
+			if (funcs.check(command, "r34", false) || funcs.check(command, "rule34", 1)) {
+				if (!msg.channel.nsfw)
+					msg.reply("what are you doing ? D:");
+				else {
+					let search = command.replace("r34 ","").replace("rule34 ","").toLowerCase();
+					while (search.includes(" "))
+						search = search.replace(" ", "_");
+					snekfetch.get("https://rule34.paheal.net/post/list/" + search + "/1").then(rep => {
+						let nbPagesTab = rep.text.replace('">Last</a>',"//LAST//").split("//LAST//")[0].split("/post/list/" + search + "/");
+						let nbPages = nbPagesTab[nbPagesTab.length-1];
+						let searchLink = "https://rule34.paheal.net/post/list/" + search + "/" + (tools.randomValue(nbPages-1)+1);
+						snekfetch.get(searchLink).then(rep2 => {
+							let html = rep2.text;
+							for (let i = 0; i <= 100; i++)
+								html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
+							let htmlTab = html.split("<-SPLIT->-");
+							let imgs = [];
+							for (let i = 0; i < htmlTab.length; i++)
+								if (htmlTab[i].includes("_images")) imgs.push("http://rule34-data-" + htmlTab[i]);
+							if (imgs.length != 0)
+								msg.channel.send("Search: " + tools.toBlock(search), {file:tools.randTab(imgs)});
+							else
+								msg.channel.send("Sorry, I didn't find anything about '" + search + "'");
+						});
+					}, function() {
+						msg.reply("sorry, I didn't find anything about '" + search + "'");
+					});
+				}
+			}
+
+			// random cyanide and happiness
+			if (funcs.check(command, "cahrcg", 0)) {
+				snekfetch.get("http://explosm.net/rcg").then(rep => {
+					msg.channel.send({file:rep.text.split('<meta property="og:image" content="')[1].split('">')[0]});
+				});
+			}
+
+			//random z0rde
+			if (funcs.check(command, "z0r", 0)) {
+				msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
+			}
+
+			// random scp
+			if (funcs.check(command, "rdscp", 0)) {
+				let d = tools.randomValue(3)+1;
+				let url;
+				let nb;
+				if (d == 1) {
+					url = "http://www.scp-wiki.net/scp-series";
+					nb = 0;
+				} else {
+					url = "http://www.scp-wiki.net/scp-series-" + d;
+					nb = d-1;
+				} snekfetch.get(url).then(rep => {
+					let htmltab = rep.text.split("<ul>").slice(1);
+					let trouve = false;
+					while (!trouve) {
+						let htmlSCPtab = htmltab[tools.randomValue(9)+19].split("</li>");
+						let tabSCPs = [];
+						for (let i = 0; i <= 99; i++) {
+							if (!htmlSCPtab[i].includes("newpage")) {
+								trouve = true;
+								tabSCPs.push(htmlSCPtab[i]);
+							}
+						}
+						let SCPhtml = tools.randTab(tabSCPs);
+						let numero = SCPhtml.split("SCP-")[1].split("</a>")[0];
+						let name = SCPhtml.split("</a> - ")[1];
+						msg.channel.send("SCP-" + numero + " | " + name + " => http://www.scp-wiki.net/scp-" + numero);
+					}
+				});
+			}
+
+			// générer un QRCode
+			if (funcs.check(command, "qrcode", 1)) {
+				qrcode.toFile("./temp/qrcode.png", command.replace("qrcode ", ""), {margin : 1, scale : 8, color : {dark : "#202225FF", light : "#36393EFF"}}, function (err) {
+					if (err) throw err;
+					try {
+						msg.channel.send("QRCode: " + tools.toBlock(command.replace("qrcode ", "")), {"file":"./temp/qrcode.png"});
+					} catch (err) {
+						console.error(err);
+					}
+				});
+			}
+
 			// générer une histoire
 			if (funcs.check(command, "story", 0))
 				msg.channel.send(shitpost.genStory());
@@ -538,6 +539,7 @@ bot.on("ready", () => {
 			console.log("(local launch)");
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
+		exports.id = bot.id;
 	}
 });
 

@@ -1,6 +1,9 @@
 "use strict";
 
+const discord = require("discord.js");
+const drabot = require("./drabot.js");
 const tools = require("./tools.js");
+const pack = require("./package.json");
 const hashSigns = ["0","1","2","3","4","5","6","7","8","9",
 "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
@@ -38,4 +41,153 @@ exports.check = function(command, str, only) {
 	else if (only == 1) return command.startsWith(str + " ");
 	else if (only == 2) return command.startsWith(str);
 	else throw new Error("checkOnlyZeroOneTwo");
+}
+
+exports.showMemberInfo = function(member) {
+	let isAdmin = "No";
+	let isBot = "No";
+	if (member.hasPermission("ADMINISTRATOR"))
+		isAdmin = "Yes";
+	if (member.user.bot)
+		isBot = "Yes";
+	let tempRoles = Array.from(member.roles.values());
+	let roles = [];
+	for (let role of tempRoles) {
+		if (role.name != "@everyone")
+			roles.push(role.name);
+		else
+			roles.push("everyone (default role)");
+	}
+	let info = new discord.RichEmbed()
+	.setThumbnail(member.user.displayAvatarURL)
+	.setColor(member.highestRole.color)
+	.addField("Member",member,true)
+	.addField("Display name", member.displayName,true)
+	.addField("Username#discriminator", member.user.tag,true)
+	.addField("Unique ID", member.user.id,true)
+	.addField(roles.length + " roles",roles)
+	.addField("Highest role", member.highestRole,true);
+	if (member.voiceChannel != null)
+		info.addField("Connected to", member.voiceChannel.name,true);
+	info.addField("Joined at", member.joinedAt.toUTCString())
+	.addField("Is admin ?", isAdmin,true)
+	.addField("Is bot ?", isBot,true);
+	let stts = "";
+	if (member.presence.status == "online") stts += "Online";
+	else if (member.presence.status == "offline") stts += "Offline";
+	else if (member.presence.status == "idle") stts += "AFK";
+	else stts += "Do not disturb";
+	info.addField("Status",stts,true);
+	if (member.presence.game != null) info.addField("Currently playing", member.presence.game.name,true);
+	if (member.displayName.toLowerCase().includes("vlt")) info.setFooter("I do not really trust anything that has got VLT in its name... the VLT Corporation is dangerous");
+	if (member.user.id == process.env.VLTID) info.setFooter("You know what I trust less than the VLT Corp ? VLT himself");
+	if (member.user.id == process.env.DRAGOID) info.setFooter("He is my creator, my Senpai... I love him");
+	if (member.user.id == drabot.id) info.setFooter("Why are you looking at my info ? D:");
+	return info;
+}
+
+exports.showGuildInfo = function(guild) {
+	let tempRoles = Array.from(guild.roles.values());
+	let roles = [];
+	for (let role of tempRoles) {
+		if (role.name != "@everyone")
+			roles.push(role.name);
+		else
+			roles.push("everyone (default role)");
+	}
+	let tempChannels = Array.from(guild.channels.values());
+	let textChannels = [];
+	let voiceChannels = [];
+	for (let channel of tempChannels) {
+		if (channel.type == "text") {
+			if (channel.id == guild.defaultChannel.id)
+				textChannels.push(channel.name + " (default channel)");
+			else
+				textChannels.push(channel.name);
+		} else if (channel.type == "voice") {
+			if (channel.id == guild.afkChannelID)
+				voiceChannels.push(channel.name + " (AFK channel)");
+			else
+				voiceChannels.push(channel.name);
+		}
+	}
+	let emojis = Array.from(guild.emojis.values());
+	let info = new discord.RichEmbed();
+	if (guild.iconURL != null)
+		info.setThumbnail(guild.iconURL);
+	info.addField("Server name",guild.name,true)
+	.addField("Unique ID",guild.id,true)
+	.addField("Owner",guild.owner,true)
+	.addField("Custom emojis",emojis.length + "/" + 50 + " (" + (50-emojis.length) + " left)",true)
+	.addField(roles.length + " roles",roles)
+	.addField(textChannels.length + " text channels",textChannels,true)
+	.addField(voiceChannels.length + " voice channels",voiceChannels,true)
+	.addField("Created at",guild.createdAt.toUTCString())
+	.addField("Region",guild.region,true)
+	.addField(guild.memberCount + " total members",getNbCon(guild) + " connected (" + Math.floor((getNbCon(guild)/guild.memberCount)*100) + "%)",true);
+	return info;
+}
+
+function getNbCon(guild) {
+	let presences = Array.from(guild.presences.values());
+	let h = 0;
+	for(let i = 0; i < presences.length; i++) {
+		if (presences[i].status != "offline") h++;
+	}
+	return h;
+}
+
+exports.showChannelInfo = function(channel) {
+	let info = new discord.RichEmbed();
+	info.addField("Channel name",channel.name,true)
+	.addField("Unique ID",channel.id,true)
+	.addField("Type",channel.type)
+	.addField("Created at",channel.createdAt.toUTCString());
+	return info;
+}
+
+exports.showRoleInfo = function(role) {
+	let isAdmin = "No";
+	let isMent = "No";
+	if (role.hasPermission("ADMINISTRATOR"))
+		isAdmin = "Yes";
+	if (role.mentionable)
+		isMent = "Yes";
+	let info = new discord.RichEmbed();
+	info.setColor(role.color)
+	.addField("Role name", role.name, true)
+	.addField("Unique ID", role.id, true)
+	.addField("Color", role.hexColor)
+	.addField("Created at", role.createdAt.toUTCString())
+	.addField("Is admin ?", isAdmin, true)
+	.addField("Is mentionable ?", isMent, true);
+	return info;
+}
+
+function cacheAllUsers(guild) {
+	guild.fetchMembers().then(guild2 => {
+		let members = Array.from(guild2.members.values());;
+		let user;
+		for (i = 0; i < members.length; i++) {
+			let user = members[i].user;
+			bot.fetchUser(user.id);
+		}
+		console.log("[CACHE] All users in guild '" + guild.name + "' have been added to the cache");
+	});
+}
+
+function cacheUser(user) {
+	bot.fetchUser(user.id);
+	console.log("[CACHE] User '" + user.username + "#" + user.discriminator + "' has been added to the cache");
+}
+
+exports.botInfo = function(bot) {
+	let info = new discord.RichEmbed()
+	.setThumbnail(bot.user.avatarURL)
+	.addField("Discord tag", bot.user.tag, true)
+	.addField("Author", "Dragoteryx", true)
+	.addField("Version", pack.version)
+	.addField("Description", "My Discord bot, DraBOTeryx, or Drabot for short.")
+	.addField("Github link", "https://github.com/Dragoteryx/draboteryx");
+	return info;
 }
