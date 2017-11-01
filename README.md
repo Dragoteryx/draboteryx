@@ -6,7 +6,7 @@ Use /help to know the commands.
 
 ## Features
 Can give you information about a role, a member, a channel or your server. (WIP)
-Can play music using drg-music (https://github.com/Dragoteryx/drg-music.
+Can play music using ``drg-music`` (https://github.com/Dragoteryx/drg-music.
 Random features :
 * roll dices
 * generate random funny sentences
