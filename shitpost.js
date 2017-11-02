@@ -96,7 +96,7 @@ exports.storyEndings = [
 
 exports.begin = [
 	"My Senpai told me that $end.",
-	"Did you know that $end ?",
+	"Did you know that $end?",
 	"Thanks to science, we now know that $end.",
 	"I wanted to tell you that $end.",
 	"You might not believe me, but $end.",
@@ -117,7 +117,7 @@ exports.begin = [
 	"It is written that only $end.",
 	"Just a daily reminder that $end.",
 	"I'm coming from the future to tell you that $end.",
-	"How come $end ?",
+	"How come $end?",
 	"This is absolute truth : $end.",
 	"You can't deny that $end.",
 	"You can't disagree with me when I say that $end.",
@@ -131,11 +131,11 @@ exports.begin = [
 	"I was told by $name that $end.",
 	"It would be so cool if $event didn't happen.",
 	"I'm wondering how the world would be if $event did not happen.",
-	"$end. Crazy, right ?",
+	"$end. Crazy, right?",
 	"Tell me that $end, or I'll murder you.",
 	"For some reason, $end.",
 	"It would be fun if $end.",
-	"Would you rather $action or $action ?"
+	"Would you rather $action or $action?"
 ];
 exports.end = [
 	"$name's favorite drink is $drink",

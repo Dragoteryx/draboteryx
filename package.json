@@ -1,6 +1,6 @@
 {
   "name": "draboteryx",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "The best Discord bot ever (jk)",
   "main": "drabot.js",
   "dependencies": {

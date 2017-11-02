@@ -408,7 +408,7 @@ bot.on("message", msg => {
 			// rule34
 			if (funcs.check(command, "r34", false) || funcs.check(command, "rule34", 1)) {
 				if (!msg.channel.nsfw)
-					msg.reply("what are you doing ? D:");
+					msg.reply("what are you doing? D:");
 				else {
 					let search = command.replace("r34 ","").replace("rule34 ","").toLowerCase();
 					while (search.includes(" "))

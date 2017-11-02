@@ -31,7 +31,7 @@ exports.log = function(msg, str, type) {
 
 // envoyer un message lorsque la demande est incomprise puis supprimer le message (+ la demande)
 exports.wakannai = function(msg) {
-	let responses = ["what ? I didn't understand","uh ? Could you repeat please ?", "wakannai yo","this doesn't make any sense","but... drabot.exe has stopped working : incorrect parameters"];
+	let responses = ["what? I didn't understand","uh? Could you repeat please?", "wakannai yo","this doesn't make any sense","but... drabot.exe has stopped working : incorrect parameters"];
 	msg.channel.send(tools.firstCharLowerToUpper(tools.randTab(responses)));
 }
 
@@ -70,19 +70,21 @@ exports.showMemberInfo = function(member) {
 	if (member.voiceChannel != null)
 		info.addField("Connected to", member.voiceChannel.name,true);
 	info.addField("Joined at", member.joinedAt.toUTCString())
-	.addField("Is admin ?", isAdmin,true)
-	.addField("Is bot ?", isBot,true);
+	.addField("Is admin?", isAdmin,true)
+	.addField("Is bot?", isBot,true);
 	let stts = "";
 	if (member.presence.status == "online") stts += "Online";
 	else if (member.presence.status == "offline") stts += "Offline";
 	else if (member.presence.status == "idle") stts += "AFK";
 	else stts += "Do not disturb";
 	info.addField("Status",stts,true);
-	if (member.presence.game != null) info.addField("Currently playing", member.presence.game.name,true);
-	if (member.displayName.toLowerCase().includes("vlt")) info.setFooter("I do not really trust anything that has got VLT in its name... the VLT Corporation is dangerous");
-	if (member.user.id == process.env.VLTID) info.setFooter("You know what I trust less than the VLT Corp ? VLT himself");
-	if (member.user.id == process.env.DRAGOID) info.setFooter("He is my creator, my Senpai... I love him");
-	if (member.user.id == drabot.id) info.setFooter("Why are you looking at my info ? D:");
+	if (member.presence.game != null)
+		info.addField("Currently playing", member.presence.game.name,true);
+	info.addField("Avatar URL", member.user.avatarURL);
+	if (member.user.id == process.env.DRAGOID)
+		info.setFooter("He is my creator, my Senpai... Daisuki!");
+	if (member.user.id == drabot.id)
+		info.setFooter("Why are you looking at my info? D:");
 	return info;
 }
 
@@ -124,7 +126,8 @@ exports.showGuildInfo = function(guild) {
 	.addField(voiceChannels.length + " voice channels",voiceChannels,true)
 	.addField("Created at",guild.createdAt.toUTCString())
 	.addField("Region",guild.region,true)
-	.addField(guild.memberCount + " total members",getNbCon(guild) + " connected (" + Math.floor((getNbCon(guild)/guild.memberCount)*100) + "%)",true);
+	.addField(guild.memberCount + " total members",getNbCon(guild) + " connected (" + Math.floor((getNbCon(guild)/guild.memberCount)*100) + "%)",true)
+	.addField("Icon URL", guild.iconURL);
 	return info;
 }
 
@@ -159,8 +162,8 @@ exports.showRoleInfo = function(role) {
 	.addField("Unique ID", role.id, true)
 	.addField("Color", role.hexColor)
 	.addField("Created at", role.createdAt.toUTCString())
-	.addField("Is admin ?", isAdmin, true)
-	.addField("Is mentionable ?", isMent, true);
+	.addField("Is admin?", isAdmin, true)
+	.addField("Is mentionable?", isMent, true);
 	return info;
 }
 
@@ -185,7 +188,7 @@ exports.botInfo = function(bot) {
 	let info = new discord.RichEmbed()
 	.setThumbnail(bot.user.avatarURL)
 	.addField("Discord tag", bot.user.tag, true)
-	.addField("Author", "Dragoteryx", true)
+	.addField("Author", "Dragoteryx#6922", true)
 	.addField("Version", pack.version)
 	.addField("Description", "My Discord bot, DraBOTeryx, or Drabot for short.")
 	.addField("Github link", "https://github.com/Dragoteryx/draboteryx");
