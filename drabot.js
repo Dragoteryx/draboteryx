@@ -341,26 +341,26 @@ bot.on("message", msg => {
 
 			// channel info
 			if (funcs.check(command, "channelinfo", 2)) {
-				let channel = funcs.stringToChannel(command.replace("channelinfo ",""));
-				if (args.length == 0)
-					channel = msg.channel;
-				msg.channel.send("", funcs.showChannelInfo(channel, msg.guild));
+				let channel = msg.channel;
+				if (args.length > 0)
+					channel = funcs.stringToChannel(command.replace("channelinfo ",""), msg.guild);
+				msg.channel.send("", funcs.showChannelInfo(channel));
 			}
 
 			// member info
 			if (funcs.check(command, "memberinfo", 2)) {
-				if (args.length == 0)
-					msg.channel.send("", funcs.showMemberInfo(member, msg.guild));
-				else
-					msg.channel.send("", funcs.showMemberInfo(member, funcs.stringToMember(command.replace("memberinfo ",""))));
+				let member = msg.member;
+				if (args.length > 0)
+					member = funcs.stringToMember(command.replace("memberinfo ", ""), msg.guild);
+				msg.channel.send("", funcs.showMemberInfo(member));
 			}
 
 			// role info
 			if (funcs.check(command, "roleinfo", 2)) {
-				let role = funcs.stringToRole(command.replace("roleinfo ",""));
-				if (args.length == 0)
-					role = msg.member.highestRole;
-				msg.channel.send("", funcs.showRoleInfo(role, msg.guild));
+				let role = msg.member.highestRole;
+				if (args.length > 0)
+					role = funcs.stringToRole(command.replace("roleinfo ", ""), msg.guild);
+				msg.channel.send("", funcs.showRoleInfo(role));
 			}
 
 			// bot info
