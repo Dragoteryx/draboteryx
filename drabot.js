@@ -341,17 +341,26 @@ bot.on("message", msg => {
 
 			// channel info
 			if (funcs.check(command, "channelinfo", 2)) {
-				msg.channel.send("", funcs.showChannelInfo(msg.channel));
+				let channel = funcs.stringToChannel(command.replace("channelinfo ",""));
+				if (args.length == 0)
+					channel = msg.channel;
+				msg.channel.send("", funcs.showChannelInfo(channel, msg.guild));
 			}
 
 			// member info
 			if (funcs.check(command, "memberinfo", 2)) {
-				msg.channel.send("", funcs.showMemberInfo(msg.member));
+				if (args.length == 0)
+					msg.channel.send("", funcs.showMemberInfo(member, msg.guild));
+				else
+					msg.channel.send("", funcs.showMemberInfo(member, funcs.stringToMember(command.replace("memberinfo ",""))));
 			}
 
 			// role info
 			if (funcs.check(command, "roleinfo", 2)) {
-				msg.channel.send("", funcs.showRoleInfo(msg.member.highestRole));
+				let role = funcs.stringToRole(command.replace("roleinfo ",""));
+				if (args.length == 0)
+					role = msg.member.highestRole;
+				msg.channel.send("", funcs.showRoleInfo(role, msg.guild));
 			}
 
 			// bot info

@@ -194,3 +194,32 @@ exports.botInfo = function(bot) {
 	.addField("Github link", "https://github.com/Dragoteryx/draboteryx");
 	return info;
 }
+
+exports.stringToMember = function(str, guild) {
+	let member;
+	if (string.startsWith("<@") && string.endsWith(">"))
+		member = guild.members.get(string.replace("<@","").replace(">","").replace("!",""));
+	else
+		member = guild.members.find("displayName",string);
+		if (member != null)
+			return member;
+		throw new Error("notAMember");
+}
+
+exports.stringToChannel = function(str, guild) {
+	let channel = guild.channels.find("name", str);
+	if (channel != null)
+		return channel;
+	throw new Error("notAChannel");
+}
+
+exports.stringToRole = function(str, guild) {
+	let role;
+	if (string.startsWith("<@") && string.endsWith(">"))
+		role = guild.roles.get(string.replace("<@","").replace(">","").replace("&",""));
+	else
+		role = guild.roles.find("name",string);
+	if (role != null)
+		return role;
+	throw new Error("notARole");
+}
