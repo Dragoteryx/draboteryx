@@ -38,7 +38,7 @@ exports.wakannai = function(msg) {
 
 // 0 => sans arguments, 1 => avec arguments, 2 => avec/sans arguments
 exports.check = function(msg, str, only, allowDMs) {
-	return exports.checkTab(msg, [str], only, allowDMS);
+	return exports.checkTab(msg, [str], only, allowDMs);
 }
 
 exports.checkTab = function(msg, strs, only, allowDMs) {
