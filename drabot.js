@@ -336,27 +336,42 @@ bot.on("message", msg => {
 			}
 
 			// guild info
-			if (funcs.check(command, "serverinfo", 0))
+			if (funcs.check(command, "serverinfo", 0)) {
+				if (!msg.member.hasPermission("MANAGE_GUILD"))
+					throw new Error("notAllowedToGuildInfo");
 				msg.channel.send("", funcs.showGuildInfo(msg.guild));
+			}
 
 			// channel info
 			if (funcs.check(command, "channelinfo", 2)) {
-				let channel = msg.channel;
-				if (args.length > 0)
+				let channel;
+				if (args.length == 0) {
+					if (!channel.permissionsFor(msg.member).has("MANAGE_CHANNELS"))
+						throw new Error("notAllowedToChannelInfoThis");
+					channel = msg.channel;
+				} else {
+					if (!msg.member.hasPermission("MANAGE_CHANNELS"))
+						throw new Error("notAllowedToChannelInfo");
 					channel = funcs.stringToChannel(command.replace("channelinfo ",""), msg.guild);
+				}
 				msg.channel.send("", funcs.showChannelInfo(channel));
 			}
 
 			// member info
 			if (funcs.check(command, "memberinfo", 2)) {
 				let member = msg.member;
-				if (args.length > 0)
+				if (args.length > 0) {
+					if (!msg.member.hasPermission("MANAGE_MEMBERS"))
+						throw new Error("notAllowedToMemberInfo");
 					member = funcs.stringToMember(command.replace("memberinfo ", ""), msg.guild);
+				}
 				msg.channel.send("", funcs.showMemberInfo(member));
 			}
 
 			// role info
 			if (funcs.check(command, "roleinfo", 2)) {
+				if (!msg.member.hasPermission("MANAGE_ROLES"))
+					throw new Error("notAllowedToRoleInfo");
 				let role = msg.member.highestRole;
 				if (args.length > 0)
 					role = funcs.stringToRole(command.replace("roleinfo ", ""), msg.guild);
@@ -529,6 +544,14 @@ bot.on("message", msg => {
 		else if (err.message == "invalidVolume") msg.channel.send("The volume must be over 0%.");
 		else if (err.message == "emptyPlaylist") msg.channel.send("You can't do that when the playlist is empty.");
 		else if (err.message == "invalidPlaylistIndex") msg.channel.send("There is no music with that ID in the playlist.");
+		else if (err.message == "notAMember") msg.channel.send("This member doesn't exist.");
+		else if (err.message == "notAChannel") msg.channel.send("This channel doesn't exist.");
+		else if (err.message == "notARole") msg.channel.send("This role doesn't exist.");
+		else if (err.message == "notAllowedToGuildInfo") msg.channel.send("You need to have the permission to manage the server.");
+		else if (err.message == "notAllowedToChannelInfoThis") msg.channel.send("You need to have the permission to manage this channel.");
+		else if (err.message == "notAllowedToChannelInfo") msg.channel.send("You need to have the permission to manage channels.");
+		else if (err.message == "notAllowedToMemberInfo") msg.channel.send("You need to have the permission to manage .");
+		else if (err.message == "notAllowedToRoleInfo") msg.channel.send("You need to have the permission to manage roles.");
 		else console.error(err);
 	}
 

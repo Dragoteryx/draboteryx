@@ -197,10 +197,10 @@ exports.botInfo = function(bot) {
 
 exports.stringToMember = function(str, guild) {
 	let member;
-	if (string.startsWith("<@") && string.endsWith(">"))
-		member = guild.members.get(string.replace("<@","").replace(">","").replace("!",""));
+	if (str.startsWith("<@") && str.endsWith(">"))
+		member = guild.members.get(str.replace("<@","").replace(">","").replace("!",""));
 	else
-		member = guild.members.find("displayName",string);
+		member = guild.members.find("displayName",str);
 		if (member != null)
 			return member;
 		throw new Error("notAMember");
@@ -215,10 +215,10 @@ exports.stringToChannel = function(str, guild) {
 
 exports.stringToRole = function(str, guild) {
 	let role;
-	if (string.startsWith("<@") && string.endsWith(">"))
-		role = guild.roles.get(string.replace("<@","").replace(">","").replace("&",""));
+	if (str.startsWith("<@") && str.endsWith(">"))
+		role = guild.roles.get(str.replace("<@","").replace(">","").replace("&",""));
 	else
-		role = guild.roles.find("name",string);
+		role = guild.roles.find("name",str);
 	if (role != null)
 		return role;
 	throw new Error("notARole");
