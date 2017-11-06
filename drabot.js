@@ -105,9 +105,9 @@ const commands = [
 	new types.Command("z0r", "random z0r.de", funType, true),
 	new types.Command("rdscp", "random SCP Object", funType, true),
 	new types.Command("serverinfo", "info about this server", utilityType, true),
-	new types.Command("channelinfo ([channelname])", "info about a channel", utilityType, true),
-	new types.Command("memberinfo ([membername])", "info about a member", utilityType, true),
-	new types.Command("roleinfo [rolename]", "info about a role", utilityType, true),
+	new types.Command("channelinfo ([channelname])", "info about a channel (if empty then info about the channel the message has been send it)", utilityType, true),
+	new types.Command("memberinfo ([membername])", "info about a member (if empty then info about you)", utilityType, true),
+	new types.Command("roleinfo ([rolename])", "info about a role (if empty info about your hightest role)", utilityType, true),
 	new types.Command("qrcode [text/link]", "generates a QRCode", funType, true)
 ];
 const tweet = new twitter({
@@ -152,27 +152,27 @@ bot.on("message", msg => {
 			funcs.log(msg, "", "admin");
 
 			// changer l'avatar du bot
-			if (funcs.check(command, "setAvatar", 1))
+			if (funcs.check(msg, "setAvatar", 1, true))
 				bot.user.setAvatar(command.replace("setAvatar ",""));
 
 			// changer le nom du bot
-			if (funcs.check(command, "setName", 1))
+			if (funcs.check(msg, "setName", 1, true))
 				bot.user.setUsername(command.replace("setName ",""));
 
 			// changer le jeu actuel du bot
-			if (funcs.check(command, "setGame", 1))
+			if (funcs.check(msg, "setGame", 1, true))
 				bot.user.setGame(command.replace("setGame ",""));
 
 			// exécuter un bout de code pendant l'exécution
-			if (funcs.check(command, "exec", 1))
+			if (funcs.check(msg, "exec", 1, true))
 					eval(command.replace("exec ", ""));
 
 			// affiche la valeur d'une variable
-			if (funcs.check(command, "value", 1))
+			if (funcs.check(msg, "value", 1, true))
 				msg.channel.send(command.replace("value ", "") + tools.toBlock(eval(command.replace("value ", "")).toString()));
 
 			// connecter/déconnecter babybot
-			if (funcs.check(command, "babybot", 0)) {
+			if (funcs.check(msg, "babybot", 0, true)) {
 				if (!babyReady) {
 					babybot.login(process.env.BABYBOTDISCORDTOKEN).then( () => {
 						babybot.guilds.get(msg.guild.id).channels.get(msg.channel.id).send("Bonzour !");
@@ -187,7 +187,7 @@ bot.on("message", msg => {
 			}
 
 			// bot follow
-			if (funcs.check(command, "follow", 0)) {
+			if (funcs.check(msg, "follow", 0, true)) {
 				follow = !follow;
 				if (follow)
 					msg.reply("I'm following you !");
@@ -196,7 +196,7 @@ bot.on("message", msg => {
 			}
 
 			// mode perroquet
-			if (funcs.check(command, "say", 1)) {
+			if (funcs.check(msg, "say", 1, true)) {
 				msg.channel.send(command.replace("say ",""));
 				msg.delete();
 			}
@@ -213,31 +213,31 @@ bot.on("message", msg => {
 			if (enableMusic) {
 
 				// rejoindre un channel vocal
-				if (funcs.check(command, "join", 0)) {
+				if (funcs.check(msg, "join", 0, false)) {
 					musicChannels.set(msg.guild.id, msg.channel);
 					music.join(msg.member);
 				}
 
 				// quitter un channel vocal
-				if (funcs.check(command, "leave", 0)) {
+				if (funcs.check(msg, "leave", 0, false)) {
 					music.leave(msg.guild);
 					musicChannels.delete(msg.guild.id);
 				}
 
 				// ajouter une musique
-				if (funcs.check(command, "request", 1))
+				if (funcs.check(msg, "request", 1, false))
 					music.addMusic(msg.member, command.replace("request ",""));
 
 				// retirer une musique
-				if (funcs.check(command, "remove", 1))
+				if (funcs.check(msg, "remove", 1, false))
 					music.removeMusic(msg.guild, Number(command.replace("remove ",""))-1);
 
 				// toggle la playlist (pause/resume)
-				if (funcs.check(command, "toggle", 0))
+				if (funcs.check(msg, "toggle", 0, false))
 					music.toggleMusic(msg.guild);
 
 				// skip la musique actuelle
-				if (funcs.check(command, "skip", 0)) {
+				if (funcs.check(msg, "skip", 0, false)) {
 					if (!music.playingInfo(msg.guild).file || config.owners.indexOf(msg.author.id) != -1)
 						music.nextMusic(msg.guild);
 					else
@@ -245,19 +245,19 @@ bot.on("message", msg => {
 				}
 
 				// clear la playlist
-				if (funcs.check(command, "plclear", 0))
+				if (funcs.check(msg, "plclear", 0, false))
 					music.clearPlaylist(msg.guild);
 
 				// shuffle la playlist
-				if (funcs.check(command, "plshuffle", 0))
+				if (funcs.check(msg, "plshuffle", 0, false))
 					music.shufflePlaylist(msg.guild);
 
 				// set le volume
-				if (funcs.check(command, "volume", 1))
+				if (funcs.check(msg, "volume", 1, false))
 					music.setVolume(msg.guild, Number(command.replace("volume ","")));
 
 				// afficher la playlist
-				if (funcs.check(command, "playlist", 0)) {
+				if (funcs.check(msg, "playlist", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
 					let playlist = music.playlistInfo(msg.guild);
 					let embed = new discord.RichEmbed().setThumbnail(playing.thumbnailURL);
@@ -275,7 +275,7 @@ bot.on("message", msg => {
 				}
 
 				// afficher la musique actuelle
-				if (funcs.check(command, "playing", 0)) {
+				if (funcs.check(msg, "playing", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
 					let embed = new discord.RichEmbed();
 					if (!playing.file) {
@@ -293,7 +293,7 @@ bot.on("message", msg => {
 				}
 
 				// ajoute une musique par recherche
-				if (funcs.check(command, "search", 1)) {
+				if (funcs.check(msg, "search", 1, false)) {
 					let search = command.replace("search ", "");
 					while (search.includes(" "))
 						search = search.replace(" ", "+");
@@ -316,7 +316,7 @@ bot.on("message", msg => {
 				}
 
 				// permettre de jouer une musique en boucle
-				if (funcs.check(command, "loop", 0))
+				if (funcs.check(msg, "loop", 0, false))
 					music.toggleLooping(msg.guild);
 
 			}
@@ -324,7 +324,7 @@ bot.on("message", msg => {
 			// -----------------------------------------------------------------------------------------------------------------------------------
 
 			// affiche le menu d'aide
-			if (funcs.check(command, "help", 0)) {
+			if (funcs.check(msg, "help", 0, true)) {
 				let i = 0;
 				for (i; i < commandTypes.length; i++) {
 					let help = new discord.RichEmbed();
@@ -336,17 +336,17 @@ bot.on("message", msg => {
 			}
 
 			// guild info
-			if (funcs.check(command, "serverinfo", 0)) {
+			if (funcs.check(msg, "serverinfo", 0, false)) {
 				if (!msg.member.hasPermission("MANAGE_GUILD"))
 					throw new Error("notAllowedToGuildInfo");
 				msg.channel.send("", funcs.showGuildInfo(msg.guild));
 			}
 
 			// channel info
-			if (funcs.check(command, "channelinfo", 2)) {
+			if (funcs.check(msg, "channelinfo", 2, false)) {
 				let channel;
 				if (args.length == 0) {
-					if (!channel.permissionsFor(msg.member).has("MANAGE_CHANNELS"))
+					if (!msg.channel.permissionsFor(msg.member).has("MANAGE_CHANNELS"))
 						throw new Error("notAllowedToChannelInfoThis");
 					channel = msg.channel;
 				} else {
@@ -358,7 +358,7 @@ bot.on("message", msg => {
 			}
 
 			// member info
-			if (funcs.check(command, "memberinfo", 2)) {
+			if (funcs.check(msg, "memberinfo", 2, false)) {
 				let member = msg.member;
 				if (args.length > 0) {
 					if (!msg.member.hasPermission("MANAGE_MEMBERS"))
@@ -369,7 +369,7 @@ bot.on("message", msg => {
 			}
 
 			// role info
-			if (funcs.check(command, "roleinfo", 2)) {
+			if (funcs.check(msg, "roleinfo", 2, false)) {
 				if (!msg.member.hasPermission("MANAGE_ROLES"))
 					throw new Error("notAllowedToRoleInfo");
 				let role = msg.member.highestRole;
@@ -379,14 +379,14 @@ bot.on("message", msg => {
 			}
 
 			// bot info
-			if (funcs.check(command, "info", 0)) {
+			if (funcs.check(msg, "info", 0, true)) {
 				msg.channel.send("", funcs.botInfo(bot));
 			}
 
 			// -----------------------------------------------------------------------------------------------------------------------------------
 
 			// voir ses stats de lancer de dé
-			if (funcs.check(command, "rolls", 0)) {
+			if (funcs.check(msg, "rolls", 0, true)) {
 				if (!dicePlayers.has(msg.author.id)) {
 					msg.channel.send("You didn't do any rolls");
 					return;
@@ -398,7 +398,7 @@ bot.on("message", msg => {
 			}
 
 			// lancer un dé
-			else if (funcs.check(command, "roll", 2)) {
+			else if (funcs.check(msg, "roll", 2, true)) {
 				if (!dicePlayers.has(msg.author.id)) dicePlayers.set(msg.author.id, new types.DicePlayer());
 				let max = 6;
 				if (args.length == 1) max = Number(args[0]);
@@ -407,7 +407,7 @@ bot.on("message", msg => {
 			}
 
 			// envoyer un shitpost
-			if (funcs.check(command, "shitpost", 2)) {
+			if (funcs.check(msg, "shitpost", 2, true)) {
 				if (args.length == 0)
 					msg.channel.send(shitpost.genShitpost());
 				else
@@ -415,23 +415,23 @@ bot.on("message", msg => {
 			}
 
 			// chiffer un message
-			if (funcs.check(command, "crypt", 1)) {
+			if (funcs.check(msg, "crypt", 1, true)) {
 				let message;
 				if (args[0].startsWith("k:"))
 					message = crypt.getHandler().crypt(command.replace("crypt " + args[0] + " ",""), args[0].replace("k:",""));
 				else message = crypt.getHandler().randomCrypt(command.replace("crypt ",""));
-				msg.channel.send("Crypted message: " + tools.toCodeBlock(message.getCrypted()) + "Key: " + message.requestKey());
+				msg.channel.send("Crypted message: " + tools.toCodeBlock(message.getCrypted()) + "Key: " + tools.toBlock(message.requestKey()));
 			}
 
 			// déchiffer un message
-			if (funcs.check(command, "decrypt", 1)) {
+			if (funcs.check(msg, "decrypt", 1, true)) {
 				let decrypted = crypt.getHandler().decrypt(command.replace("decrypt " + args[0] + " ",""), args[0]);
 				msg.channel.send("Decrypted message: " + tools.toCodeBlock(decrypted));
 			}
 
 			// rule34
-			if (funcs.check(command, "r34", false) || funcs.check(command, "rule34", 1)) {
-				if (!msg.channel.nsfw)
+			if (funcs.checkTab(command, ["r34", "rule34"], 1, true)) {
+				if (msg.channel.type != "dm" && !msg.channel.nsfw)
 					msg.reply("what are you doing? D:");
 				else {
 					let search = command.replace("r34 ","").replace("rule34 ","").toLowerCase();
@@ -461,19 +461,19 @@ bot.on("message", msg => {
 			}
 
 			// random cyanide and happiness
-			if (funcs.check(command, "cahrcg", 0)) {
+			if (funcs.check(msg, "cahrcg", 0, true)) {
 				snekfetch.get("http://explosm.net/rcg").then(rep => {
 					msg.channel.send({file:rep.text.split('<meta property="og:image" content="')[1].split('">')[0]});
 				});
 			}
 
 			//random z0rde
-			if (funcs.check(command, "z0r", 0)) {
+			if (funcs.check(msg, "z0r", 0, true)) {
 				msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
 			}
 
 			// random scp
-			if (funcs.check(command, "rdscp", 0)) {
+			if (funcs.check(msg, "rdscp", 0, true)) {
 				let d = tools.randomValue(3)+1;
 				let url;
 				let nb;
@@ -504,7 +504,7 @@ bot.on("message", msg => {
 			}
 
 			// générer un QRCode
-			if (funcs.check(command, "qrcode", 1)) {
+			if (funcs.check(msg, "qrcode", 1, true)) {
 				qrcode.toFile("./temp/qrcode.png", command.replace("qrcode ", ""), {margin : 1, scale : 8, color : {dark : "#202225FF", light : "#36393EFF"}}, function (err) {
 					if (err) throw err;
 					try {
@@ -516,11 +516,11 @@ bot.on("message", msg => {
 			}
 
 			// générer une histoire
-			if (funcs.check(command, "story", 0))
+			if (funcs.check(msg, "story", 0, true))
 				msg.channel.send(shitpost.genStory());
 
 			// waifu (SECRET COMMAND UNLESS YOU ARE READING THIS)
-			if (funcs.check(command, "waifu", 0)) {
+			if (funcs.check(msg, "waifu", 0, true)) {
 				if (msg.channel.type != "dm")
 					msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");
 				else
@@ -552,6 +552,7 @@ bot.on("message", msg => {
 		else if (err.message == "notAllowedToChannelInfo") msg.channel.send("You need to have the permission to manage channels.");
 		else if (err.message == "notAllowedToMemberInfo") msg.channel.send("You need to have the permission to manage .");
 		else if (err.message == "notAllowedToRoleInfo") msg.channel.send("You need to have the permission to manage roles.");
+		else if (err.message == "DMsOnlyCommandInDMs") msg.channel.send("You can't use that command in DMs.");
 		else console.error(err);
 	}
 
@@ -598,21 +599,21 @@ babybot.on("message", msg => {
 			if (config.owners.indexOf(msg.author.id) != -1) {
 
 				// changer l'avatar du bot
-				if (funcs.check(command, "setAvatar", 1))
+				if (funcs.check(msg, "setAvatar", 1, true))
 					babybot.user.setAvatar(command.replace("setAvatar ",""));
 
 				// changer le nom du bot
-				if (funcs.check(command, "setName", 1))
+				if (funcs.check(msg, "setName", 1, true))
 					babybot.user.setUsername(command.replace("setName ",""));
 
 				// changer le jeu actuel du bot
-				if (funcs.check(command, "setGame", 1))
+				if (funcs.check(msg, "setGame", 1, true))
 					babybot.user.setGame(command.replace("setGame ",""));
 
 			}
 
 			// répéter
-			if (funcs.check(command, "say", 1)) {
+			if (funcs.check(msg, "say", 1, true)) {
 				if (msg.author.id == process.env.DRAGOID) {
 					msg.channel.send(command.replace("say ",""));
 					msg.delete();

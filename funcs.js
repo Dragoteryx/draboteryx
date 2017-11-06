@@ -4,6 +4,7 @@ const discord = require("discord.js");
 const drabot = require("./drabot.js");
 const tools = require("./tools.js");
 const pack = require("./package.json");
+const config = require("./config.js");
 const hashSigns = ["0","1","2","3","4","5","6","7","8","9",
 "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
@@ -36,11 +37,28 @@ exports.wakannai = function(msg) {
 }
 
 // 0 => sans arguments, 1 => avec arguments, 2 => avec/sans arguments
-exports.check = function(command, str, only) {
-	if (only == 0) return command == str;
-	else if (only == 1) return command.startsWith(str + " ");
-	else if (only == 2) return command.startsWith(str);
-	else throw new Error("checkOnlyZeroOneTwo");
+exports.check = function(msg, str, only, allowDMs) {
+	return exports.checkTab(msg, [str], only, allowDMS);
+}
+
+exports.checkTab = function(msg, strs, only, allowDMs) {
+	if (msg.channel.type == "dm" && !allowDMs)
+		throw new Error("DMsOnlyCommandInDMs");
+	command = msg.content.replace(config.prefix, "");
+	let bool = false;
+	if (only != 0 && only != 1 && only != 2)
+		throw new Error("checkOnlyZeroOneTwo");
+	for (let str of strs) {
+		if (!bool) {
+			if (only == 0)
+				bool = command == str;
+			else if (only == 1)
+				bool = command.startsWith(str + " ");
+			else
+				bool = command.startsWith(str);
+		}
+	}
+	return bool;
 }
 
 exports.showMemberInfo = function(member) {
