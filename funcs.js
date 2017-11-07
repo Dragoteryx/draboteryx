@@ -18,15 +18,10 @@ exports.genRandomHash = function(size) {
 }
 
 // logger une commande
-exports.log = function(msg, str, type) {
+exports.log = function(msg, str) {
 	let toLog = "";
-	if (type == "command") {
-		if (msg.channel.type != "dm") toLog += "[LOG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + " : " + msg.content;
-		else toLog += "[LOG] (DM) " + msg.author.username + " : " + msg.content;
-	} else if (type == "admin") {
-		if (msg.channel.type != "dm") toLog += "[ADMINLOG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + " : " + msg.content;
-		else toLog += "[ADMINLOG] (DM) " + msg.author.username + " : " + msg.content;
-	}
+	if (msg.channel.type != "dm") toLog += "[LOG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + " : " + msg.content;
+	else toLog += "[LOG] (DM) " + msg.author.username + " : " + msg.content;
 	console.log(toLog);
 }
 
@@ -42,9 +37,9 @@ exports.check = function(msg, str, only, allowDMs) {
 }
 
 exports.checkTab = function(msg, strs, only, allowDMs) {
-	if (msg.channel.type == "dm" && !allowDMs)
-		throw new Error("DMsOnlyCommandInDMs");
-	command = msg.content.replace(config.prefix, "");
+	if (msg.channel.type != "text" && !allowDMs)
+		throw new Error("DMsForbiddenCommandInDMs");
+	let command = msg.content.replace(config.prefix, "");
 	let bool = false;
 	if (only != 0 && only != 1 && only != 2)
 		throw new Error("checkOnlyZeroOneTwo");
@@ -58,6 +53,8 @@ exports.checkTab = function(msg, strs, only, allowDMs) {
 				bool = command.startsWith(str);
 		}
 	}
+	if (bool)
+		exports.log(msg, "");
 	return bool;
 }
 

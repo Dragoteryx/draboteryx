@@ -41,7 +41,7 @@ music.addVideo(member, youtubeLink);
 ``member`` represents the guild member that requested the music.
 ``youtubeLink`` must be a Youtube video link.
 
-Emits an event ``added``, with the guild where the music was added along information about the music. (cf ``music.musicInfo(index)``)
+Emits an event ``added``, with the guild where the music was added along with information about the music. (cf ``music.musicInfo(index)``)
 
 #### Add a local file to the playlist
 ```js
@@ -50,7 +50,7 @@ music.addFile(member, filePath);
 ``member`` represents the guild member that requested the file.
 ``filePath`` represents the path of the file to play.
 
-Emits an event ``added``, with the guild where the file was added along information about the file.
+Emits an event ``added``, with the guild where the file was added along with information about the file.
 
 #### Remove a Youtube video/file from the playlist
 ```js
@@ -58,7 +58,7 @@ music.removeMusic(guild, index);
 ```
 ``index`` represents the index of the music in the playlist. (cf ``music.playlistInfo()``)
 
-Emits an event ``removed``, with the guild from where the music was removed along information about the music.
+Emits an event ``removed``, with the guild from where the music was removed along with information about the music.
 
 #### Skip the current music
 ```js
@@ -66,7 +66,7 @@ music.nextMusic(guild);
 ```
 If the playlist is empty, the bot will stop playing music.
 
-Emits an event ``skipped``, with the guild where the current music was skipped along information about the next music.
+Emits an event ``skipped``, with the guild where the current music was skipped along with information about the next music.
 
 #### Shuffle the playlist
 ```js
@@ -78,7 +78,7 @@ Emits an event ``shuffled``, with the guild where the playlist was shuffled.
 ```js
 music.clearPlaylist(guild);
 ```
-Emits an event ``shuffled``, with the guild where the playlist was cleared.
+Emits an event ``cleared``, with the guild where the playlist was cleared.
 
 #### Pause/resume the music
 ```js
@@ -100,7 +100,7 @@ music.setVolume(guild, volume);
 ```
 ``volume`` must be >= 0. By default, it's set to 100.
 
-Emits an event ``volumechange`` along the guild where the volume was changed, the new volume and the old one.
+Emits an event ``volumechange`` along with the guild where the volume was changed, the new volume and the old one.
 
 #### Set a music to loop
 ```js
@@ -108,7 +108,7 @@ music.toggleLooping(guild);
 ```
 Whether or not the current music must repeat itself upon end.
 
-Emits an event ``looping``, along the guild where it was toggled, the current music and whether or not looping is toggled.
+Emits an event ``looping``, along with the guild where it was toggled, the current music and whether or not looping is toggled.
 
 ### Useful commands
 Those commands are used to ask something to the handler.
@@ -186,9 +186,22 @@ music.playingInfo(guild);
 Returns information about the current music.
 
 ### Events
-When the current music is finished, an event ``finished`` is emitted with the guild and the music.
-When playing the next music, an event ``next`` is emitted with the guild and the next music.
-When the current music is finished and the playlist is empty, an event ``empty`` is emitted with the guild.
+* When the current music is finished, an event ``finished`` is emitted with the guild and the music.
+* When playing the next music, an event ``next`` is emitted with the guild and the next music.
+* When the current music is finished and the playlist is empty, an event ``empty`` is emitted with the guild.
+
+### Errors
+* memberNotInAVoiceChannel : when the bot is trying to join a member who is not connected in a voice channel
+* voiceChannelNotJoinable : when the bot is trying to join a voice channel it can't join
+* voiceChannelNotSpeakable : when the bot is trying to join a voice channel in which it's not allowed to speak
+* voiceChannelFull : when the bot is trying to join a voice channel which is full
+* clientAlreadyInAVoiceChannel : when someone requested the bot to join but it's already connected in a voice channel
+* clientNotInAVoiceChannel : when the bot tries to do something requiring being connected while it's not (eg. leaving a voice channel)
+* unknownOrNotSupportedVideoWebsite : trying to request a link not from Youtube
+* notPlayingMusic : when the bots tries to do something requiring playing while it's not (eg. pausing)
+* invalidVolume : volume must be at least 0, no upper limit
+* emptyPlaylist : when the bot is trying to do something which requires the playlist not to be empty
+* invalidPlaylistIndex : trying to access a bigger index than the playlist's size (eg. trying to delete the 3rd music when there are only 2 songs in the playlist)
 
 ## Example
 Here is an example of a Discord bot using this module. You can also check my bot DraBOTeryx which is using this plugin here : https://github.com/Dragoteryx/draboteryx

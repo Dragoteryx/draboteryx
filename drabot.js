@@ -13,7 +13,7 @@ const drgMusic = require("drg-music");
 
 // FILES
 const config = require("./config.js");
-const shitpost = require("./shitpost.js");
+const shitposting = require("./shitpost.js");
 const crypt = require("./crypt.js");
 const tools = require("./tools.js");
 const funcs = require("./funcs.js");
@@ -24,6 +24,7 @@ const types = require("./types.js");
 // CONSTS
 const bot = new discord.Client();
 const music = new drgMusic.MusicHandler(bot);
+const shitpost = new shitposting.ShitpostHandler();
 music.on("joined", guild => {
 	console.log("[MUSICBOT] Joined guild " + guild.name + " (" + guild.id + ")");
 	musicChannels.get(guild.id).send("I'm here !");
@@ -149,7 +150,6 @@ bot.on("message", msg => {
 		if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
 			let command = msg.content.replace(config.ownerPrefix, "");
 			let args = command.split(" ");
-			funcs.log(msg, "", "admin");
 
 			// changer l'avatar du bot
 			if (funcs.check(msg, "setAvatar", 1, true))
@@ -207,7 +207,6 @@ bot.on("message", msg => {
 		if (msg.content.startsWith(config.prefix)) {
 			let command = msg.content.replace(config.prefix, "");
 			let args = command.split(" ").slice(1);
-			funcs.log(msg, "", "command");
 
 			// commandes musicales
 			if (enableMusic) {
@@ -234,7 +233,7 @@ bot.on("message", msg => {
 
 				// toggle la playlist (pause/resume)
 				if (funcs.check(msg, "toggle", 0, false))
-					music.toggleMusic(msg.guild);
+					music.toggleMusic(msg.guild).leave(msg.guild);
 
 				// skip la musique actuelle
 				if (funcs.check(msg, "skip", 0, false)) {
@@ -407,12 +406,12 @@ bot.on("message", msg => {
 			}
 
 			// envoyer un shitpost
-			if (funcs.check(msg, "shitpost", 2, true)) {
-				if (args.length == 0)
+			if (funcs.check(msg, "shitpost", 0, true))
 					msg.channel.send(shitpost.genShitpost());
-				else
-					msg.channel.send(shitpost.findShitpost(command.replace("shitpost ","").split(" && ")));
-			}
+
+			// envoyer une histoire
+			if (funcs.check(msg, "story", 0, true))
+					msg.channel.send(shitpost.genStory());
 
 			// chiffer un message
 			if (funcs.check(msg, "crypt", 1, true)) {
@@ -430,7 +429,7 @@ bot.on("message", msg => {
 			}
 
 			// rule34
-			if (funcs.checkTab(command, ["r34", "rule34"], 1, true)) {
+			if (funcs.checkTab(msg, ["r34", "rule34"], 1, true)) {
 				if (msg.channel.type != "dm" && !msg.channel.nsfw)
 					msg.reply("what are you doing? D:");
 				else {
@@ -515,10 +514,6 @@ bot.on("message", msg => {
 				});
 			}
 
-			// générer une histoire
-			if (funcs.check(msg, "story", 0, true))
-				msg.channel.send(shitpost.genStory());
-
 			// waifu (SECRET COMMAND UNLESS YOU ARE READING THIS)
 			if (funcs.check(msg, "waifu", 0, true)) {
 				if (msg.channel.type != "dm")
@@ -552,7 +547,7 @@ bot.on("message", msg => {
 		else if (err.message == "notAllowedToChannelInfo") msg.channel.send("You need to have the permission to manage channels.");
 		else if (err.message == "notAllowedToMemberInfo") msg.channel.send("You need to have the permission to manage .");
 		else if (err.message == "notAllowedToRoleInfo") msg.channel.send("You need to have the permission to manage roles.");
-		else if (err.message == "DMsOnlyCommandInDMs") msg.channel.send("You can't use that command in DMs.");
+		else if (err.message == "DMsForbiddenCommandInDMs") msg.channel.send("You can't use that command in DMs.");
 		else console.error(err);
 	}
 

@@ -82,6 +82,7 @@ exports.MusicHandler = function(client) {
 			this.emit("volumechange", guild, newVolume, oldVolume);
 		});
 		member.voiceChannel.join();
+		return this;
 	}
 	this.leave = guild => {
 		if (guild == undefined)
@@ -92,6 +93,7 @@ exports.MusicHandler = function(client) {
 		playlists.get(guild.id).kill();
 		guild.me.voiceChannel.leave();
 		playlists.delete(guild.id);
+		return this;
 	}
 	this.addMusic = (member, link) => {
 		if (member == undefined)
@@ -124,6 +126,7 @@ exports.MusicHandler = function(client) {
 		if (!this.isConnected(member.guild))
 			throw new Error("clientNotInAVoiceChannel");
 		playlists.get(member.guild.id).add(new Music(path, member, true));
+		return this;
 	}
 	this.removeMusic = (guild, index) => {
 		if (guild == undefined)
@@ -137,6 +140,7 @@ exports.MusicHandler = function(client) {
 		if (index < 0 || index >= playlists.get(guild.id).size())
 			throw new Error("invalidPlaylistIndex");
 		playlists.get(guild.id).remove(index);
+		return this;
 	}
 	this.nextMusic = guild => {
 		if (guild == undefined)
@@ -144,6 +148,7 @@ exports.MusicHandler = function(client) {
 		if (!this.isPlaying(guild))
 			throw new Error("notPlayingMusic");
 		playlists.get(guild.id).skip();
+		return this;
 	}
 	this.shufflePlaylist = guild => {
 		if (guild == undefined)
@@ -151,6 +156,7 @@ exports.MusicHandler = function(client) {
 		if (this.isPlaylistEmpty(guild))
 			throw new Error("emptyPlaylist");
 		playlists.get(guild.id).shuffle();
+		return this;
 	}
 	this.clearPlaylist = guild => {
 		if (guild == undefined)
@@ -158,6 +164,7 @@ exports.MusicHandler = function(client) {
 		if (this.isPlaylistEmpty(guild))
 			throw new Error("emptyPlaylist");
 		playlists.get(guild.id).clear();
+		return this;
 	}
 	this.toggleMusic = guild => {
 		if (guild == undefined)
@@ -165,6 +172,7 @@ exports.MusicHandler = function(client) {
 		if (!this.isPlaying(guild))
 			throw new Error("notPlayingMusic");
 		playlists.get(guild.id).toggle();
+		return this;
 	}
 	this.pauseMusic = guild => {
 		if (guild == undefined)
@@ -172,6 +180,7 @@ exports.MusicHandler = function(client) {
 		if (!this.isPlaying(guild))
 			throw new Error("notPlayingMusic");
 		playlists.get(guild.id).pause();
+		return this;
 	}
 	this.resumeMusic = guild => {
 		if (guild == undefined)
@@ -179,6 +188,7 @@ exports.MusicHandler = function(client) {
 		if (!this.isPlaying(guild))
 			throw new Error("notPlayingMusic");
 		playlists.get(guild.id).resume();
+		return this;
 	}
 	this.setVolume = (guild, volume) => {
 		if (guild == undefined)
@@ -190,6 +200,7 @@ exports.MusicHandler = function(client) {
 		if (volume < 0)
 			throw new Error("invalidVolume");
 		playlists.get(guild.id).volume(volume);
+		return this;
 	}
 	this.toggleLooping = guild => {
 		if (guild == undefined)
@@ -198,6 +209,7 @@ exports.MusicHandler = function(client) {
 			throw new Error("notPlayingMusic");
 		playlists.get(guild.id).toggleLoop();
 		this.emit("looping", guild, this.playingInfo(guild), this.isLooping(guild));
+		return this;
 	}
 
 	// INFOS PLAYLIST

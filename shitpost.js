@@ -1,6 +1,57 @@
 "use strict";
 
 const tools = require("./tools.js");
+const EventEmitter = require("events");
+
+exports.ShitpostHandler = function() {
+	EventEmitter.call(this);
+	this.genShitpost = () => {
+		let texte = tools.randTab(exports.begin);
+		let const_name = tools.randTab(exports.names);
+		for (let i = 0; i < 15; i++) {
+			texte = texte
+			.replace("$cname", const_name);
+			texte = shitpostReplace(texte);
+		}
+		return tools.firstCharUpper(texte);
+	}
+	this.findShitpost = strings => {
+		let done = false;
+		let shitpost;
+		for (let i = 0; i <= 100000 && !done; i++) {
+			shitpost = this.genShitpost();
+			done = tools.stringContainsAllArray(shitpost, strings);
+		} if (done)
+			return shitpost;
+		throw "shitpostNotFound"
+	}
+	this.genStory = () => {
+		let hero = tools.randTab(exports.names);
+		let friend = tools.randTab(exports.names);
+		let enemy = tools.randTab(exports.names);
+		let minion = tools.randTab(exports.names);
+		let rareItem = tools.randTab(exports.items);
+		let corp = tools.randTab(exports.entreprises);
+		let where = tools.randTab(exports.pays);
+		let enemyGoal = tools.randTab(exports.goals);
+		let texte = "$storyStart $storyMiddle $storyEnding";
+		for (let i = 0; i < 15; i++) {
+			texte = texte
+			.replace("$storyStart", tools.randTab(exports.storyStarts))
+			.replace("$storyMiddle", tools.randTab(exports.storyMiddle))
+			.replace("$storyEnding", tools.randTab(exports.storyEndings))
+			.replace("$hero", hero)
+			.replace("$friend", friend)
+			.replace("$enemy", enemy)
+			.replace("$minion", minion)
+			.replace("$rareItem", rareItem)
+			.replace("$corp", corp)
+			.replace("$where", where)
+			.replace("$enemyGoal", enemyGoal)
+			texte = shitpostReplace(texte);
+		} return tools.firstCharUpper(texte);
+	}
+}
 
 function shitpostReplace(str) {
 	let texte = str;
@@ -28,56 +79,8 @@ function shitpostReplace(str) {
 	return texte;
 }
 
-// générer un shitpost complètement aléatoire
-exports.genShitpost = function() {
-	let texte = tools.randTab(exports.begin);
-	let const_name = tools.randTab(exports.names);
-	for (let i = 0; i < 15; i++) {
-		texte = texte
-		.replace("$cname", const_name);
-		texte = shitpostReplace(texte);
-	}
-	return tools.firstCharUpper(texte);
-}
-
-exports.genStory = function() {
-	let hero = tools.randTab(exports.names);
-	let friend = tools.randTab(exports.names);
-	let enemy = tools.randTab(exports.names);
-	let minion = tools.randTab(exports.names);
-	let rareItem = tools.randTab(exports.items);
-	let corp = tools.randTab(exports.entreprises);
-	let where = tools.randTab(exports.pays);
-	let enemyGoal = tools.randTab(exports.goals);
-	let texte = "$storyStart $storyMiddle $storyEnding";
-	for (let i = 0; i < 15; i++) {
-		texte = texte
-		.replace("$storyStart", tools.randTab(exports.storyStarts))
-		.replace("$storyMiddle", tools.randTab(exports.storyMiddle))
-		.replace("$storyEnding", tools.randTab(exports.storyEndings))
-		.replace("$hero", hero)
-		.replace("$friend", friend)
-		.replace("$enemy", enemy)
-		.replace("$minion", minion)
-		.replace("$rareItem", rareItem)
-		.replace("$corp", corp)
-		.replace("$where", where)
-		.replace("$enemyGoal", enemyGoal)
-		texte = shitpostReplace(texte);
-	} return tools.firstCharUpper(texte);
-}
-
-// return un shitpost contenant des morceaux de phrase (contenus dans un array)
-exports.findShitpost = function(strings) {
-	let done = false;
-	let shitpost;
-	for (let i = 0; i <= 100000 && !done; i++) {
-		shitpost = this.genShitpost();
-		done = tools.stringContainsAllArray(shitpost, strings);
-	} if (done)
-		return shitpost;
-	throw "shitpostNotFound"
-}
+exports.ShitpostHandler.prototype = Object.create(EventEmitter.prototype);
+exports.ShitpostHandler.prototype.constructor = exports.ShitpostHandler;
 
 exports.storyStarts = [
 	"Once upon a time,",
