@@ -202,15 +202,6 @@ bot.on("message", msg => {
 				msg.delete();
 			}
 
-			// TLS certificate
-			else if (funcs.check(msg, "tls", 1, true)) {
-				let req = https.request({host:command.replace("tls ",""), port:443, method:"GET"}, res => {
-					let cert = res.connection.getPeerCertificate();
-					msg.channel.send("Le certificat est valide depuis " + new Date(cert.valid_from) + ", et il expirera " + new Date(cert.valid_to) + ".");
-				});
-				req.end();
-			}
-
 		}
 
 		// NORMAL COMMANDS
@@ -336,7 +327,7 @@ bot.on("message", msg => {
 			if (funcs.check(msg, "help", 0, true)) {
 				let i = 0;
 				for (i; i < commandTypes.length; i++) {
-					let help = new funcs.defaultEmbed();
+					let help = funcs.defaultEmbed();
 					for (let h = 0; h < commands.length; h++) {
 						if (commands[h].type.equals(commandTypes[i]) && commands[h].show)
 							help.addField(config.prefix + commands[h].name,commands[h].desc);
