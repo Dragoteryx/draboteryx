@@ -9,6 +9,7 @@ const snekfetch = require("snekfetch");
 const qrcode = require("qrcode");
 const youtubeSearch = require("youtube-search");
 const drgMusic = require("drg-music");
+const twitter = require("twitter");
 
 // FILES
 const config = require("./config.js");
@@ -78,6 +79,7 @@ const utilityType = new types.CommandType("utility", ":wrench: Utility commands"
 const funType = new types.CommandType("fun", ":bowling: Fun commands");
 const musicType = new types.CommandType("music", ":microphone: Music commands");
 const nsfwType = new types.CommandType("nsfw", ":cucumber: NSFW commands");
+//const gmType = new types.Commandtype("gm", ":sunrise_over_mountains:");
 const commandTypes = [utilityType, funType, musicType, nsfwType];
 let enableMusic = true;
 const commands = [
