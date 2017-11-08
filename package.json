@@ -1,12 +1,14 @@
 {
   "name": "draboteryx",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "The best Discord bot ever (jk)",
   "main": "drabot.js",
   "dependencies": {
     "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
     "drg-music": "^1.4.0",
+    "gm": "^1.23.0",
+    "https": "^1.0.0",
     "opusscript": "0.0.4",
     "qrcode": "^0.9.0",
     "sha1": "^1.1.1",

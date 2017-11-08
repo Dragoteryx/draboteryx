@@ -1,3 +1,4 @@
+/* jshint esversion: 6 */
 "use strict";
 
 const discord = require("discord.js");
@@ -38,8 +39,14 @@ exports.check = function(msg, str, only, allowDMs) {
 
 exports.checkTab = function(msg, strs, only, allowDMs) {
 	if (msg.channel.type != "text" && !allowDMs)
-		throw new Error("DMsForbiddenCommandInDMs");
-	let command = msg.content.replace(config.prefix, "");
+		return false;
+	let command = "";
+	if (msg.content.startsWith(config.prefix))
+		command += msg.content.replace(config.prefix, "")
+	else if (msg.content.startsWith(config.ownerPrefix))
+		command += msg.content.replace(config.ownerPrefix, "");
+	else
+		return false;
 	let bool = false;
 	if (only != 0 && only != 1 && only != 2)
 		throw new Error("checkOnlyZeroOneTwo");
