@@ -269,7 +269,7 @@ bot.on("message", msg => {
 				else if (funcs.check(msg, "playlist", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
 					let playlist = music.playlistInfo(msg.guild);
-					let embed = new discord.RichEmbed().setThumbnail(playing.thumbnailURL);
+					let embed = funcs.defaultEmbed().setThumbnail(playing.thumbnailURL);
 					if (!playing.file)
 						embed.addField("Playing (" + Math.floor((playing.time/playing.length)*100) + "%) - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
 					else
@@ -286,7 +286,7 @@ bot.on("message", msg => {
 				// afficher la musique actuelle
 				else if (funcs.check(msg, "playing", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
-					let embed = new discord.RichEmbed();
+					let embed = funcs.defaultEmbed();
 					if (!playing.file) {
 						embed.setThumbnail(playing.thumbnailURL)
 						.addField("Title", playing.title, true)
@@ -336,7 +336,7 @@ bot.on("message", msg => {
 			if (funcs.check(msg, "help", 0, true)) {
 				let i = 0;
 				for (i; i < commandTypes.length; i++) {
-					let help = new discord.RichEmbed();
+					let help = new funcs.defaultEmbed();
 					for (let h = 0; h < commands.length; h++) {
 						if (commands[h].type.equals(commandTypes[i]) && commands[h].show)
 							help.addField(config.prefix + commands[h].name,commands[h].desc);

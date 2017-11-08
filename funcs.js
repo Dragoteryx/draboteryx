@@ -136,7 +136,7 @@ exports.showGuildInfo = function(guild) {
 		}
 	}
 	let emojis = Array.from(guild.emojis.values());
-	let info = new discord.RichEmbed();
+	let info = exports.defaultEmbed();
 	if (guild.iconURL != null)
 		info.setThumbnail(guild.iconURL);
 	info.addField("Server name",guild.name,true)
@@ -163,7 +163,7 @@ function getNbCon(guild) {
 }
 
 exports.showChannelInfo = function(channel) {
-	let info = new discord.RichEmbed();
+	let info = exports.defaultEmbed();
 	info.addField("Channel name",channel.name,true)
 	.addField("Unique ID",channel.id,true)
 	.addField("Type",channel.type)
@@ -207,7 +207,7 @@ function cacheUser(user) {
 }
 
 exports.botInfo = function(bot) {
-	let info = new discord.RichEmbed()
+	let info = exports.defaultEmbed()
 	.setThumbnail(bot.user.avatarURL)
 	.addField("Discord tag", bot.user.tag, true)
 	.addField("Author", "Dragoteryx#6922", true)
@@ -245,3 +245,5 @@ exports.stringToRole = function(str, guild) {
 		return role;
 	throw new Error("notARole");
 }
+
+exports.defaultEmbed = () => new discord.RichEmbed().setColor("#7289DA");
