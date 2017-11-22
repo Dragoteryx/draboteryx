@@ -127,8 +127,14 @@ let vars = new Map();
 let musicChannels = new Map();
 let follow = false;
 let date = new Date();
-let bluedab = false;
-let bluedabEmoji;
+let dabbing = false;
+let reddab;
+let orangedab;
+let yellowdab;
+let greendab;
+let bluedab;
+let indigodab;
+let purpledab;
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -150,9 +156,17 @@ bot.on("message", msg => {
 
 	try {
 
-		// bluedab
-		if (msg.guild.id == "191560973922992128" && bluedab)
-			msg.react(bluedabEmoji);
+		// dabbing
+		if (msg.guild.id == "191560973922992128" && dabbing) {
+			msg.react(reddab).then(react => {
+			msg.react(orangedab).then(react => {
+			msg.react(yellowdab).then(react => {
+			msg.react(greendab).then(react => {
+			msg.react(bluedab).then(react => {
+			msg.react(indigodab).then(react => {
+			msg.react(purpledab);
+			})})})})})});
+		}
 
 		// OWNER COMMANDS
 		if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
@@ -531,11 +545,13 @@ bot.on("message", msg => {
 			}
 
 			// bluedab
-			else if (funcs.check(msg, "bluedab", 0, true)) {
+			else if (funcs.check(msg, "dabbing", 0, true)) {
 				if (msg.author.id == process.env.NISID || msg.author.id == process.env.DRAGOID) {
-					bluedab = !bluedab;
-					if (bluedab)
-						msg.channel.send("" + bluedabEmoji);
+					dabbing= !dabbing;
+					if (dabbing)
+						msg.channel.send("" + greendab);
+					else
+						msg.channel.send("" + reddab);
 				}
 			}
 
@@ -582,7 +598,14 @@ bot.on("ready", () => {
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		exports.bot = bot;
-		bluedabEmoji = bot.guilds.get("191560973922992128").emojis.get("382185235049086978");
+		reddab = bot.guilds.get("191560973922992128").emojis.get("382924168443854859");
+		orangedab = bot.guilds.get("191560973922992128").emojis.get("382924182951952384");
+		yellowdab = bot.guilds.get("191560973922992128").emojis.get("382924196629577733");
+		greendab = bot.guilds.get("191560973922992128").emojis.get("382924250413269032");
+		bluedab = bot.guilds.get("191560973922992128").emojis.get("382185235049086978");
+		indigodab = bot.guilds.get("191560973922992128").emojis.get("382924258973581313");
+		purpledab = bot.guilds.get("191560973922992128").emojis.get("382924299515985921");
+
 	}
 });
 
