@@ -17,7 +17,7 @@ const shitposting = require("./shitpost.js");
 const crypt = require("./crypt.js");
 const tools = require("./tools.js");
 const funcs = require("./funcs.js");
-const types = require("./types.js");
+const types = require("./types.js"); // this is the test
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
