@@ -291,7 +291,7 @@ bot.on("message", msg => {
 					let timer = drgMusic.intToTime(playing.time);
 					let end = drgMusic.intToTime(playing.length);
 					if (!playing.file)
-						embed.addField("Playing (" + timer[0] + ":" + timer[1] + "/" + end[0] + ":" + end[1] + " => " + Math.floor((playing.time/playing.length)*100) + "%) - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
+						embed.addField("Playing (" + timer.minutes + ":" + timer.seconds + "/" + end.minutes + ":" + end.seconds + " => " + Math.floor((playing.time/playing.length)*100) + "%) - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
 					else
 						embed.addField("Playing - " + playing.title, "Requested by " + playing.member)
 					for (let i = 0; i < playlist.length; i++) {
@@ -315,7 +315,7 @@ bot.on("message", msg => {
 						.addField("Author", playing.author.name + " (" + playing.author.channelURL + ")", true)
 						.addField("Link", playing.link, true)
 						.addField("Requested by", playing.member, true);
-						msg.channel.send("Playing: ``" + timer[0] + ":" + timer[1] + "/" + end[0] + ":" + end[1] + " ("+ Math.floor((playing.time/playing.length)*100) + "%)``", embed);
+						msg.channel.send("Playing: ``" + timer.minutes + ":" + timer.seconds + "/" + end.minutes + ":" + end.seconds + " ("+ Math.floor((playing.time/playing.length)*100) + "%)``", embed);
 					} else {
 						embed.addField("File name", playing.title, true)
 						.addField("Requested by", playing.member, true);
