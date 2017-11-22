@@ -128,6 +128,7 @@ let musicChannels = new Map();
 let follow = false;
 let date = new Date();
 let bluedab = false;
+let bluedabEmoji;
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -151,7 +152,7 @@ bot.on("message", msg => {
 
 		// bluedab
 		if (msg.guild.id == "191560973922992128" && bluedab)
-			msg.react(":bluedab:");
+			msg.react(bluedabEmoji);
 
 		// OWNER COMMANDS
 		if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
@@ -206,11 +207,6 @@ bot.on("message", msg => {
 			else if (funcs.check(msg, "say", 1, true)) {
 				msg.channel.send(command.replace("say ",""));
 				msg.delete();
-			}
-
-			// bluedab
-			else if (funcs.check(msg, "bluedab", 0, true)) {
-				bluedab = !bluedab;
 			}
 
 		}
@@ -534,6 +530,15 @@ bot.on("message", msg => {
 					msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 			}
 
+			// bluedab
+			else if (funcs.check(msg, "bluedab", 0, true)) {
+				if (msg.author.id == process.env.NISID || msg.author.id == process.env.DRAGOID) {
+					bluedab = !bluedab;
+					if (bluedab)
+						msg.channel.send("" + bluedabEmoji);
+				}
+			}
+
 		}
 
 	} catch (err) {
@@ -577,6 +582,7 @@ bot.on("ready", () => {
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		exports.bot = bot;
+		bluedabEmoji = bot.guilds.get("191560973922992128").emojis.get("382185235049086978");
 	}
 });
 
