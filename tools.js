@@ -1,6 +1,8 @@
+/* jshint node:true, evil:true, asi:true, esversion:6*/
 "use strict";
 
 const discord = require("discord.js");
+const fs = require("fs");
 
 // valeur random entre min et max
 exports.random= function(min, max) {
@@ -20,7 +22,7 @@ exports.randTab = function(tab) {
 // convertir un String en List
 exports.listToString = function(list) {
 	let string = "";
-	for (i = 0; i < list.length; i++)
+	for (let i = 0; i < list.length; i++)
 		string += list[i];
 	return string;
 }
@@ -50,23 +52,6 @@ exports.hash = function(obj) {
 		hash = hash & hash;
 	}
 	return Math.abs(hash);
-}
-
-exports.cacheAllUsers = function(guild) {
-	guild.fetchMembers().then(guild2 => {
-		var members = Array.from(guild2.members.values());;
-		var user;
-		for (i = 0; i < members.length; i++) {
-			var user = members[i].user;
-			bot.fetchUser(user.id);
-		}
-		console.log("[CACHE] All users in guild '" + guild.name + "' have been added to the cache");
-	});
-}
-
-exports.cacheUser = function(user) {
-	bot.fetchUser(user.id);
-	console.log("[CACHE] User '" + user.username + "#" + user.discriminator + "' has been added to the cache");
 }
 
 exports.toBlock = function(str) {

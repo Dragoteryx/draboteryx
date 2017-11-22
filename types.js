@@ -1,3 +1,6 @@
+/* jshint node:true, evil:true, asi:true, esversion:6*/
+"use strict";
+
 const discord = require("discord.js")
 const tools = require("./tools.js");
 
@@ -16,7 +19,7 @@ exports.Command = function(name, desc, type, show) {
 exports.CommandType = function(name, title) {
 	this.name = name;
 	this.title = title;
-	this.embed;
+	this.embed = null;
 	this.equals = function(other) {
 		return this.name == other.name;
 	}
@@ -35,7 +38,7 @@ exports.Dice = function(size) {
 	this.avg = function() {
 		if (this.previous.length == 0) return 0;
 		let total = 0;
-		for (i = 0; i < this.previous.length; i++)
+		for (let i = 0; i < this.previous.length; i++)
 			total += this.previous[i];
 		return total/this.previous.length;
 	}
@@ -48,7 +51,7 @@ exports.Dice = function(size) {
 exports.DicePlayer = function() {
 	this.dices = new Map(); // Dice
 	this.roll = function(size) {
-		if (!this.dices.has(size)) this.dices.set(new Dice(size));
+		if (!this.dices.has(size)) this.dices.set(new exports.Dice(size));
 		return this.dices.get(size).roll();
 	}
 }

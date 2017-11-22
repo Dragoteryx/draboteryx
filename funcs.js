@@ -1,4 +1,4 @@
-/* jshint esversion: 6 */
+/* jshint node:true, evil:true, asi:true, esversion:6*/
 "use strict";
 
 const discord = require("discord.js");
@@ -191,29 +191,30 @@ exports.showRoleInfo = function(role) {
 
 function cacheAllUsers(guild) {
 	guild.fetchMembers().then(guild2 => {
-		let members = Array.from(guild2.members.values());;
+		let members = Array.from(guild2.members.values());
 		let user;
-		for (i = 0; i < members.length; i++) {
+		for (let i = 0; i < members.length; i++) {
 			let user = members[i].user;
-			bot.fetchUser(user.id);
+			drabot.bot.fetchUser(user.id);
 		}
 		console.log("[CACHE] All users in guild '" + guild.name + "' have been added to the cache");
 	});
 }
 
 function cacheUser(user) {
-	bot.fetchUser(user.id);
+	drabot.bot.fetchUser(user.id);
 	console.log("[CACHE] User '" + user.username + "#" + user.discriminator + "' has been added to the cache");
 }
 
-exports.botInfo = function(bot) {
+exports.botInfo = function() {
 	let info = exports.defaultEmbed()
-	.setThumbnail(bot.user.avatarURL)
-	.addField("Discord tag", bot.user.tag, true)
+	.setThumbnail(drabot.bot.user.avatarURL)
+	.addField("Discord tag", drabot.bot.user.tag, true)
 	.addField("Author", "Dragoteryx#6922", true)
 	.addField("Version", pack.version)
 	.addField("Description", "My Discord bot, DraBOTeryx, or Drabot for short.")
-	.addField("Github link", "https://github.com/Dragoteryx/draboteryx");
+	.addField("Github link", "https://github.com/Dragoteryx/draboteryx")
+	.addField("Invite link", "https://discordapp.com/api/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=1");
 	return info;
 }
 

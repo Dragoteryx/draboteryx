@@ -1,4 +1,4 @@
-/* jshint node:true, esversion:6*/
+/* jshint node:true, evil:true, asi:true, esversion:6*/
 "use strict";
 require("dotenv").config();
 
@@ -566,7 +566,7 @@ bot.on("ready", () => {
 			console.log("(local launch)");
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
-		exports.id = bot.id;
+		exports.bot = bot;
 	}
 });
 

@@ -1,3 +1,4 @@
+/* jshint node:true, evil:true, asi:true, esversion:6*/
 "use strict";
 
 // CONSTANTES
@@ -56,14 +57,14 @@ function CryptHandler() {
 	}
 }
 
-function CryptedMessage(message, key) {
+function CryptedMessage(msg, k) {
 	var crypted = sha1(message);
 	for (let i = 0; i < tools.hash(key)%255; i++)
 		crypted = sha1(crypted);
 	crypted = randomToUp(crypted);
 	var hash = sha1(key);
-	var message = message;
-	var key = key
+	var message = msg;
+	var key = k;
 	var requested = false;
 	// return le message crypté
 	this.getCrypted = function() {

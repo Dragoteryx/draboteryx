@@ -1,4 +1,4 @@
-/* jshint esversion: 6 */
+/* jshint node:true, evil:true, asi:true, esversion:6*/
 module.exports = {
   prefix : "/",
   babybotPrefix : "!",
