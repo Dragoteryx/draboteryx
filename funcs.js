@@ -212,7 +212,7 @@ exports.botInfo = function() {
 	.addField("Discord tag", drabot.bot.user.tag, true)
 	.addField("Author", "Dragoteryx#6922", true)
 	.addField("Version", pack.version)
-	.addField("Description", "My Discord bot, DraBOTeryx, or Drabot for short.")
+	.addField("Description", pack.description)
 	.addField("Github link", "https://github.com/Dragoteryx/draboteryx")
 	.addField("Invite link", "https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=2146958591");
 	return info;

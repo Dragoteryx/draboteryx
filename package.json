@@ -1,7 +1,7 @@
 {
   "name": "draboteryx",
   "version": "0.4.0",
-  "description": "The best Discord bot ever (jk)",
+  "description": "My Discord bot, DraBOTeryx, or Drabot for short. Use /help to learn how to use the bot.",
   "main": "drabot.js",
   "dependencies": {
     "discord.js": "^11.2.1",
