@@ -261,7 +261,7 @@ bot.on("message", msg => {
 
 				// toggle la playlist (pause/resume)
 				else if (funcs.check(msg, "toggle", 0, false))
-					music.toggleMusic(msg.guild).leave(msg.guild);
+					music.toggleMusic(msg.guild);
 
 				// skip la musique actuelle
 				else if (funcs.check(msg, "skip", 0, false)) {
