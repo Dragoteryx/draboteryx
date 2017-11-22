@@ -6,7 +6,7 @@
   "dependencies": {
     "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
-    "drg-music": "^1.4.0",
+    "drg-music": "^1.5.1",
     "gm": "^1.23.0",
     "http": "0.0.0",
     "https": "^1.0.0",

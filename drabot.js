@@ -288,8 +288,10 @@ bot.on("message", msg => {
 					let playing = music.playingInfo(msg.guild);
 					let playlist = music.playlistInfo(msg.guild);
 					let embed = funcs.defaultEmbed().setThumbnail(playing.thumbnailURL);
+					let timer = drgMusic.intToTime(playing.time);
+					let end = drgMusic.intToTime(playing.length);
 					if (!playing.file)
-						embed.addField("Playing (" + Math.floor((playing.time/playing.length)*100) + "%) - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
+						embed.addField("Playing (" + timer[0] + ":" + timer[1] + "/" + end[0] + ":" + end[1] + " => " + Math.floor((playing.time/playing.length)*100) + "%) - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
 					else
 						embed.addField("Playing - " + playing.title, "Requested by " + playing.member)
 					for (let i = 0; i < playlist.length; i++) {
@@ -305,13 +307,15 @@ bot.on("message", msg => {
 				else if (funcs.check(msg, "playing", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
 					let embed = funcs.defaultEmbed();
+					let timer = drgMusic.intToTime(playing.time);
+					let end = drgMusic.intToTime(playing.length);
 					if (!playing.file) {
 						embed.setThumbnail(playing.thumbnailURL)
 						.addField("Title", playing.title, true)
 						.addField("Author", playing.author.name + " (" + playing.author.channelURL + ")", true)
 						.addField("Link", playing.link, true)
 						.addField("Requested by", playing.member, true);
-						msg.channel.send("Playing: ``" + Math.floor((playing.time/playing.length)*100) + "%``", embed);
+						msg.channel.send("Playing: ``" + timer[0] + ":" + timer[1] + "/" + end[0] + ":" + end[1] + " ("+ Math.floor((playing.time/playing.length)*100) + "%)``", embed);
 					} else {
 						embed.addField("File name", playing.title, true)
 						.addField("Requested by", playing.member, true);
@@ -550,7 +554,7 @@ bot.on("message", msg => {
 					msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 			}
 
-			// bluedab
+			// dabbing
 			else if (funcs.check(msg, "dabbing", 0, true)) {
 				if (msg.author.id == process.env.NISID || msg.author.id == process.env.DRAGOID) {
 					dabbing= !dabbing;
