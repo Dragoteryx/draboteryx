@@ -21,9 +21,9 @@ exports.videoWebsite = str => {
 }
 
 exports.intToTime = int => {
-	let seconds = int*1000;
+	let seconds = int;
 	let minutes = 0;
-	while (seconds <= 60) {
+	while (seconds >= 60) {
 		seconds -= 60;
 		minutes++;
 	}
