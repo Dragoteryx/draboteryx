@@ -288,15 +288,19 @@ bot.on("message", msg => {
 					let playing = music.playingInfo(msg.guild);
 					let playlist = music.playlistInfo(msg.guild);
 					let embed = funcs.defaultEmbed().setThumbnail(playing.thumbnailURL);
-					let timer = drgMusic.intToTime(playing.time);
-					let end = drgMusic.intToTime(playing.length);
-					if (!playing.file)
-						embed.addField("Playing (" + timer.minutes + ":" + timer.seconds + "/" + end.minutes + ":" + end.seconds + " => " + Math.floor((playing.time/playing.length)*100) + "%) - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
+					let timer2;
+					if (!playing.file) {
+						let timer = drgMusic.intToTime(playing.time);
+						let end = drgMusic.intToTime(playing.length);
+						embed.addField("Playing (" + timer.minutes + ":" + timer.seconds + "/" + end.minutes + ":" + end.seconds + ") - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
+					}
 					else
 						embed.addField("Playing - " + playing.title, "Requested by " + playing.member)
 					for (let i = 0; i < playlist.length; i++) {
-						if (!playlist[i].file)
-							embed.addField((i+1) + " - " + playlist[i].title + " by " + playlist[i].author.name, "Requested by " + playlist[i].member);
+						if (!playlist[i].file) {
+							timer2 = music.intToTime(playlist[i].length);
+							embed.addField((i+1) + " - " + playlist[i].title + " by " + playlist[i].author.name + " (" + timer2.minutes + ":" + timer2.seconds + ")", "Requested by " + playlist[i].member);
+						}
 						else
 							embed.addField((i+1) + " - " + playlist[i].title, "Requested by " + playlist[i].member);
 					}
