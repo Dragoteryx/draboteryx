@@ -127,6 +127,7 @@ let vars = new Map();
 let musicChannels = new Map();
 let follow = false;
 let date = new Date();
+let bluedab = false;
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -147,6 +148,10 @@ bot.on("voiceStateUpdate", (memberOld, memberNew) => {
 bot.on("message", msg => {
 
 	try {
+
+		// bluedab
+		if (msg.guild.id == "191560973922992128" && bluedab)
+			msg.react(":bluedab:");
 
 		// OWNER COMMANDS
 		if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
@@ -201,6 +206,11 @@ bot.on("message", msg => {
 			else if (funcs.check(msg, "say", 1, true)) {
 				msg.channel.send(command.replace("say ",""));
 				msg.delete();
+			}
+
+			// bluedab
+			else if (funcs.check(msg, "bluedab", 0, true)) {
+				bluedab = !bluedab;
 			}
 
 		}
