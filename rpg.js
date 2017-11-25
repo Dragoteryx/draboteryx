@@ -1,5 +1,5 @@
 /* jshint node:true, evil:true, asi:true, esversion:6*/
-/*"use strict";
+"use strict";
 
 function Player(user, name, force, dex, int) {
   this.user = user;
@@ -13,27 +13,31 @@ function Player(user, name, force, dex, int) {
   this.maxHealth = () => this.force*2 + this.dex*1.5 + this.int;
   this.health = this.maxHealth();
   this.lvlUp = choice => {
-    if (choice == "force")
+    if (choice == "force" && this.force != 0)
       this.force++;
-    else if (choice == "dex")
+    else if (choice == "dex" && this.dex != 0)
       this.dex++;
-    else if (choice == "int")
+    else if (choice == "int" && this.int != 0)
       this.int++;
     else
       this.unspent++;
     this.lvl++;
   }
+  this.inventory = [];
 }
 
 function Item(name, desc, price) {
   this.name = name;
   this.desc = desc;
-  this.price = price; // prix de vente = prix achat*0.66
-  this.giveToPlayer = () => {
-
+  this.buyPrice = price;
+  this.sellPrice = price*0.66;
+  this.giveToPlayer = player => {
+    player.inventory.push(this);
+    player.money -= this.buyPrice;
   }
-  this.sellFromPlayer = () => {
-
+  this.sellFromPlayer = player => {
+    player.inventory.remove(this);
+    player.money += this.sellPrice;
   }
 }
 
@@ -58,4 +62,4 @@ function Spell(name, desc, minl, effect) {
   this.desc = desc;
   this.minLevel = minl;
   this.effect = effect;
-}*/
+}

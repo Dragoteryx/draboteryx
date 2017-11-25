@@ -160,7 +160,7 @@ bot.on("message", msg => {
 	try {
 
 		// dabbing
-		if (msg.guild.id == "191560973922992128" && dabbing) {
+		if (msg.guild.id == "191560973922992128" && dabbing && msg.author.id != bot.user.id && msg.content != config.prefix + "dabbing") {
 			msg.react(reddab).then(react => {
 			msg.react(orangedab).then(react => {
 			msg.react(yellowdab).then(react => {
