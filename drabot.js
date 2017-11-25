@@ -175,7 +175,7 @@ bot.on("message", msg => {
 			msg.react(pinkdab).then(react => {
 			msg.react(whitedab).then(react => {
 			msg.react(blackdab).then(react => {
-				if (Math.random() <= rand)
+				if (rand <= 0.01)
 					msg.react(rainbowdab);
 			})})})})})})})})})});
 		}
