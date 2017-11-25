@@ -162,6 +162,9 @@ bot.on("message", msg => {
 
 		// dabbing
 		if (msg.guild.id == "191560973922992128" && dabbing && msg.author.id != bot.user.id && msg.content != config.prefix + "dabbing") {
+			let rand = Math.random();
+			if (msg.content == "je t'invoque dieu du dab" && msg.author.id == process.env.DRAGOID)
+				rand = 0.01;
 			msg.react(reddab).then(react => {
 			msg.react(orangedab).then(react => {
 			msg.react(yellowdab).then(react => {
@@ -172,7 +175,7 @@ bot.on("message", msg => {
 			msg.react(pinkdab).then(react => {
 			msg.react(whitedab).then(react => {
 			msg.react(blackdab).then(react => {
-				if (Math.random() <= 0.01)
+				if (Math.random() <= rand)
 					msg.react(rainbowdab);
 			})})})})})})})})})});
 		}
