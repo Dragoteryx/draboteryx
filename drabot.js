@@ -435,7 +435,7 @@ bot.on("message", msg => {
 				let dicesArray = Array.from(dicePlayers.get(msg.author.id).dices.values());
 				for (let i = 0; i < dicesArray.length; i++)
 					str += "\n" + dicesArray[i].toString();
-				msg.channel.std(str + "```");
+				msg.channel.send(str + "```");
 			}
 
 			// lancer un dé
