@@ -138,6 +138,7 @@ let purpledab;
 let pinkdab;
 let whitedab;
 let blackdab;
+let rainbowdab;
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -170,8 +171,10 @@ bot.on("message", msg => {
 			msg.react(purpledab).then(react => {
 			msg.react(pinkdab).then(react => {
 			msg.react(whitedab).then(react => {
-			msg.react(blackdab);
-			})})})})})})})})});
+			msg.react(blackdab).then(react => {
+				if (Math.random <= 0.01)
+					msg.react(rainbowdab);
+			})})})})})})})})})});
 		}
 
 		// OWNER COMMANDS
@@ -622,6 +625,7 @@ bot.on("ready", () => {
 		pinkdab = bot.guilds.get("191560973922992128").emojis.get("382931408953409538");
 		whitedab = bot.guilds.get("191560973922992128").emojis.get("382931481930104855");
 		blackdab = bot.guilds.get("191560973922992128").emojis.get("382931443627589633");
+		rainbowdab = bot.guilds.get("191560973922992128").emojis.get("383928845570670592");
 	}
 });
 
