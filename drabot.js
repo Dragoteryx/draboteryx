@@ -163,8 +163,8 @@ bot.on("message", msg => {
 		// dabbing
 		if (msg.guild.id == "191560973922992128" && dabbing && msg.author.id != bot.user.id && msg.content != config.prefix + "dabbing") {
 			let rand = Math.random();
-			if (msg.content.toLowerCase().includes("dieu du dab"))
-				rand = 0.05;
+			/*if (msg.content.toLowerCase().includes("dieu du dab"))
+				rand = 0.05;*/
 			msg.react(reddab).then(react => {
 			msg.react(orangedab).then(react => {
 			msg.react(yellowdab).then(react => {
