@@ -10,7 +10,6 @@ const qrcode = require("qrcode");
 const youtubeSearch = require("youtube-search");
 const drgMusic = require("drg-music");
 const twitter = require("twitter");
-const http = require("http");
 
 // FILES
 const config = require("./config.js");
@@ -696,11 +695,3 @@ babybot.on("ready", () => {
 		console.log("[BABYDRABOT] Ze suis prêt");
 	}
 });
-
-// SERVER
-let server = http.createServer(function(req, res) {
-  res.writeHead(200);
-  res.write("BOUH!");
-	res.end();
-});
-server.listen(80);
