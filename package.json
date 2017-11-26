@@ -19,7 +19,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "console.log(\"[GIT] Ça fonctionne\")"
+    "test": "console.log(\"[GIT] Ça fonctionne\")",
+	"start": "node drabot.js"
   },
   "author": "Dragoteryx",
   "license": "ISC"
