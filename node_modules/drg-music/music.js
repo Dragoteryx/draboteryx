@@ -298,10 +298,7 @@ exports.MusicHandler = function(cl) {
 			throw new Error("missingParameter: guild");
 		if (!this.isConnected(guild))
 			throw new Error("clientNotInAVoiceChannel");
-		if (this.isPlaylistEmpty(guild))
-			return 0;
-		else
-			return playlists.get(guild.id).remainingTime();
+		return playlists.get(guild.id).remainingTime();
 	}
 }
 
