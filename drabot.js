@@ -80,6 +80,7 @@ const tweet = new twitter({
 	access_token_key : process.env.ACCESSTOKENKEY,
 	access_token_secret : process.env.ACCESSTOKENSECRET
 });
+const defaultEmbed = new discord.RichEmbed().setColor("#7289DA");
 /*const connection = mysql.createConnection(process.env.JAWSDB_URL);
 connection.query("select 1+1 as solution;", (err, rows, fields) => {
 	if (err) throw err;
@@ -182,6 +183,10 @@ bot.on("message", msg => {
 				// rejoindre un channel vocal
 				if (funcs.check(msg, "join", 0, false)) {
 					music.join(msg.member, () => {
+						if (funcs.getDate() == "1/4")
+							music.addMusic(msg.guild.me, process.env.APRIL_1ST_MUSIC, () => {
+								msg.channel.send("Happy April Fools' !");
+							});
 						musicChannels.set(msg.guild.id, msg.channel);
 						console.log("[MUSICBOT] Joined guild " + msg.guild.name + " (" + msg.guild.id + ")");
 						msg.channel.send("I'm here o/");
@@ -265,7 +270,7 @@ bot.on("message", msg => {
 				else if (funcs.check(msg, "playlist", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
 					let playlist = music.playlistInfo(msg.guild);
-					let embed = funcs.defaultEmbed().setThumbnail(playing.thumbnailURL);
+					let embed = Object.create(defaultEmbed).setThumbnail(playing.thumbnailURL);
 					let timer2;
 					if (!playing.file) {
 						let timer = drgMusic.millisecondsToTime(playing.time);
@@ -288,7 +293,7 @@ bot.on("message", msg => {
 				// afficher la musique actuelle
 				else if (funcs.check(msg, "playing", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
-					let embed = funcs.defaultEmbed();
+					let embed = Object.create(defaultEmbed);
 					let timer = drgMusic.millisecondsToTime(playing.time);
 					let end = drgMusic.millisecondsToTime(playing.length);
 					if (!playing.file) {
@@ -323,7 +328,7 @@ bot.on("message", msg => {
 			if (funcs.check(msg, "help", 0, true)) {
 				let i = 0;
 				for (i; i < commandTypes.length; i++) {
-					let help = funcs.defaultEmbed();
+					let help = Object.create(defaultEmbed);
 					for (let h = 0; h < commands.length; h++) {
 						if (commands[h].type.equals(commandTypes[i]) && commands[h].show)
 							help.addField(config.prefix + commands[h].name,commands[h].desc);

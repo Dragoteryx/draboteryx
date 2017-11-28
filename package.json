@@ -1,12 +1,12 @@
 {
   "name": "draboteryx",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "My Discord bot, DraBOTeryx, or Drabot for short. Use /help to learn how to use the bot.",
   "main": "drabot.js",
   "dependencies": {
     "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
-    "drg-music": "^2.0.5",
+    "drg-music": "^2.0.7",
     "gm": "^1.23.0",
     "http": "0.0.0",
     "https": "^1.0.0",

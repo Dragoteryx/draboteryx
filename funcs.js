@@ -247,4 +247,4 @@ exports.stringToRole = function(str, guild) {
 	throw new Error("notARole");
 }
 
-exports.defaultEmbed = () => new discord.RichEmbed().setColor("#7289DA");
+exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
