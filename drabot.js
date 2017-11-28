@@ -10,6 +10,7 @@ const qrcode = require("qrcode");
 const youtubeSearch = require("youtube-search");
 const drgMusic = require("drg-music");
 const twitter = require("twitter");
+const mysql = require("mysql");
 
 // FILES
 const config = require("./config.js");
@@ -118,6 +119,10 @@ const tweet = new twitter({
 	access_token_key : process.env.ACCESSTOKENKEY,
 	access_token_secret : process.env.ACCESSTOKENSECRET
 });
+const connection = mysql.createConnection(process.env.JAWSDB_URL);
+connection.query("select 1+1 as solution;", (err, rows, fields) => {
+	console.log(rows[0].solution);
+})
 
 // VARIABLES GLOBALES
 let ready = false;
