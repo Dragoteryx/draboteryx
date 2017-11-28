@@ -269,7 +269,7 @@ bot.on("message", msg => {
 				else if (funcs.check(msg, "playlist", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
 					let playlist = music.playlistInfo(msg.guild);
-					let embed = Object.create(funcs.defaultEmbed).setThumbnail(playing.thumbnailURL);
+					let embed = funcs.defaultEmbed().setThumbnail(playing.thumbnailURL);
 					let timer2;
 					if (!playing.file) {
 						let timer = drgMusic.millisecondsToTime(playing.time);
@@ -292,7 +292,7 @@ bot.on("message", msg => {
 				// afficher la musique actuelle
 				else if (funcs.check(msg, "playing", 0, false)) {
 					let playing = music.playingInfo(msg.guild);
-					let embed = Object.create(funcs.defaultEmbed);
+					let embed = funcs.defaultEmbed();
 					let timer = drgMusic.millisecondsToTime(playing.time);
 					let end = drgMusic.millisecondsToTime(playing.length);
 					if (!playing.file) {
@@ -327,7 +327,7 @@ bot.on("message", msg => {
 			if (funcs.check(msg, "help", 0, true)) {
 				let i = 0;
 				for (i; i < commandTypes.length; i++) {
-					let help = Object.create(funcs.defaultEmbed);
+					let help = funcs.defaultEmbed();
 					for (let h = 0; h < commands.length; h++) {
 						if (commands[h].type.equals(commandTypes[i]) && commands[h].show)
 							help.addField(config.prefix + commands[h].name,commands[h].desc);
