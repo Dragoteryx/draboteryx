@@ -10,6 +10,8 @@ const hashSigns = ["0","1","2","3","4","5","6","7","8","9",
 "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
 ];
+
+exports.defaultEmbed = new discord.RichEmbed().setColor("#7289DA");
 // generate a random hash
 exports.genRandomHash = function(size) {
 	let str = "";
@@ -136,7 +138,7 @@ exports.showGuildInfo = function(guild) {
 		}
 	}
 	let emojis = Array.from(guild.emojis.values());
-	let info = exports.defaultEmbed();
+	let info = Object.create(exports.defaultEmbed);
 	if (guild.iconURL != null)
 		info.setThumbnail(guild.iconURL);
 	info.addField("Server name",guild.name,true)
@@ -163,7 +165,7 @@ function getNbCon(guild) {
 }
 
 exports.showChannelInfo = function(channel) {
-	let info = exports.defaultEmbed();
+	let info = Object.create(exports.defaultEmbed);
 	info.addField("Channel name",channel.name,true)
 	.addField("Unique ID",channel.id,true)
 	.addField("Type",channel.type)
@@ -207,7 +209,7 @@ function cacheUser(user) {
 }
 
 exports.botInfo = function() {
-	let info = exports.defaultEmbed()
+	let info = Object.create(exports.defaultEmbed)
 	.setThumbnail(drabot.bot.user.avatarURL)
 	.addField("Discord tag", drabot.bot.user.tag, true)
 	.addField("Author", "Dragoteryx#6922", true)
