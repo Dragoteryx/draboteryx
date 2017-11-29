@@ -33,6 +33,10 @@ exports.millisecondsToTime = int => {
 	return minutes + ":" + seconds;
 }
 
+exports.playYoutube = (ytbLink, voiceConnection) => {
+	return voiceConnection.playStream(ytdl(ytbLink, {filter:"audioonly"}));
+}
+
 //CLASSES
 exports.MusicHandler = function(cl) {
 	if (cl === undefined)
@@ -468,7 +472,7 @@ function Music(link, member, file) {
 	this.play = () => {
 		if (!this.file) {
 			if (this.website == "Youtube")
-				return this.member.guild.me.voiceChannel.connection.playStream(ytdl(this.link, {filter:"audioonly"}));
+				return exports.playYoutube(this.link, this.member.guild.me.voiceChannel.connection);
 			else if (this.website == "Dailymotion")
 				return this.member.guild.me.voiceChannel.connection.playStream(null);
 			else if (this.website == "NicoNicoVideo")
