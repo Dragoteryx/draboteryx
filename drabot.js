@@ -544,7 +544,7 @@ bot.on("message", msg => {
 				redisClient.get(msg.author.id + "-money", (err, reply) => {
 					if (err) msg.channel.send("Sorry, but the bank is closed at the moment. Come back later.")
 					else {
-						let moneyEmote = ":gem:";
+						let moneyEmote = " :gem:";
 						if (reply === null) {
 							reply = 100;
 							redisClient.set(msg.author.id + "-money", reply);
