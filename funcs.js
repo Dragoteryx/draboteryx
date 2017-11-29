@@ -45,6 +45,8 @@ exports.checkTab = function(msg, strs, only, allowDMs) {
 	let command = "";
 	if (msg.content.startsWith(config.prefix))
 		command += msg.content.replace(config.prefix, "")
+	else if (msg.content.startsWith("<@273576577512767488> "))
+		command += msg.content.replace("<@273576577512767488> ", "")
 	else if (msg.content.startsWith(config.ownerPrefix))
 		command += msg.content.replace(config.ownerPrefix, "");
 	else
@@ -250,3 +252,9 @@ exports.stringToRole = function(str, guild) {
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
+
+exports.resetPrefixes = () => {
+	let guilds = Array.from(drabot.bot.guilds.keys());
+	for (let guild of guilds)
+		drabot.redis.set(guild + "-prefix", config.prefix);
+}

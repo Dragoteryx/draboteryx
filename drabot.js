@@ -9,7 +9,7 @@ const snekfetch = require("snekfetch");
 const qrcode = require("qrcode");
 const drgMusic = require("drg-music");
 const twitter = require("twitter");
-const mysql = require("mysql");
+const redis = require("redis");
 
 // FILES
 const config = require("./config.js");
@@ -50,6 +50,7 @@ const commands = [
 	new types.Command("roll ([dice size])", "rolls a dice (6 by default)", funType, true),
 	new types.Command("rolls", "gives you rolls stats (resets when the bot restarts)", funType, true),
 	new types.Command("shitpost", "generates a random shitpost", funType, true),
+	new types.Command("story", "generates a random story", funType, false),
 	new types.Command("crypt (k:[key]) [message]", "crypts a message and generates a random key", funType, true),
 	new types.Command("decrypt [key] [message]", "decrypts a crypted message using its key", funType, true),
 	new types.Command("join", "join a voice channel", musicType, true),
@@ -72,7 +73,8 @@ const commands = [
 	new types.Command("channelinfo ([channelname])", "info about a channel (if empty then info about the channel the message has been send it)", utilityType, true),
 	new types.Command("memberinfo ([membername])", "info about a member (if empty then info about you)", utilityType, true),
 	new types.Command("roleinfo ([rolename])", "info about a role (if empty info about your hightest role)", utilityType, true),
-	new types.Command("qrcode [text/link]", "generates a QRCode", funType, true)
+	new types.Command("qrcode [text/link]", "generates a QRCode", funType, true),
+	new types.Command("money (give [amount] [member] / drop [amount])", "show how much money you've got, give some to someone else or put in the chat", funType, false)
 ];
 const tweet = new twitter({
 	consumer_key : process.env.CONSUMERKEY,
@@ -80,11 +82,7 @@ const tweet = new twitter({
 	access_token_key : process.env.ACCESSTOKENKEY,
 	access_token_secret : process.env.ACCESSTOKENSECRET
 });
-/*const connection = mysql.createConnection(process.env.JAWSDB_URL);
-connection.query("select 1+1 as solution;", (err, rows, fields) => {
-	if (err) throw err;
-	console.log(rows[0].solution);
-})*/
+const redisClient = redis.createClient(process.env.REDIS_URL);
 
 // VARIABLES GLOBALES
 let ready = false;
@@ -117,7 +115,7 @@ bot.on("message", msg => {
 		// OWNER COMMANDS
 		if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
 			let command = msg.content.replace(config.ownerPrefix, "");
-			let args = command.split(" ");
+			let args = command.split(" ").slice(1);
 
 			// changer l'avatar du bot
 			if (funcs.check(msg, "setAvatar", 1, true))
@@ -169,11 +167,25 @@ bot.on("message", msg => {
 				msg.delete();
 			}
 
+			// clear redis
+			else if (funcs.check(msg, "clearRedis", 0, true)) {
+				redisClient.flushall((err, success) => {
+					console.log("[REDIS] Flush success: " + success);
+				})
+			}
+
+			// setMoney
+			else if (funcs.check(msg, "setMoney", 1, false)) {
+				redisClient.set(funcs.stringToMember(args[0], msg.guild).user.id + "-money", Number(args[1]));
+			}
+
 		}
 
 		// NORMAL COMMANDS
-		else if (msg.content.startsWith(config.prefix)) {
+		else if (msg.content.startsWith(config.prefix) || msg.content.startsWith("<@273576577512767488> ")) {
 			let command = msg.content.replace(config.prefix, "");
+			if (command.startsWith("<@273576577512767488> "))
+				command = command.replace("<@273576577512767488> ", "");
 			let args = command.split(" ").slice(1);
 
 			// commandes musicales
@@ -323,8 +335,12 @@ bot.on("message", msg => {
 
 			// -----------------------------------------------------------------------------------------------------------------------------------
 
+			// prefix
+			if (funcs.check(msg, "prefix", 0, true))
+				msg.channel.send("My prefix is ``" + config.prefix + "``. You can also tag me.");
+
 			// affiche le menu d'aide
-			if (funcs.check(msg, "help", 0, true)) {
+			else if (funcs.check(msg, "help", 0, true)) {
 				let i = 0;
 				for (i; i < commandTypes.length; i++) {
 					let help = funcs.defaultEmbed();
@@ -523,6 +539,46 @@ bot.on("message", msg => {
 					msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 			}
 
+			// money
+			else if (funcs.check(msg, "money", 2, false)) {
+				redisClient.get(msg.author.id + "-money", (err, reply) => {
+					if (err) msg.channel.send("Sorry, but the bank is closed at the moment. Come back later.")
+					else {
+						let moneyEmote = ":moneybag:"
+						if (reply === null) {
+							reply = 100;
+							redisClient.set(msg.author.id + "-money", reply);
+						}
+						if (args[0] == "give") {
+							let member = funcs.stringToMember(args[1], msg.guild);
+							let somme = Number(args[2]);
+							if (somme > reply)
+								msg.channel.send("You can't do that unless you want to be in debt.");
+							else {
+								redisClient.get(member.user.id + "-money", (err, reply2) => {
+									if (reply2 === null)
+										msg.channel.send("This user doesn't have a bank account. He must use ``" + config.prefix + "money`` at least once to get one.");
+									else {
+										let plus = Number(reply2) + somme;
+										let minus = Number(reply) - somme;
+										redisClient.set(member.user.id + "-money", plus);
+										redisClient.set(msg.author.id + "-money", minus);
+										redisClient.get(msg.author.id + "-money", (err, reply) => {
+											msg.channel.send("You gave " + somme + moneyEmote + " to " + member.displayName + ".\nYour money: " + reply + moneyEmote);
+										});
+									}
+								});
+							}
+						} else if (args[0] == "drop") {
+							let somme = Number(args[1]);
+							if (somme > reply)
+								msg.channel.send("You can't do that unless you want to be in debt.");
+						} else if (args.length == 0)
+							msg.channel.send("Your money: " + reply + moneyEmote);
+					}
+				})
+			}
+
 		}
 
 	} catch (err) {
@@ -554,7 +610,7 @@ bot.on("message", msg => {
 
 });
 
-// READY
+// WHEN BOT READY
 bot.on("ready", () => {
 	if (!ready) {
 		ready = true;
@@ -567,8 +623,18 @@ bot.on("ready", () => {
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		exports.bot = bot;
+
 	}
 });
+
+// WHEN REDIS READY
+redisClient.on("ready", () => {
+	console.log("[REDIS] Connected.");
+	exports.redis = redisClient;
+})
+redisClient.on("end", () => {
+	console.log("[REDIS] Disconnected.");
+})
 
 // CONNECT THE BOT TO DISCORD
 bot.login(process.env.DISCORDTOKEN);
