@@ -540,7 +540,7 @@ bot.on("message", msg => {
 			}
 
 			// money
-			else if (funcs.check(msg, "money", 2, false)) {
+			/*else if (funcs.check(msg, "money", 2, false)) {
 				redisClient.get(msg.author.id + "-money", (err, reply) => {
 					if (err) msg.channel.send("Sorry, but the bank is closed at the moment. Come back later.")
 					else {
@@ -573,11 +573,14 @@ bot.on("message", msg => {
 							let somme = Number(args[1]);
 							if (somme > reply)
 								msg.channel.send("You can't do that unless you want to be in debt.");
+							else {
+								null;
+							}
 						} else if (args.length == 0)
 							msg.channel.send("Your money: " + reply + moneyEmote);
 					}
 				})
-			}
+			}*/
 
 		}
 
@@ -623,7 +626,7 @@ bot.on("ready", () => {
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		exports.bot = bot;
-
+		bot.user.setGame(config.prefix + "/");
 	}
 });
 
