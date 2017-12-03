@@ -28,8 +28,7 @@ const shitpost = new shitposting.ShitpostHandler();
 music.on("next", (guild, musik) => {
 	if (!music.isLooping(guild)) {
 		if (!musik.file)
-			if (musik.link != process.env.APRIL_1ST_MUSIC)
-				musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "`` by ``" + musik.author.name + "``. (requested by " + musik.member +")");
+			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "`` by ``" + musik.author.name + "``. (requested by " + musik.member +")");
 		else
 			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "``. (requested by " + musik.member +")");
 	}
