@@ -641,7 +641,7 @@ bot.on("ready", () => {
 			bot.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		exports.bot = bot;
-		bot.user.setGame(config.prefix + "/");
+		bot.user.setGame(config.prefix + "help");
 	}
 });
 
