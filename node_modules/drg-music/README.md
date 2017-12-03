@@ -49,7 +49,7 @@ handler.pushMusic(properties, callback);
 
 The callback lets you interact with the music that was added.
 
-#### Add a Youtube video to the playlist using the link **DEPRECATED**
+#### Add a Youtube video to the playlist using the link **[DEPRECATED]**
 ```js
 handler.addMusic(member, youtubeLink, callback);
 ```
@@ -58,7 +58,7 @@ handler.addMusic(member, youtubeLink, callback);
 
 The callback lets you interact with the music that was added.
 
-#### Add a Youtube video to the playlist using a query **DEPRECATED**
+#### Add a Youtube video to the playlist using a query **[DEPRECATED]**
 ```js
 handler.addYoutubeQuery(member, query, youtubeAPIKey, callback);
 ```
@@ -66,7 +66,7 @@ To get a Youtube API key follow this tutorial : https://www.slickremix.com/docs/
 
 The callback lets you interact with the music that was added. (cf ``handler.musicInfo(index)``)
 
-#### Add a local file to the playlist **DEPRECATED**
+#### Add a local file to the playlist **[DEPRECATED]**
 ```js
 handler.addFile(member, filePath, callback);
 ```
@@ -228,10 +228,11 @@ console.log(timer); // 0:01
 
 #### Play a Youtube video without the use of a playlist
 ```js
-let dispatcher = drgMusic.playYoutube(ytblink, voiceConnection);
+let dispatcher = drgMusic.playYoutube(ytblink, voiceConnection, passes);
 ```
 ``voiceConnection`` => https://discord.js.org/#/docs/main/stable/class/VoiceConnection
 ``dispatcher`` is an instance of ``StreamDispatcher`` => https://discord.js.org/#/docs/main/stable/class/StreamDispatcher
+``passes`` represents the number of passes. Set it to a high number to prevent packet loss.
 I do not recommend the use of this function, but you can use it.
 
 ####

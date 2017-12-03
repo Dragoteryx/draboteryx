@@ -34,7 +34,7 @@ exports.millisecondsToTime = int => {
 }
 
 exports.playYoutube = (ytbLink, voiceConnection, passes) => {
-	return voiceConnection.playStream(ytdl(ytbLink, {filter:"audioonly"}), {passes: passes});
+	return voiceConnection.playStream(ytdl(ytbLink, {filter:"audioonly"}), {passes: passes, bitrate:"auto"});
 }
 
 //CLASSES
