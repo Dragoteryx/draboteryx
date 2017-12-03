@@ -94,40 +94,41 @@ exports.MusicHandler = function(cl) {
 	this.pushMusic = (props, callback) => {
 		if (props === undefined)
 			throw new Error("missingParameter: properties");
+		let keys = Object.key(props);
 		let value = 0;
-		if (props.path !== undefined)
+		if (keys.includes("path"))
 			value++;
-		if (props.link !== undefined)
+		if (keys.includes("link"))
 			value++;
-		if (props.query !== undefined)
+		if (keys.includes("query"))
 			value++;
 		if (value != 1)
 			throw new Error("either properties.link or properties.query or properties.path");
-		if (props.member === undefined)
+		if (!keys.includes("member"))
 			throw new Error("properties.member is undefined (the GuildMember who requested the music)");
 		if (!this.isConnected(props.member.guild))
 			throw new Error("clientNotInAVoiceChannel");
 
 		// LOCAL FILE
-		if (props.path !== undefined) {
+		if (keys.includes("path")) {
 			let music;
-			if (props.passes === undefined)
+			if (!keys.includes("passes"))
 				music = new Music(props.path, props.member, true, 1);
 			else
 				music = new Music(props.path, props.member, true, Number(props.passes));
-			if (props.props !== undefined)
+			if (keys.includes("props"))
 				music.props = props.props;
 			playlists.get(props.member.guild.id).add(music);
 			if (callback instanceof Function)
 				callback(music.info());
 
 		// YOUTUBE LINK
-		} else if (props.link !== undefined) {
+	} else if (keys.includes("link")) {
 			exports.videoWebsite(props.link);
 			ytdl.getInfo(props.link, (err, info) => {
 				if (err) throw err;
 				let music;
-				if (props.passes === undefined)
+				if (!keys.includes("passes"))
 					music = new Music(props.link, props.member, false, 1);
 				else
 					music = new Music(props.link, props.member, false, Number(props.passes));
@@ -140,7 +141,7 @@ exports.MusicHandler = function(cl) {
 				}
 				music.thumbnailURL = info.thumbnail_url;
 				music.length = Number(info.length_seconds)*1000;
-				if (props.props !== undefined)
+				if (keys.includes("props"))
 					music.props = props.props;
 				playlists.get(props.member.guild.id).add(music);
 				if (callback instanceof Function)
@@ -148,8 +149,8 @@ exports.MusicHandler = function(cl) {
 			});
 
 		// YOUTUBE QUERY
-		} else if (props.query !== undefined) {
-			if (props.ytbApiKey === undefined)
+	} else if (keys.includes("query")) {
+			if (!keys.includes("ytbApiKey"))
 				throw new Error("properties.ytbApiKey is undefined (Youtube API key)");
 			let query = props.query;
 			while (query.includes(" "))
@@ -165,9 +166,9 @@ exports.MusicHandler = function(cl) {
 							link: link,
 							member: props.member
 						}
-						if (props.passes !== undefined)
+						if (keys.includes("member"))
 							object.passes = props.passes;
-						if (props.props !== undefined)
+						if (keys.includes("props"))
 							object.props = props.props;
 						if (callback instanceof Function)
 							this.pushMusic(object, callback);
