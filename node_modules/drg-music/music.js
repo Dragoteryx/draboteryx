@@ -33,8 +33,8 @@ exports.millisecondsToTime = int => {
 	return minutes + ":" + seconds;
 }
 
-exports.playYoutube = (ytbLink, voiceConnection) => {
-	return voiceConnection.playStream(ytdl(ytbLink, {filter:"audioonly"}));
+exports.playYoutube = (ytbLink, voiceConnection, passes) => {
+	return voiceConnection.playStream(ytdl(ytbLink, {filter:"audioonly"}), {passes: passes});
 }
 
 //CLASSES
@@ -91,6 +91,94 @@ exports.MusicHandler = function(cl) {
 			callback();
 		return this;
 	}
+	this.pushMusic = (props, callback) => {
+		if (props === undefined)
+			throw new Error("missingParameter: properties");
+		let value = 0;
+		if (props.path !== undefined)
+			value++;
+		if (props.link !== undefined)
+			value++;
+		if (props.query !== undefined)
+			value++;
+		if (value != 1)
+			throw new Error("either properties.link or properties.query or properties.path");
+		if (props.member === undefined)
+			throw new Error("properties.member is undefined (the GuildMember who requested the music)");
+		if (!this.isConnected(props.member.guild))
+			throw new Error("clientNotInAVoiceChannel");
+
+		// LOCAL FILE
+		if (props.path !== undefined) {
+			let music;
+			if (props.passes === undefined)
+				music = new Music(props.path, props.member, true, 1);
+			else
+				music = new Music(props.path, props.member, true, Number(props.passes));
+			if (props.props !== undefined)
+				music.props = props.props;
+			playlists.get(props.member.guild.id).add(music);
+			if (callback instanceof Function)
+				callback(music.info());
+
+		// YOUTUBE LINK
+		} else if (props.link !== undefined) {
+			exports.videoWebsite(props.link);
+			ytdl.getInfo(props.link, (err, info) => {
+				if (err) throw err;
+				let music;
+				if (props.passes === undefined)
+					music = new Music(props.link, props.member, false, 1);
+				else
+					music = new Music(props.link, props.member, false, Number(props.passes));
+				music.title = info.title;
+				music.description = info.description;
+				music.author = {
+					name : info.author.name,
+					avatarURL : info.author.avatar,
+					channelURL : info.author.channel_url
+				}
+				music.thumbnailURL = info.thumbnail_url;
+				music.length = Number(info.length_seconds)*1000;
+				if (props.props !== undefined)
+					music.props = props.props;
+				playlists.get(props.member.guild.id).add(music);
+				if (callback instanceof Function)
+					callback(music.info());
+			});
+
+		// YOUTUBE QUERY
+		} else if (props.query !== undefined) {
+			if (props.ytbApiKey === undefined)
+				throw new Error("properties.ytbApiKey is undefined (Youtube API key)");
+			let query = props.query;
+			while (query.includes(" "))
+				query = query.replace(" ", "+");
+			youtubeSearch(query, {maxResults : 10, key : props.ytbApiKey}, (err, rep) => {
+				if (err) throw err;
+					let link = "";
+					for (let i = 0; i < 10; i++)
+						if (rep[i].kind == "youtube#video" && link == "")
+							link += rep[i].link;
+					if (link != "") {
+						let object = {
+							link: link,
+							member: props.member
+						}
+						if (props.passes !== undefined)
+							object.passes = props.passes;
+						if (props.props !== undefined)
+							object.props = props.props;
+						if (callback instanceof Function)
+							this.pushMusic(object, callback);
+						else
+							this.pushMusic(object);
+					} else
+						throw new Error("youtubeQueryNoResults");
+			});
+		}
+		return this;
+	}
 	this.addMusic = (member, link, callback) => {
 		if (member === undefined)
 			throw new Error("missingParameter: member");
@@ -115,6 +203,7 @@ exports.MusicHandler = function(cl) {
 			if (callback instanceof Function)
 				callback(music.info());
 		});
+		console.log("[DRG-MUSIC] This method is deprecated. Use MusicHandler#pushMusic() instead.");
 		return this;
 	}
 	this.addFile = (member, path, callback) => {
@@ -128,6 +217,7 @@ exports.MusicHandler = function(cl) {
 		playlists.get(member.guild.id).add(music);
 		if (callback instanceof Function)
 			callback(music.info());
+		console.log("[DRG-MUSIC] This method is deprecated. Use MusicHandler#pushMusic() instead.");
 		return this;
 	}
 	this.addYoutubeQuery = (member, query, ytbApiKey, callback) => {
@@ -139,20 +229,22 @@ exports.MusicHandler = function(cl) {
 			throw new Error("missingParameter: youtube API key");
 		while (query.includes(" "))
 			query = query.replace(" ", "+");
-			youtubeSearch(query, {maxResults : 10, key : ytbApiKey}, (err, rep) => {
-				if (err) throw err;
-					let link = "";
-					for (let i = 0; i < 10; i++)
-						if (rep[i].kind == "youtube#video" && link == "")
-							link += rep[i].link;
-					if (link != "")
-						if (callback instanceof Function)
-							this.addMusic(member, link, callback);
-						else
-							this.addMusic(member, link);
+		youtubeSearch(query, {maxResults : 10, key : ytbApiKey}, (err, rep) => {
+			if (err) throw err;
+				let link = "";
+				for (let i = 0; i < 10; i++)
+					if (rep[i].kind == "youtube#video" && link == "")
+						link += rep[i].link;
+				if (link != "")
+					if (callback instanceof Function)
+						this.addMusic(member, link, callback);
 					else
-						throw new Error("youtubeQueryNoResults");
-			});
+						this.addMusic(member, link);
+				else
+					throw new Error("youtubeQueryNoResults");
+		});
+		console.log("[DRG-MUSIC] This method is deprecated. Use MusicHandler#pushMusic() instead.");
+		return this;
 	}
 	this.removeMusic = (guild, index, callback) => {
 		if (guild === undefined)
@@ -450,29 +542,19 @@ function Playlist(gld, cl) {
 Playlist.prototype = Object.create(EventEmitter.prototype);
 Playlist.prototype.constructor = Playlist;
 
-function Music(link, member, file) {
-	if (!file) {
+function Music(link, member, file, passes) {
+	if (!file)
 		this.website = exports.videoWebsite(link);
-		this.title = undefined;
-	} else {
-		this.website = undefined;
+	else
 		this.title = link.split("/").pop();
-	}
 	this.link = link;
 	this.member = member;
-	this.description = undefined;
-	this.author = {
-		name : undefined,
-		avatarURL : undefined,
-		channelURL : undefined
-	};
-	this.thumbnailURL = undefined;
-	this.length = 0;
 	this.file = file;
+	this.passes = passes;
 	this.play = () => {
 		if (!this.file) {
 			if (this.website == "Youtube")
-				return exports.playYoutube(this.link, this.member.guild.me.voiceChannel.connection);
+				return exports.playYoutube(this.link, this.member.guild.me.voiceChannel.connection, this.passes);
 			else if (this.website == "Dailymotion")
 				return this.member.guild.me.voiceChannel.connection.playStream(null);
 			else if (this.website == "NicoNicoVideo")
@@ -481,8 +563,9 @@ function Music(link, member, file) {
 			return this.member.guild.me.voiceChannel.connection.playFile(this.link);
 	}
 	this.info = () => {
+		let object;
 		if (!this.file)
-			return {
+			object = {
 				title : this.title,
 				description : this.description,
 				author : this.author,
@@ -493,11 +576,14 @@ function Music(link, member, file) {
 				file : false
 			};
 		else
-			return {
+			object = {
 				title : this.title,
 				link : this.link,
 				member : this.member,
 				file : true
-			}
+			};
+		if (this.props !== undefined)
+			object.props = this.props;
+		return object;
 	}
 }

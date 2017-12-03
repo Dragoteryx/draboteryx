@@ -35,7 +35,21 @@ handler.join(member, callback);
 handler.leave(guild, callback);
 ```
 
-#### Add a Youtube video to the playlist using the link
+#### Add a Youtube video or a local file to the playlist
+```js
+handler.pushMusic(properties, callback);
+```
+``properties`` is an object containing the following information:
+``properties.link`` is a Youtube link.
+``properties.path`` is a path to a local file.
+``properties.query`` is a Youtube query.
+``properties.member`` is a GuildMember (the one who requested the music)
+``properties.passes`` is the number of passes. (optional)
+``properties.props`` is whatever you want it to be, it's an object where you can store any data you want and access it when you get info from a music. (optional)
+
+The callback lets you interact with the music that was added.
+
+#### Add a Youtube video to the playlist using the link **DEPRECATED**
 ```js
 handler.addMusic(member, youtubeLink, callback);
 ```
@@ -44,7 +58,7 @@ handler.addMusic(member, youtubeLink, callback);
 
 The callback lets you interact with the music that was added.
 
-#### Add a Youtube video to the playlist using a query
+#### Add a Youtube video to the playlist using a query **DEPRECATED**
 ```js
 handler.addYoutubeQuery(member, query, youtubeAPIKey, callback);
 ```
@@ -52,7 +66,7 @@ To get a Youtube API key follow this tutorial : https://www.slickremix.com/docs/
 
 The callback lets you interact with the music that was added. (cf ``handler.musicInfo(index)``)
 
-#### Add a local file to the playlist
+#### Add a local file to the playlist **DEPRECATED**
 ```js
 handler.addFile(member, filePath, callback);
 ```
@@ -220,7 +234,7 @@ let dispatcher = drgMusic.playYoutube(ytblink, voiceConnection);
 ``dispatcher`` is an instance of ``StreamDispatcher`` => https://discord.js.org/#/docs/main/stable/class/StreamDispatcher
 I do not recommend the use of this function, but you can use it.
 
-#### 
+####
 
 ### Events
 * When the current music is finished, an event ``finished`` is emitted with the guild and the music.
@@ -247,7 +261,7 @@ const Discord = require("discord.js");
 const drgMusic = require("drg-music");
 
 const client = new Discord.Client();
-const music = new drgMusic.MusicHandler(client);
+const handler = new drgMusic.MusicHandler(client);
 let musicChannels = new Map();
 
 handler.on("next", (guild, music) => {
@@ -274,8 +288,13 @@ client.on("message", message => {
   }
 
   if (message.content.startsWith("/request ")) {
-    handler.addMusic(message.member, message.replace("/request ",""), added => {
-      message.channel.send("The music " + added.title + " was added to the playlist.");
+    let properties = {
+      member: message.member,
+      link: message.replace("/request ",""),
+      props: {time: new Date()}
+    }
+    handler.pushMusic(properties, added => {
+      message.channel.send("The music " + added.title + " was added to the playlist. (requested at " + added.props.time + ")");
     });
   }
 

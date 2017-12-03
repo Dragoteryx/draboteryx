@@ -82,7 +82,6 @@ const tweet = new twitter({
 	access_token_key : process.env.ACCESSTOKENKEY,
 	access_token_secret : process.env.ACCESSTOKENSECRET
 });
-const redisClient = redis.createClient(process.env.REDIS_URL);
 
 // VARIABLES GLOBALES
 let ready = false;
@@ -91,6 +90,12 @@ let vars = new Map();
 let musicChannels = new Map();
 let follow = false;
 let date = new Date();
+let redisClient;
+try {
+	redisClient = redis.createClient(process.env.REDIS_URL);
+} catch(err) {
+	console.log("[REDIS] Could not connect to Redis.\n" + err.message);
+}
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -215,15 +220,28 @@ bot.on("message", msg => {
 
 				// ajouter une musique
 				else if (funcs.check(msg, "request", 1, false)) {
-					music.addMusic(msg.member, command.replace("request ",""), added => {
-						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
+					let properties = {
+						member: msg.member,
+						link: command.replace("request ",""),
+						passes: 3,
+						properties: {msg: msg, time: new Date()}
+					}
+					music.pushMusic(properties, added => {
+						msg.channel.send("``" + added.title + "`` has been added to the playlist.a");
+						msg.channel.send("Message envoyé par " + added.properties.msg.member.displayName);
 					});
 				}
 
 				// ajoute une musique par recherche
 				else if (funcs.check(msg, "search", 1, false)) {
-					let search = command.replace("search ", "");
-					music.addYoutubeQuery(msg.member, search, process.env.YOUTUBEAPIKEY, added => {
+					let properties = {
+						member: msg.member,
+						query: command.replace("search ", ""),
+						ytbApiKey: process.env.YOUTUBEAPIKEY,
+						passes: 3,
+						properties: {msg: msg, time: new Date()}
+					}
+					music.pushMusic(properties, added => {
 						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
 					});
 				}
