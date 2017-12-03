@@ -6,7 +6,7 @@
   "dependencies": {
     "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
-    "drg-music": "^2.2.3",
+    "drg-music": "^2.2.4",
     "gm": "^1.23.0",
     "opusscript": "0.0.4",
     "qrcode": "^0.9.0",

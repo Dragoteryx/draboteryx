@@ -94,7 +94,7 @@ exports.MusicHandler = function(cl) {
 	this.pushMusic = (props, callback) => {
 		if (props === undefined)
 			throw new Error("missingParameter: properties");
-		let keys = Object.key(props);
+		let keys = Object.keys(props);
 		let value = 0;
 		if (keys.includes("path"))
 			value++;
