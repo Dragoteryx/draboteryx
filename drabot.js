@@ -224,10 +224,10 @@ bot.on("message", msg => {
 						member: msg.member,
 						link: command.replace("request ",""),
 						passes: 3,
-						properties: {msg: msg, time: new Date()}
+						props: {msg: msg, time: new Date()}
 					}
 					music.pushMusic(properties, added => {
-						msg.channel.send("``" + added.title + "`` has been added to the playlist.");					
+						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
 					});
 				}
 
@@ -238,7 +238,7 @@ bot.on("message", msg => {
 						query: command.replace("search ", ""),
 						ytbApiKey: process.env.YOUTUBEAPIKEY,
 						passes: 3,
-						properties: {msg: msg, time: new Date()}
+						props: {msg: msg, time: new Date()}
 					}
 					music.pushMusic(properties, added => {
 						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
