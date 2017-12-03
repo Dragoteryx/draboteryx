@@ -200,7 +200,7 @@ bot.on("message", msg => {
 				if (funcs.check(msg, "join", 0, false)) {
 					music.join(msg.member, () => {
 						if (funcs.getDate() == "1/4")
-							music.addMusic(msg.guild.me, process.env.APRIL_1ST_MUSIC, () => {
+							music.pushMusic({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
 								msg.channel.send("Happy April Fools' !");
 							});
 						musicChannels.set(msg.guild.id, msg.channel);
@@ -223,8 +223,7 @@ bot.on("message", msg => {
 					let properties = {
 						member: msg.member,
 						link: command.replace("request ",""),
-						passes: 3,
-						props: {msg: msg, time: new Date()}
+						passes: 3
 					}
 					music.pushMusic(properties, added => {
 						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
@@ -237,12 +236,10 @@ bot.on("message", msg => {
 						member: msg.member,
 						query: command.replace("search ", ""),
 						ytbApiKey: process.env.YOUTUBEAPIKEY,
-						passes: 3,
-						props: {msg: msg, time: new Date()}
+						passes: 3
 					}
 					music.pushMusic(properties, added => {
 						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
-						msg.channel.send("Message envoyé par " + added.props.msg.member.displayName);
 					});
 				}
 
