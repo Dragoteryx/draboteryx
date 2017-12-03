@@ -227,8 +227,7 @@ bot.on("message", msg => {
 						properties: {msg: msg, time: new Date()}
 					}
 					music.pushMusic(properties, added => {
-						msg.channel.send("``" + added.title + "`` has been added to the playlist.a");
-						msg.channel.send("Message envoyé par " + added.properties.msg.member.displayName);
+						msg.channel.send("``" + added.title + "`` has been added to the playlist.");					
 					});
 				}
 
@@ -243,6 +242,7 @@ bot.on("message", msg => {
 					}
 					music.pushMusic(properties, added => {
 						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
+						msg.channel.send("Message envoyé par " + added.props.msg.member.displayName);
 					});
 				}
 
