@@ -30,7 +30,7 @@ music.on("next", (guild, musik) => {
 		if (!musik.file)
 			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "`` by ``" + musik.author.name + "``. (requested by " + musik.member +")");
 		else
-			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "``. (requested by " + musik.member +")");
+			musicChannels.get(guild.id).send("Now playing: ``" + musik.name + "``. (requested by " + musik.member +")");
 	}
 });
 music.on("empty", guild => {
@@ -56,7 +56,7 @@ const commands = [
 	new types.Command("join", "join a voice channel", musicType, true),
 	new types.Command("leave", "leave the voice channel", musicType, true),
 	new types.Command("request [youtube link]", "request a video", musicType, true),
-	new types.Command("search [youtube query]", "request a video", musicType, true),
+	new types.Command("query [youtube query]", "request a video", musicType, true),
 	new types.Command("remove [nb]", "remove a music from the playlist", musicType, true),
 	new types.Command("toggle", "pause/resume the playlist", musicType, true),
 	new types.Command("volume [0 or more]", "change the volume of the bot", musicType, true),
@@ -96,6 +96,18 @@ try {
 } catch(err) {
 	console.log("[REDIS] Could not connect to Redis.\n" + err.message);
 }
+let dabbing = false;
+let reddab;
+let orangedab;
+let yellowdab;
+let greendab;
+let bluedab;
+let indigodab;
+let purpledab;
+let pinkdab;
+let whitedab;
+let blackdab;
+let rainbowdab;
 
 // CHANGEMENT DE PROTOTYPES
 discord.TextChannel.prototype.std = function(content, duration) {
@@ -117,8 +129,28 @@ bot.on("message", msg => {
 
 	try {
 
+		// DABBING
+		if (msg.guild.id == "191560973922992128" && dabbing && msg.author.id != bot.user.id && msg.content != config.prefix + "dabbing") {
+			let rand = Math.random();
+			if (msg.content.toLowerCase().includes("dieu du dab"))
+				rand = 0.05;
+			msg.react(reddab).then(react => {
+			msg.react(orangedab).then(react => {
+			msg.react(yellowdab).then(react => {
+			msg.react(greendab).then(react => {
+			msg.react(bluedab).then(react => {
+			msg.react(indigodab).then(react => {
+			msg.react(purpledab).then(react => {
+			msg.react(pinkdab).then(react => {
+			msg.react(whitedab).then(react => {
+			msg.react(blackdab).then(react => {
+			if (rand <= 0.05)
+				msg.react(rainbowdab);
+			})})})})})})})})})});
+		}
+
 		// OWNER COMMANDS
-		if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
+		else if (msg.content.startsWith(config.ownerPrefix) && config.owners.includes(msg.author.id)) {
 			let command = msg.content.replace(config.ownerPrefix, "");
 			let args = command.split(" ").slice(1);
 
@@ -184,6 +216,23 @@ bot.on("message", msg => {
 				redisClient.set(funcs.stringToMember(args[0], msg.guild).user.id + "-money", Number(args[1]));
 			}
 
+			// jouer le fichier test
+			else if (funcs.check(msg, "testfile", 0, false)) {
+				let path = "/files/test.oga";
+				msg.channel.send("Uploading the test file.").then(msg2 => {
+					music.addMusic(path, msg.member, {passes: 3, type: "file"}).then(added => {
+						msg2.edit("``" + added.title + "`` has been added to the playlist.");
+					}, err => {
+						if (err.message == "clientNotInAVoiceChannel") msg2.edit("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
+						else if (err.message == "unknownOrNotSupportedVideoWebsite") msg2.edit("Sorry, but I don't know this website.");
+						else {
+							msg2.edit("Sorry but for some reason I was not able to download that music. (maybe it's not available where I'm hosted)");
+							console.error(err);
+						}
+					});
+				});
+			}
+
 		}
 
 		// NORMAL COMMANDS
@@ -198,97 +247,147 @@ bot.on("message", msg => {
 
 				// rejoindre un channel vocal
 				if (funcs.check(msg, "join", 0, false)) {
-					music.join(msg.member, () => {
-						if (funcs.getDate() == "1/4")
+					music.join(msg.member).then(() => {
+						if (funcs.getDate() == "1/4") {
 							music.pushMusic({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
 								msg.channel.send("Happy April Fools' !");
 							});
+						}
 						musicChannels.set(msg.guild.id, msg.channel);
 						console.log("[MUSICBOT] Joined guild " + msg.guild.name + " (" + msg.guild.id + ")");
 						msg.channel.send("I'm here o/");
+					}, err => {
+						if (err.message == "memberNotInAVoiceChannel") msg.channel.send("You're not in a voice channel.");
+						else if (err.message == "voiceChannelNotJoinable") msg.channel.send("I can't join this voice channel.");
+						else if (err.message == "voiceChannelNotSpeakable") msg.channel.send("I'm not allowed to speak in this voice channel.");
+						else if (err.message == "voiceChannelFull") msg.channel.send("This voice channel is full.");
+						else if (err.message == "clientAlreadyInAVoiceChannel") msg.channel.send("I'm already in a voice channel.");
+						else console.error(err);
 					});
 				}
 
 				// quitter un channel vocal
 				else if (funcs.check(msg, "leave", 0, false)) {
-					music.leave(msg.guild, () => {
+					music.leave(msg.guild).then(() => {
 						musicChannels.delete(msg.guild.id);
 						console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
 						msg.channel.send("Goodbye o/");
+					}, err => {
+						if (err.message == "clientNotInAVoiceChannel") msg.channel.send("You can't ask me to leave when I'm not connected.");
+						else console.error(err);
 					});
 				}
 
 				// ajouter une musique
 				else if (funcs.check(msg, "request", 1, false)) {
-					let properties = {
-						member: msg.member,
-						link: command.replace("request ",""),
-						passes: 3
-					}
-					music.pushMusic(properties, added => {
-						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
+					let link = command.replace("request ","");
+					msg.channel.send("Downloading this music: ``" + link + "``").then(async msg2 => {
+						let added = await music.addMusic(link, msg.member, {passes: 3});
+						if (added instanceof Error) {
+							if (added.message == "clientNotInAVoiceChannel") msg2.edit("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
+							else if (added.message == "unknownOrNotSupportedVideoWebsite") msg2.edit("Sorry, but I don't know this website.");
+							else {
+								msg2.edit("Sorry but for some reason I was not able to download that music. (maybe it's not available where I'm hosted)");
+								console.error(added);
+							}
+						}
+						msg2.edit("``" + added.title + "`` has been added to the playlist.");
 					});
 				}
 
 				// ajoute une musique par recherche
-				else if (funcs.check(msg, "search", 1, false)) {
-					let properties = {
-						member: msg.member,
-						query: command.replace("search ", ""),
-						ytbApiKey: process.env.YOUTUBEAPIKEY,
-						passes: 3
-					}
-					music.pushMusic(properties, added => {
-						msg.channel.send("``" + added.title + "`` has been added to the playlist.");
+				else if (funcs.check(msg, "query", 1, false)) {
+					let link = command.replace("request ","");
+					msg.channel.send("I am searching for a music that corresponds to your request.").then(msg2 => {
+						music.addMusic(link, msg.member, {passes: 3, ytbApiKey: process.env.YOUTUBEAPIKEY, type: "query"}).then(added => {
+							msg2.edit("``" + added.title + "`` has been added to the playlist.");
+						}, err => {
+							if (err.message == "clientNotInAVoiceChannel") msg2.edit("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
+							else if (err.message == "notImplementedYet") msg2.edit("Sorry, but I did not find anything.");
+							else {
+								msg2.edit("Sorry but for some reason I was not able to download that music. (maybe it's not available where I'm hosted)");
+								console.error(err);
+							}
+						});
 					});
 				}
 
 				// retirer une musique
 				else if (funcs.check(msg, "remove", 1, false)) {
-					music.removeMusic(msg.guild, Number(command.replace("remove ",""))-1, removed => {
+					music.removeMusic(msg.guild, Number(command.replace("remove ",""))-1).then(removed => {
 						msg.channel.send("``" + removed.title + "`` has been removed from the playlist.");
+					}, err => {
+						if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
+						else if (err.message == "invalidPlaylistIndex") msg.channel.send("There is no music with that ID in the playlist.");
+						else console.error(err);
 					});
 				}
 
 				// toggle la playlist (pause/resume)
 				else if (funcs.check(msg, "toggle", 0, false)) {
-					music.toggleMusic(msg.guild, paused => {
+					music.toggleMusic(msg.guild).then(paused => {
 						if (paused)
 							msg.channel.send("The music has been paused.");
 						else
 							msg.channel.send("The music has been resumed.");
+					}, err => {
+						if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
+						else if (err.message == "notPlayingMusic") msg.channel.send("You can't pause a music if I'm not playing, you know ?");
+						else console.error(err);
+					});
+				}
+
+				// permettre de jouer une musique en boucle
+				else if (funcs.check(msg, "loop", 0, false)) {
+					music.toggleLooping(msg.guild).then(looping => {
+						let current = music.playingInfo(msg.guild);
+						if (looping)
+							msg.channel.send("The current music (``" + current.title + "``) will now loop. Use ``" + config.prefix + "loop`` again to stop looping.");
+						else
+							msg.channel.send("The current music (``" + current.title + "``) won't loop anymore.");
+					}, err => {
+						if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
+						else if (err.message == "notPlayingMusic") msg.channel.send("You can't pause a music if I'm not playing, you know ?");
+						else console.error(err);
 					});
 				}
 
 				// skip la musique actuelle
 				else if (funcs.check(msg, "skip", 0, false)) {
-					if (!music.playingInfo(msg.guild).file || config.owners.indexOf(msg.author.id) != -1)
-						music.nextMusic(msg.guild, current => {
-							msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
-						});
-					else
-						msg.channel.send("You are not allowed to skip that !");
+					music.nextMusic(msg.guild).then(skipped => {
+						msg.channel.send("The current music (``" + skipped.title + "``) has been skipped.");
+					}, err => {
+						console.error(err);
+					});
 				}
 
 				// clear la playlist
 				else if (funcs.check(msg, "plclear", 0, false)) {
-					music.clearPlaylist(msg.guild, () => {
+					music.clearPlaylist(msg.guild).then(() => {
 						msg.channel.send("The playlist has been cleared.");
+					}, err => {
+						if (err.message == "emptyPlaylist") msg.channel.send("You can't clear the playlist when it's already empty, duh.");
+						else console.error(err);
 					});
 				}
 
 				// shuffle la playlist
 				else if (funcs.check(msg, "plshuffle", 0, false)) {
-					music.shufflePlaylist(msg.guild, () => {
+					music.shufflePlaylist(msg.guild).then(() => {
 						msg.channel.send("The playlist has been shuffled.");
+					}, err => {
+						if (err.message == "emptyPlaylist") msg.channel.send("You can't shuffle an empty playlist.");
+						else console.error(err);
 					});
 				}
 
 				// set le volume
 				else if (funcs.check(msg, "volume", 1, false)) {
 					let newVolume = Number(command.replace("volume ",""));
-					music.setVolume(msg.guild, newVolume, oldVolume => {
+					music.setVolume(msg.guild, newVolume).then(oldVolume => {
 						msg.channel.send("The volume has been set to " + newVolume + "%. (was set at " + oldVolume + "%)");
+					}, err => {
+						console.error(err);
 					});
 				}
 
@@ -304,14 +403,14 @@ bot.on("message", msg => {
 						embed.addField("Playing (" + timer + " / " + end + ") - " + playing.title + " by " + playing.author.name, "Requested by " + playing.member);
 					}
 					else
-						embed.addField("Playing - " + playing.title, "Requested by " + playing.member)
+						embed.addField("Playing - " + playing.name, "Requested by " + playing.member)
 					for (let i = 0; i < playlist.length; i++) {
 						if (!playlist[i].file) {
 							timer2 = drgMusic.millisecondsToTime(playlist[i].length);
 							embed.addField((i+1) + " - " + playlist[i].title + " by " + playlist[i].author.name + " (" + timer2 + ")", "Requested by " + playlist[i].member);
 						}
 						else
-							embed.addField((i+1) + " - " + playlist[i].title, "Requested by " + playlist[i].member);
+							embed.addField((i+1) + " - " + playlist[i].name, "Requested by " + playlist[i].member);
 					}
 					msg.channel.send("Here's the playlist: (``" + drgMusic.millisecondsToTime(music.remainingTime(msg.guild)) + "`` remaining)", embed);
 				}
@@ -330,20 +429,10 @@ bot.on("message", msg => {
 						.addField("Requested by", playing.member, true);
 						msg.channel.send("Playing: ``" + timer + " / " + end + " ("+ Math.floor((playing.time / playing.length)*100) + "%)``", embed);
 					} else {
-						embed.addField("File name", playing.title, true)
+						embed.addField("File name", playing.name, true)
 						.addField("Requested by", playing.member, true);
 						msg.channel.send("Playing:", embed);
 					}
-				}
-
-				// permettre de jouer une musique en boucle
-				else if (funcs.check(msg, "loop", 0, false)) {
-					music.toggleLooping(msg.guild, (looping, current) => {
-						if (looping)
-							msg.channel.send("The current music (``" + current.title + "``) will now loop. Use ``" + config.prefix + "loop`` again to stop looping.");
-						else
-							msg.channel.send("The current music (``" + current.title + "``) won't loop anymore.");
-					});
 				}
 
 			}
@@ -435,6 +524,17 @@ bot.on("message", msg => {
 				if (args.length == 1) max = Number(args[0]);
 				if (!dicePlayers.get(msg.author.id).dices.has(max)) dicePlayers.get(msg.author.id).dices.set(max, new types.Dice(max));
 				msg.reply(dicePlayers.get(msg.author.id).roll(max) + "/" + max + " (:game_die:)");
+			}
+
+			// dabbing
+			else if (funcs.check(msg, "dabbing", 0, false)) {
+				if (msg.author.id == process.env.NISID || msg.author.id == process.env.DRAGOID) {
+					dabbing= !dabbing;
+					if (dabbing)
+						msg.channel.send("" + greendab);
+					else
+						msg.channel.send("" + reddab);
+				}
 			}
 
 			// envoyer un shitpost
@@ -603,17 +703,9 @@ bot.on("message", msg => {
 		if (err.message == "impossibleDiceSize") msg.channel.send("This is not a dice and you know it.");
 		else if (err.message == "incorrectKey") msg.channel.send("This key and/or message is incorrect.");
 		else if (err.message == "shitpostNotFound") msg.channel.send("Sorry but I didn't find anything.");
-		else if (err.message == "memberNotInAVoiceChannel") msg.channel.send("You're not in a voice channel.");
-		else if (err.message == "voiceChannelNotJoinable") msg.channel.send("I can't join this voice channel.");
-		else if (err.message == "voiceChannelNotSpeakable") msg.channel.send("I'm not allowed to speak in this voice channel.");
-		else if (err.message == "voiceChannelFull") msg.channel.send("This voice channel is full.");
-		else if (err.message == "clientAlreadyInAVoiceChannel") msg.channel.send("I'm already in a voice channel.");
-		else if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I'm not connected. You can ask me to join you using ``" + config.prefix + "join``.");
-		else if (err.message == "unknownOrNotSupportedVideoWebsite") msg.channel.send("Sorry, but I don't know this website.")
 		else if (err.message == "notPlayingMusic") msg.channel.send("I'm not playing any music at the moment. Use ``" + config.prefix + "request [link]``.");
 		else if (err.message == "invalidVolume") msg.channel.send("The volume must be over 0%.");
 		else if (err.message == "emptyPlaylist") msg.channel.send("You can't do that when the playlist is empty.");
-		else if (err.message == "invalidPlaylistIndex") msg.channel.send("There is no music with that ID in the playlist.");
 		else if (err.message == "youtubeQueryNoResults") msg.channel.send("Sorry, but I did not find anything.");
 		else if (err.message == "notAMember") msg.channel.send("This member doesn't exist.");
 		else if (err.message == "notAChannel") msg.channel.send("This channel doesn't exist.");
@@ -642,6 +734,19 @@ bot.on("ready", () => {
 		}
 		exports.bot = bot;
 		bot.user.setGame(config.prefix + "help");
+
+		// dabbing emotes
+		reddab = bot.guilds.get("191560973922992128").emojis.get("382924168443854859");
+		orangedab = bot.guilds.get("191560973922992128").emojis.get("382924182951952384");
+		yellowdab = bot.guilds.get("191560973922992128").emojis.get("382924196629577733");
+		greendab = bot.guilds.get("191560973922992128").emojis.get("382924250413269032");
+		bluedab = bot.guilds.get("191560973922992128").emojis.get("382185235049086978");
+		indigodab = bot.guilds.get("191560973922992128").emojis.get("382924258973581313");
+		purpledab = bot.guilds.get("191560973922992128").emojis.get("382924299515985921");
+		pinkdab = bot.guilds.get("191560973922992128").emojis.get("382931408953409538");
+		whitedab = bot.guilds.get("191560973922992128").emojis.get("382931481930104855");
+		blackdab = bot.guilds.get("191560973922992128").emojis.get("382931443627589633");
+		rainbowdab = bot.guilds.get("191560973922992128").emojis.get("383928845570670592");
 	}
 });
 
@@ -655,7 +760,10 @@ redisClient.on("end", () => {
 })
 
 // CONNECT THE BOT TO DISCORD
-bot.login(process.env.DISCORDTOKEN);
+bot.login(process.env.DISCORDTOKEN).catch(err => {
+	console.log("[DRABOT] Connection failed.");
+	console.error(err);
+});
 
 // BABYBOT ----------------------------------------------------------------------------------------------------------------------
 

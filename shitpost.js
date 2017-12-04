@@ -23,8 +23,8 @@ exports.ShitpostHandler = function() {
 			shitpost = this.genShitpost();
 			done = tools.stringContainsAllArray(shitpost, strings);
 		} if (done)
-			return shitpost;
-		throw "shitpostNotFound"
+			return Promise.resolve(shitpost);
+		return Promise.reject("shitpostNotFound");
 	}
 	this.genStory = () => {
 		let hero = tools.randTab(exports.names);

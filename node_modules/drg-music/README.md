@@ -37,15 +37,15 @@ handler.leave(guild, callback);
 
 #### Add a Youtube video or a local file to the playlist
 ```js
-handler.pushMusic(properties, callback);
+handler.pushMusic(options, callback);
 ```
-``properties`` is an object containing the following information:
-``properties.link`` is a Youtube link.
-``properties.path`` is a path to a local file.
-``properties.query`` is a Youtube query.
-``properties.member`` is a GuildMember (the one who requested the music)
-``properties.passes`` is the number of passes. (optional)
-``properties.props`` is whatever you want it to be, it's an object where you can store any data you want and access it when you get info from a music. (optional)
+``options`` is an object containing the following information:
+``options.link`` is a Youtube link.
+``options.path`` is a path to a local file.
+``options.query`` is a Youtube query.
+``options.member`` is a GuildMember (the one who requested the music)
+``options.passes`` is the number of passes. (optional)
+``options.props`` is whatever you want it to be, it's an object where you can store any data you want and access it when you get info from a music. (optional)
 
 The callback lets you interact with the music that was added.
 
@@ -289,12 +289,12 @@ client.on("message", message => {
   }
 
   if (message.content.startsWith("/request ")) {
-    let properties = {
+    let options = {
       member: message.member,
       link: message.replace("/request ",""),
       props: {time: new Date()}
     }
-    handler.pushMusic(properties, added => {
+    handler.pushMusic(options, added => {
       message.channel.send("The music " + added.title + " was added to the playlist. (requested at " + added.props.time + ")");
     });
   }
