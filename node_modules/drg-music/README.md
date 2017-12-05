@@ -19,10 +19,8 @@ However some functions do not require the use of a MusicHandler.
 
 #### What can it do ?
 With this module, you can ask the bot to join and leave a voice channel, to request and play a Youtube video, to pause/resume, to set the volume, etc.
-Most commands will require you to specify the guild where you want to execute the action.
-
-Most methods include a callback function as a parameter.
-The music handler will emit an event whenever something happens (eg. when the current song is finished or when the playlist is empty), and throw errors when it's trying to do something impossible. (eg. joining someone who isn't in a voice channel)
+Most commands will require you to specify the guild where you want to execute the action and return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
+The music handler will emit an event whenever something happens. (eg. when the current song is finished or when the playlist is empty)
 
 ##### Join a voice channel
 ```js
@@ -30,10 +28,14 @@ handler.join(member, callback);
 ```
 ``member`` is the guild member that the bot will join.
 
+Returns a resolved Promise, or a rejected Promise with an error if something goes wrong.
+
 #### Leave a voice channel
 ```js
 handler.leave(guild, callback);
 ```
+
+Returns a resolved Promise, or a rejected Promise with an error if something goes wrong.
 
 #### Add a Youtube video or a local file to the playlist
 ```js
@@ -47,33 +49,7 @@ handler.pushMusic(options, callback);
 ``options.passes`` is the number of passes. (optional)
 ``options.props`` is whatever you want it to be, it's an object where you can store any data you want and access it when you get info from a music. (optional)
 
-The callback lets you interact with the music that was added.
-
-#### Add a Youtube video to the playlist using the link **[DEPRECATED]**
-```js
-handler.addMusic(member, youtubeLink, callback);
-```
-``member`` represents the guild member that requested the music.
-``youtubeLink`` must be a Youtube video link.
-
-The callback lets you interact with the music that was added.
-
-#### Add a Youtube video to the playlist using a query **[DEPRECATED]**
-```js
-handler.addYoutubeQuery(member, query, youtubeAPIKey, callback);
-```
-To get a Youtube API key follow this tutorial : https://www.slickremix.com/docs/get-api-key-for-youtube/.
-
-The callback lets you interact with the music that was added. (cf ``handler.musicInfo(index)``)
-
-#### Add a local file to the playlist **[DEPRECATED]**
-```js
-handler.addFile(member, filePath, callback);
-```
-``member`` represents the guild member that requested the file.
-``filePath`` represents the path of the file to play.
-
-The callback lets you interact with the file that was added.
+Returns a Promise resolved with the music that was added.
 
 #### Remove a Youtube video/file from the playlist
 ```js
@@ -81,7 +57,7 @@ handler.removeMusic(guild, index, callback);
 ```
 ``index`` represents the index of the music in the playlist.
 
-The callback lets you interact with the music that got removed.
+Returns a Promise resolved with the music that was removed.
 
 #### Skip the current music
 ```js
@@ -89,31 +65,35 @@ handler.nextMusic(guild, callback);
 ```
 If the playlist is empty, the bot will stop playing music.
 
-The callback lets you interact with the music that was skipped.
+Returns a Promise resolved with the music that was skipped.
 
 #### Shuffle the playlist
 ```js
 handler.shufflePlaylist(guild, callback);
 ```
 
+Returns a resolved Promise.
+
 #### Clear the playlist
 ```js
 handler.clearPlaylist(guild, callback);
 ```
 
+Returns a resolved Promise.
+
 #### Pause/resume the music
 ```js
 handler.pauseMusic(guild, callback);
 ```
-The callback lets you interact with the current music.
+Returns a resolved Promise.
 ```js
 handler.resumeMusic(guild, callback);
 ```
-The callback lets you interact with the current music.
+Returns a resolved Promise.
 ```js
 handler.toggleMusic(guild, callback);
 ```
-The callback lets you know whether or not the playlist got paused, as well as interact with the current music.
+Returns a Promise resolved with a boolean set to ``true`` if the music is paused, ``false`` otherwise.
 
 #### Set the volume
 ```js
@@ -121,7 +101,7 @@ handler.setVolume(guild, volume, callback);
 ```
 ``volume`` must be >= 0. By default, it's set to 100.
 
-The callback lets interact with the old volume.
+Return a Promise resolved with the old volume.
 
 #### Set a music to loop
 ```js
@@ -129,7 +109,7 @@ handler.toggleLooping(guild, callback);
 ```
 Whether or not the current music must repeat itself upon end.
 
-The callback lets you know whether or not the playlist is looping.
+Returns a Promise resolved with a boolean set to ``true`` if the music is looping, ``false`` otherwise.
 
 ### Useful commands
 Those commands are used to ask something to the handler.
@@ -276,13 +256,13 @@ client.on("message", message => {
 
   if (message.content == "/join") {
     musicChannels.set(msg.guild.id, msg.channel);
-    handler.join(message.member, () => {
+    handler.join(message.member).then(() => {
       message.channel.send("Hello, I'm here to play you some music :)");
     });
   }
 
   if (message.content == "/leave") {
-    handler.leave(message.guild, () => {
+    handler.leave(message.guild).then(() => {
       message.channel.send("Goodbye :)");
     });
     musicChannels.delete(msg.guild.id);
@@ -294,8 +274,11 @@ client.on("message", message => {
       link: message.replace("/request ",""),
       props: {time: new Date()}
     }
-    handler.pushMusic(options, added => {
+    handler.addMusic(options).then(added => {
       message.channel.send("The music " + added.title + " was added to the playlist. (requested at " + added.props.time + ")");
+    }, err => {
+      message.channel.send("Sorry but I can't play that music for unknown reasons.");
+      console.error(err);
     });
   }
 
