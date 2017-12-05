@@ -297,7 +297,7 @@ bot.on("message", msg => {
 
 				// ajoute une musique par recherche
 				else if (funcs.check(msg, "query", 1, false)) {
-					let link = command.replace("request ","");
+					let link = command.replace("query ","");
 					msg.channel.send("I am searching for a music that corresponds to your request.").then(msg2 => {
 						music.addMusic(link, msg.member, {passes: 3, ytbApiKey: process.env.YOUTUBEAPIKEY, type: "query"}).then(added => {
 							msg2.edit("``" + added.title + "`` has been added to the playlist.");
@@ -500,7 +500,9 @@ bot.on("message", msg => {
 
 			// bot info
 			else if (funcs.check(msg, "info", 0, true)) {
-				msg.channel.send("", funcs.botInfo(bot));
+				funcs.showInfo().then(embed => {
+					msg.channel.send("", embed);
+				});
 			}
 
 			// -----------------------------------------------------------------------------------------------------------------------------------

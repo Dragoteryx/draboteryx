@@ -210,15 +210,16 @@ function cacheUser(user) {
 	console.log("[CACHE] User '" + user.username + "#" + user.discriminator + "' has been added to the cache");
 }
 
-exports.botInfo = function() {
+exports.showInfo = async () => {
+	let app = await drabot.bot.fetchApplication();
 	let info = exports.defaultEmbed()
 	.setThumbnail(drabot.bot.user.avatarURL)
 	.addField("Discord tag", drabot.bot.user.tag, true)
-	.addField("Author", "Dragoteryx#6922", true)
+	.addField("Author", app.owner.tag, true)
 	.addField("Version", pack.version)
 	.addField("Description", pack.description)
-	.addField("Github link", "https://github.com/Dragoteryx/draboteryx")
-	.addField("Invite link", "https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=104193088");
+	.addField("Github link", pack.homepage)
+	.addField("Invite link", "https://discordapp.com/oauth2/authorize?client_id=" + drabot.bot.user.id + "&scope=bot&permissions=104193088");
 	return info;
 }
 

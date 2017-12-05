@@ -3,7 +3,7 @@
 
 // IMPORTS
 const ytdl = require("ytdl-core");
-const {YTSearcher} = require("ytsearcher");
+const youtubeSearch = require("youtube-search");
 const EventEmitter = require("events");
 
 // VARIABLES
@@ -20,34 +20,65 @@ exports.videoWebsite = str => {
 	else throw new Error("unknownOrNotSupportedVideoWebsite");
 }
 
-function timeout(delay) {
-
-}
-
 exports.millisecondsToTime = int => {
 	let seconds = int/1000;
 	let minutes = 0;
+	let hours = 0;
 	while (seconds >= 60) {
 		seconds -= 60;
 		minutes++;
 	}
+	while (minutes >= 60) {
+		minutes -= 60;
+		hours++;
+	}
 	seconds = Math.floor(seconds);
 	if (seconds < 10)
 		seconds = "0" + seconds;
-	return minutes + ":" + seconds;
+	if (hours != 0) {
+		if (minutes < 10)
+			minutes = "0" + minutes;
+			return hours + ":" + minutes + ":" + seconds;
+	} else
+		return minutes + ":" + seconds;
 }
 
-exports.playYoutube = (ytbLink, voiceConnection, passes) => {
-	return voiceConnection.playStream(ytdl(ytbLink, {filter:"audioonly"}), {passes: passes, bitrate:"auto"});
+exports.playYoutube = (link, voiceConnection, passes) => {
+	return voiceConnection.playStream(ytdl(link, {filter:"audioonly"}), {passes: passes, bitrate:"auto"});
 }
 
-exports.queryYoutube = async (query, ytbApiKey) => {
-	let searcher = new YTSearcher(ytbApiKey);
-	let rep = await searcher.search(query, {type: "video"});
-	if (rep instanceof Error)
-		return Promise.reject(rep);
-	else
-		return Promise.resolve(rep.first.url);
+exports.youtubeInfo = link => {
+	return ytdl.getInfo(link).then(info => {
+		let music = {
+			title: info.title,
+			description: info.description,
+			author: {
+				name: info.author.name,
+				avatarURL: info.author.avatar,
+				channelURL: info.author.channel_url
+			},
+			thumbnailURL: info.thumbnail_url,
+			length: Number(info.length_seconds)*1000,
+			link: link
+		};
+		return Promise.resolve(music);
+	}, err => {
+		return Promise.reject(err);
+	});
+}
+
+exports.queryYoutube = (query, ytbApiKey) => {
+	return new Promise((resolve, reject) => {
+		youtubeSearch(query, {key: ytbApiKey, maxResults: 1, type: "video"}, (err, res) => {
+			if (err) reject(err);
+			else resolve(res[0].link);
+		});
+	});
+}
+
+exports.queryYoutubeInfo = async (query, ytbApiKey) => {
+	let link = await exports.queryYoutube(query, ytbApiKey);
+	return await exports.youtubeInfo(link);
 }
 
 //CLASSES
@@ -89,7 +120,7 @@ exports.MusicHandler = function(cl) {
 	}
 
 	// quitter le vocal -------------------------------------------------------------------------
-	this.leave = (guild, callback) => {
+	this.leave = guild => {
 		if (!this.isConnected(guild))
 			return Promise.reject(new Error("clientNotInAVoiceChannel"));
 		playlists.get(guild.id).kill();
@@ -111,15 +142,15 @@ exports.MusicHandler = function(cl) {
 			return Promise.reject(new Error("clientNotInAVoiceChannel"));
 
 		// what type of input ?
-		let type = "link";
-		if (options !== undefined)
-			if (options.type !== undefined)
-				type = "" + options.type;
+		if (options === undefined)
+			options = {};
+		if (options.type === undefined)
+			options.type = "link";
 
 		// add the music to the playlist
 
 		// link
-		if (type == "link") {
+		if (options.type == "link") {
 			let info = await ytdl.getInfo(request);
 			if (info instanceof Error)
 				return Promise.reject(info);
@@ -145,7 +176,7 @@ exports.MusicHandler = function(cl) {
 		}
 
 		// local file
-		else if (type == "file") {
+		else if (options.type == "file") {
 			let music;
 			if (!keys.includes("passes"))
 				music = new Music(request, member, true, 1);
@@ -158,18 +189,18 @@ exports.MusicHandler = function(cl) {
 		}
 
 		// youtube query
-		else if (type == "query") {
+		else if (options.type == "query") {
 			let link = await exports.queryYoutube(request, options.ytbApiKey);
 			if (link instanceof Error)
 				return Promise.reject(link);
 			options.type = "link";
-			return Promise.resolve(this.addMusic(link, member, options));
+			return this.addMusic(link, member, options);
 		} else
 			return Promise.reject(new Error("invalidInputType"));
 	}
 
 	// remove a music from the playlist -------------------------------------------------------------------------
-	this.removeMusic = (guild, index, callback) => {
+	this.removeMusic = (guild, index) => {
 		if (!this.isConnected(guild))
 			return Promise.reject(new Error("clientNotInAVoiceChannel"));
 		if (this.isPlaylistEmpty(guild))
@@ -487,5 +518,11 @@ function Music(link, member, file, passes) {
 		if (this.props !== undefined)
 			object.props = this.props;
 		return object;
+	}
+	this.remainingTime = () => {
+		if (this.file)
+			return this.length - this.time;
+		else
+			return
 	}
 }
