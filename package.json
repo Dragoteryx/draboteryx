@@ -1,18 +1,16 @@
 {
   "name": "draboteryx",
-  "version": "0.6.1",
+  "version": "0.10.0",
   "description": "My Discord bot, DraBOTeryx, or Drabot for short. Use /help to learn how to use the bot.",
   "main": "drabot.js",
   "dependencies": {
     "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
     "drg-music": "^3.2.1",
-    "gm": "^1.23.0",
+    "http": "0.0.0",
     "opusscript": "0.0.4",
-    "qrcode": "^0.9.0",
     "redis": "^2.8.0",
-    "sha1": "^1.1.1",
-    "twitter": "^1.7.1",
+    "url": "^0.11.0",
     "youtube-search": "^1.0.10",
     "ytdl-core": "^0.18.1"
   },
@@ -23,5 +21,5 @@
   },
   "author": "Dragoteryx",
   "license": "ISC",
-  "homepage": "https://github.com/Dragoteryx/drg-music#readme"
+  "homepage": "https://github.com/Dragoteryx/draboteryx#readme"
 }

@@ -19,7 +19,6 @@ exports.Command = function(name, desc, type, show) {
 exports.CommandType = function(name, title) {
 	this.name = name;
 	this.title = title;
-	this.embed = null;
 	this.equals = function(other) {
 		return this.name == other.name;
 	}
