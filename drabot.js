@@ -13,7 +13,7 @@ const config = require("./config.js"); 	// configs
 const tools = require("./tools.js");		// useful functions
 const funcs = require("./funcs.js");		// commands related functions
 const types = require("./types.js");		// custom types
-const server = require("./server.js");	// HTTP webserver
+//const server = require("./server.js");	// HTTP webserver
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
