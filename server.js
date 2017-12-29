@@ -1,4 +1,5 @@
 "use strict";
+require("dotenv").config();
 const http = require("http");
 const fs = require("fs");
 const url = require("url");
@@ -34,6 +35,18 @@ http.createServer((req, res) => {
 			fs.readFile(page, (err, data) => {
 				if (err) throw err;
 			  res.writeHead(200, {"Content-Type": "image/png"});
+				res.end(data);
+			});
+		} else if (page.endsWith(".gif")) {
+			fs.readFile(page, (err, data) => {
+				if (err) throw err;
+			  res.writeHead(200, {"Content-Type": "image/gif"});
+				res.end(data);
+			});
+		} else if (page.endsWith(".ico")) {
+			fs.readFile(page, (err, data) => {
+				if (err) throw err;
+			  res.writeHead(200, {"Content-Type": "image/x-icon"});
 				res.end(data);
 			});
 		}
