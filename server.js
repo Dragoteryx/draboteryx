@@ -66,3 +66,4 @@ http.createServer((req, res) => {
 			res.end('<script language="javascript">document.location.href="http://localhost/unknown.html"</script>');
 	}
 }).listen(process.env.PORT);
+console.log("[WEB] Web server ready, listening to port " + process.env.PORT);
