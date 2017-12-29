@@ -13,7 +13,10 @@
     "ytdl-core": "^0.18.1"
   },
   "devDependencies": {},
-  "scripts": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+	"start": "node drabot.js"
+  },
   "author": "Dragoteryx",
   "license": "ISC",
   "homepage": "https://github.com/Dragoteryx/draboteryx#readme"

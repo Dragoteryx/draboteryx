@@ -1,1 +1,1 @@
-worker: node drabot.js
+worker: npm start
