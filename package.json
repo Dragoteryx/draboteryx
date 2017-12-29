@@ -15,10 +15,7 @@
     "ytdl-core": "^0.18.1"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "console.log(\"[GIT] Ça fonctionne\")",
-    "start": "node drabot.js"
-  },
+  "scripts": {},
   "author": "Dragoteryx",
   "license": "ISC",
   "homepage": "https://github.com/Dragoteryx/draboteryx#readme"
