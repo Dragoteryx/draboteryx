@@ -1,4 +1,5 @@
 "use strict";
+const drabot = require("./drabot.js");
 const http = require("http");
 const fs = require("fs");
 const url = require("url");
@@ -17,13 +18,32 @@ http.createServer((req, res) => {
 			else
 				res.end('<script language="javascript">document.location.href="http://localhost/index.html"</script>');
 		} else if (page.endsWith(".html")) {
-			fs.readFile(page, (err, data) => {
-				fs.readFile("headerfooter.html", (err, data2) => {
-          let hf = new String(data2).split("<!--CUT-->");
-          res.writeHead(200, {"Content-Type": "text/html"});
-          res.end(new String(data).replace("<!--HEADER-->", hf[0]).replace("<!--FOOTER-->", hf[1]));
-        });
-			});
+			if (page == "index.html") {
+				fs.readFile("index.html", (err, data) => {
+					if (err) throw err;
+		      let html = new String(data).split("<!--CUT-->");
+		      fs.readFile("headerfooter.html", (err, data) => {
+		        if (err) throw err;
+		        let hf = new String(data).split("<!--CUT-->");
+		  		  res.writeHead(200, {"Content-Type": "text/html"});
+		  			res.write(html[0].replace("<!--HEADER-->", hf[0]));
+		        let commands = Array.from(drabot.commands.fetchProps().values());
+		        for (let command of commands)
+		          if (command.name !== undefined)
+		            res.write("<tr><td>" + command.name + "</td><td>" + command.desc + "</td></tr>");
+		  			res.write(html[1].replace("<!--FOOTER-->",  hf[1]));
+		  			res.end();
+		      })
+				});
+			} else {
+				fs.readFile(page, (err, data) => {
+					fs.readFile("headerfooter.html", (err, data2) => {
+	          let hf = new String(data2).split("<!--CUT-->");
+	          res.writeHead(200, {"Content-Type": "text/html"});
+	          res.end(new String(data).replace("<!--HEADER-->", hf[0]).replace("<!--FOOTER-->", hf[1]));
+	        });
+				});
+			}
 		} else if (page.endsWith(".css")) {
 			fs.readFile(page, (err, data) => {
 				if (err) throw err;
