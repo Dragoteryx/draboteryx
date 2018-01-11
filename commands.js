@@ -71,61 +71,37 @@ exports.CommandsHandler = function() {
 		commands.get(name).active = !commands.get(name).active;
 		return this;
 	}
-	this.isToggled = name => {
+	this.isActive = name => {
 		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).active;
 	}
-	this.check = (msg, options) => {
-		if (options === undefined)
-			options = {};
-		if (options.decount === undefined)
-			options.decount = false;
-		if (options.debug === undefined)
-			options.debug = false;
-		if (options.debug)
-			console.log("message content: '" + msg.content + "'");
+	this.check = (msg, decount) => {
+		if (decount === undefined)
+			decount = true;
 		return new Promise((resolve, reject) => {
 			try {
 				let prefixed = false;
 				let usedPrefix = "";
 				for (let prefix of this.prefixes) {
-					if (options.debug)
-						console.log("testing prefix: " + prefix)
 					if (msg.content.startsWith(prefix) && !prefixed) {
 						prefixed = true;
 						usedPrefix = prefix;
-						if (options.debug)
-							console.log("used prefix: " + prefix)
 					}
 				}
 				if (!prefixed) {
-					if (options.debug)
-						console.log("no prefix");
 					resolve({command: null, result: {valid: false, reasons: ["missing prefix"]}});
 					return;
 				}
 				let name = msg.content.replace(usedPrefix, "").split(" ")[0];
-				if (options.debug)
-					console.log("searching command name: '" + name + "'");
-				if (!this.hasCommand(name)) {
-					if (options.debug)
-						console.log("command doesn't exist");
+				if (!this.hasCommand(name))
 					resolve({command: null, result: {valid: false, reasons: ["wrong/not command"]}});
-					return;
-				}
-				if (options.debug)
-					console.log("command exists");
-				if (!this.isToggled(name)) {
-					if (options.debug)
-						console.log("command is disabled");
+				else if (!this.isActive(name))
 					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
-					return;
+				else {
+					let command = this.getCommand(name);
+					resolve(Object.seal({command: command, result: command.check(msg, decount)}));
 				}
-				if (options.debug)
-					console.log("checking command '" + name + "'");
-				let command = this.getCommand(name);
-				resolve(Object.seal({command: command, result: command.check(msg, options.dec)}));
 			} catch(err) {
 				reject(err);
 			}
@@ -139,7 +115,7 @@ exports.CommandsHandler = function() {
 				props.set(name, Object.freeze(this.getCommand(name).options.props));
 		return props;
 	}
-	this.changeCommandName = (oldName, newName) => {
+	this.changeName = (oldName, newName) => {
 		if (!this.hasCommand(oldName))
 			throw new Error("unknownCommand");
 		let command = this.getCommand(oldName);
@@ -155,7 +131,9 @@ function Command(name, callback, options, handler) {
 	this._name = name;
 	this.callback = callback;
 	this.options = options;
-	this.check = (msg, dec) => {
+	this.check = (msg, decount) => {
+		if (decount === undefined)
+			decount = true;
 		let check = {valid: true};
 		let prefixed = false;
 		let usedPrefix = "";
@@ -253,7 +231,7 @@ function Command(name, callback, options, handler) {
 				check.reasons = [];
 			check.reasons.push("function: " + funcRes.reason);
 		}
-		if (this.options.uses > 0 && dec && check.valid)
+		if (this.options.uses > 0 && decount && check.valid)
 			this.options.uses--;
 		return Object.freeze(check);
 	}
