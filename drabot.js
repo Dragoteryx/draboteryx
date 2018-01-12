@@ -28,6 +28,7 @@ exports.client = client;
 let ready = false;
 let musicChannels = new Map();
 let clever = true;
+let cvbignore = [];
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -65,7 +66,7 @@ client.on("message", msg => {
 					console.error(err);
 				}
 			} else {
-				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever) {
+				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever && !cvbignore.includes(msg.author.id)) {
 					let toLog = "";
 					if (msg.channel.type != "dm") toLog += "[CLEVERBOT] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
 					else toLog += "[CLEVERBOT] (DM) " + msg.author.username + ": " + msg.content;
