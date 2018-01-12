@@ -13,10 +13,10 @@ exports.CommandsHandler = function() {
 		if (callback === undefined)
 			throw new Error("missing parameter: callback function");
 		let options = options2 !== undefined ? options2 : {};
-		if (options.allowDMs === undefined)
-			options.allowDMs = true;
-		if (options.ownerOnly === undefined)
-			options.ownerOnly = false;
+		if (options.dms === undefined)
+			options.dms = true;
+		if (options.owner === undefined)
+			options.owner = false;
 		if (options.guilds === undefined)
 			options.guilds = [];
 		if (options.channels === undefined)
@@ -36,8 +36,8 @@ exports.CommandsHandler = function() {
 		if (options.function === undefined)
 			options.function = () => {return {valid: true}};
 		let command = new Command(name, callback, Object.seal({
-			allowDMs: options.allowDMs,
-			ownerOnly: options.ownerOnly,
+			dms: options.dms,
+			owner: options.owner,
 			guilds: options.guilds,
 			channels: options.channels,
 			users: options.users,
@@ -156,17 +156,17 @@ function Command(name, callback, options, handler) {
 				check.reasons = [];
 			check.reasons.push("wrong name");
 		}
-		if (msg.channel.type != "text" && !this.options.allowDMs) {
+		if (msg.channel.type != "text" && !this.options.dms) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
 			check.reasons.push("DMs not allowed");
 		}
-		if (!handler.owners.includes(msg.author.id) && this.options.ownerOnly) {
+		if (!handler.owners.includes(msg.author.id) && this.options.owner) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
-			check.reasons.push("ownerOnly");
+			check.reasons.push("owner");
 		}
 		if (this.options.guilds.length != 0) {
 			if (!this.options.guilds.includes(msg.guild.id)) {
