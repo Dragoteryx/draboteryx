@@ -207,6 +207,11 @@ commands.setCommand("stopclever", () => {
 	}, 10000);
 }, {owner: true});
 
+commands.setCommand("exec", () => {
+	let code = msg.content.replace(config.prefix + "exec ", "");
+	eval(code);
+}, {owner: true});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
