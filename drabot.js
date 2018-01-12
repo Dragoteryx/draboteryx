@@ -27,6 +27,7 @@ exports.client = client;
 // GLOBALS ----------------------------------------------------------------------------------------------
 let ready = false;
 let musicChannels = new Map();
+let clever = true;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -64,7 +65,7 @@ client.on("message", msg => {
 					console.error(err);
 				}
 			} else {
-				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id) {
+				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever) {
 					console.log("[CLEVERBOT] " + msg.content);
 					cleverbot.ask(msg.content, (err, res) => {
 						if (err) console.error(err);
@@ -192,6 +193,15 @@ commands.setCommand("roll", msg => {
 	let res = tools.random(1, max);
 	msg.lreply(res + "/" + max + " (:game_die:)")
 }, {props: new types.Command("roll ([size])", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
+
+commands.setCommand("stopclever", () => {
+	clever = false;
+	console.log("[CLEVERBOT] Off");
+	setTimeout(() => {
+		clever = true;
+		console.log("[CLEVERBOT] On")
+	}, 10000);
+}, {owner: true});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
