@@ -7,6 +7,7 @@ const fs = require("fs");
 const snekfetch = require("snekfetch");
 const drgMusic = require("drg-music");
 const drgCommands = require("./commands.js");
+const cleverbotIO = require("cleverbot.io");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -20,6 +21,7 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands.CommandsHandler();
+const cleverbot = new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY);
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -60,6 +62,14 @@ client.on("message", msg => {
 					res.command.callback(msg);
 				} catch(err) {
 					console.error(err);
+				}
+			} else {
+				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id) {
+					console.log("[CLEVERBOT] " + msg.content);
+					cleverbot.ask(msg.content, (err, res) => {
+						if (err) console.error(err);
+						else msg.channel.lsend(res);
+					});
 				}
 			}
 		}, err => {
