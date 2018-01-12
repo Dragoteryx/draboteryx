@@ -207,7 +207,7 @@ commands.setCommand("stopclever", () => {
 	}, 10000);
 }, {owner: true});
 
-commands.setCommand("exec", () => {
+commands.setCommand("exec", msg => {
 	let code = msg.content.replace(config.prefix + "exec ", "");
 	eval(code);
 }, {owner: true});
