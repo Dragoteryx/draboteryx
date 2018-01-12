@@ -66,7 +66,10 @@ client.on("message", msg => {
 				}
 			} else {
 				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever) {
-					console.log("[CLEVERBOT] " + msg.content);
+					let toLog = "";
+					if (msg.channel.type != "dm") toLog += "[CLEVERBOT] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+					else toLog += "[CLEVERBOT] (DM) " + msg.author.username + ": " + msg.content;
+					console.log(toLog);
 					cleverbot.ask(msg.content, (err, res) => {
 						if (err) console.error(err);
 						else msg.channel.lsend(res);
