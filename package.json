@@ -4,7 +4,7 @@
   "description": "My Discord bot, DraBOTeryx, or Drabot for short. Use /help to learn how to use the bot.",
   "main": "drabot.js",
   "dependencies": {
-    "cleverbot.io": "^1.0.4",
+    "better-cleverbot-io": "^1.0.2",
     "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
     "drg-music": "^3.2.1",

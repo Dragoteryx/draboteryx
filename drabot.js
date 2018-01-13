@@ -7,7 +7,7 @@ const fs = require("fs");
 const snekfetch = require("snekfetch");
 const drgMusic = require("drg-music");
 const drgCommands = require("./commands.js");
-const cleverbotIO = require("cleverbot.io");
+const cleverbotIO = require("better-cleverbot-io");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -21,7 +21,12 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands.CommandsHandler();
-const cleverbot = new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY);
+const cleverbot = new cleverbotIO({user: process.env.CLEVER_USER, key: process.env.CLEVER_KEY});
+cleverbot.create().then(() => {
+	console.log("[CLEVERBOT] Initialisé");
+}, err => {
+	console.error(err);
+});
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -83,16 +88,13 @@ client.on("message", msg => {
 		else toLog += "[CLEVERBOT] (DM) " + msg.author.username + ": " + msg.content;
 		console.log(toLog);
 		cleverbot.setNick(msg.author.id + "/" + msg.channel.id);
-		cleverbot.ask(msg.content, (err, res) => {
-			if (err) console.error(err);
-			else msg.channel.lsend(res);
-		});
+		cleverbot.ask(msg.content).then(msg.channel.lsend, console.error);
+		}, err =);
 	}
 
 });
 
 // CONNECT THE BOT TO DISCORD ----------------------------------------------------------------------------------------------
-login();
 client.on("ready", () => {
 	if (!ready) {
 		ready = true;
@@ -112,6 +114,7 @@ client.on("error", err => {
 	ready = false;
 	login();
 })
+login();
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
 commands.setCommand("test", () => {console.log("[TEST] It works!")}, {owner: true});
@@ -162,7 +165,11 @@ commands.setCommand("leave", msg => {
 
 commands.setCommand("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
+	music.addMusic().then(added => {
 
+	}, err => {
+
+	});
 }, {dms: false, arguments: "required", props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
 commands.setCommand("query", msg => {
