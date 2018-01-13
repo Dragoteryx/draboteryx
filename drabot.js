@@ -20,7 +20,7 @@ const types = require("./types.js");		// custom types
 // CONSTS ----------------------------------------------------------------------------------------------
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
-const commands = new drgCommands.CommandsHandler();
+const commands = new drgCommands();
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -85,8 +85,8 @@ client.on("message", msg => {
 			if (err) console.error(err);
 			else {
 				let toLog = "";
-				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + session + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-				else toLog += "[CLEVERBOT] Session: " + session + " (DM) " + msg.author.username + ": " + msg.content;
+				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + msg.channel.id + "/" + msg.author.id + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+				else toLog += "[CLEVERBOT] Session: " + msg.channel.id + "/" + msg.author.id + " (DM) " + msg.author.username + ": " + msg.content;
 				console.log(toLog);
 				cleverbot.ask(msg.content, (err, res) => {
 					if (err) console.error(err)
@@ -205,7 +205,7 @@ commands.setCommand("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
 	msg.channel.lsend(content);
 	msg.ldelete();
-}, {owner: true});
+}, {owner: true, arguments: "required"});
 
 commands.setCommand("roll", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -223,12 +223,30 @@ commands.setCommand("stopclever", () => {
 		clever = true;
 		console.log("[CLEVERBOT] On")
 	}, 10000);
-}, {owner: true});
+}, {owner: true, arguments: "none"});
 
 commands.setCommand("exec", msg => {
 	let code = msg.content.replace(config.prefix + "exec ", "");
 	eval(code);
-}, {owner: true});
+}, {owner: true, arguments: "required"});
+
+commands.setCommand("setName", msg => {
+	let name = msg.content.replace(config.prefix + "setName ", "");
+	client.user.setName(name);
+	console.log("[DRABOT] New name: " + name);
+}, {owner: true, arguments: "required"});
+
+commands.setCommand("setGame", msg => {
+	let game = msg.content.replace(config.prefix + "setGame ", "");
+	client.user.setGame(game);
+	console.log("[DRABOT] New game: " + game);
+}, {owner: true, arguments: "required"});
+
+commands.setCommand("setAvatar", msg => {
+	let avatar = msg.content.replace(config.prefix + "setAvatar ", "");
+	client.user.setAvatar(avatar);
+	console.log("[DRABOT] New avatar: " + avatar);
+}, {owner: true, arguments: "required"});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

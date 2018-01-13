@@ -2,7 +2,7 @@
 "use strict";
 
 // IMPORTS
-exports.CommandsHandler = function() {
+module.exports = function() {
 	this.prefixes = [];
 	this.owners = [];
 	var off = [];
