@@ -54,34 +54,41 @@ music.on("empty", guild => {
 
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
-		commands.check(msg).then(res => {
-			if (res.result.valid) {
-				let toLog = "";
-				if (msg.channel.type != "dm") toLog += "[COMMAND] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-				else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
-				console.log(toLog);
-				try {
-					res.command.callback(msg);
-				} catch(err) {
-					console.error(err);
-				}
-			} else {
-				if (msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever && !cvbignore.includes(msg.author.id)) {
-					let toLog = "";
-					if (msg.channel.type != "dm") toLog += "[CLEVERBOT] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-					else toLog += "[CLEVERBOT] (DM) " + msg.author.username + ": " + msg.content;
-					console.log(toLog);
-					cleverbot.ask(msg.content, (err, res) => {
-						if (err) console.error(err);
-						else msg.channel.lsend(res);
-					});
-				}
+
+	// COMMANDS
+	commands.check(msg).then(res => {
+		if (res.result.valid) {
+			let toLog = "";
+			if (msg.channel.type != "dm") toLog += "[COMMAND] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+			else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
+			console.log(toLog);
+			try {
+				res.command.callback(msg);
+			} catch(err) {
+				console.error(err);
 			}
-		}, err => {
-			console.error(err);
+		}
+	}, err => {
+		console.error(err);
+	});
+
+	// PING
+	if (msg.content.toLowerCase() == "ping")
+		msg.lreply("pong!");
+
+	// CLEVERBOT
+	if (!msg.content.startsWith(config.prefix) && msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever && !cvbignore.includes(msg.author.id)) {
+		let toLog = "";
+		if (msg.channel.type != "dm") toLog += "[CLEVERBOT] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+		else toLog += "[CLEVERBOT] (DM) " + msg.author.username + ": " + msg.content;
+		console.log(toLog);
+		cleverbot.setNick(msg.author.id + "/" + msg.channel.id);
+		cleverbot.ask(msg.content, (err, res) => {
+			if (err) console.error(err);
+			else msg.channel.lsend(res);
 		});
-		if (msg.content.toLowerCase() == "ping")
-			msg.lreply("pong!");
+	}
+
 });
 
 // CONNECT THE BOT TO DISCORD ----------------------------------------------------------------------------------------------
