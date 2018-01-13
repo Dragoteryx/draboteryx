@@ -58,13 +58,15 @@ client.on("message", msg => {
 
 	// COMMANDS
 	commands.check(msg).then(res => {
-		if (debug)
-			console.log(res)
 		if (res.result.valid) {
 			let toLog = "";
 			if (msg.channel.type != "dm") toLog += "[COMMAND] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
 			else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
 			console.log(toLog);
+		}
+		if (debug) {
+			console.log("[DEBUG] Message content: " + msg.content);
+			console.log(res)
 		}
 	}, err => {
 		console.error(err);
