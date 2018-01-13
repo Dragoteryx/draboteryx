@@ -89,7 +89,6 @@ client.on("message", msg => {
 		console.log(toLog);
 		cleverbot.setNick(msg.author.id + "/" + msg.channel.id);
 		cleverbot.ask(msg.content).then(msg.channel.lsend, console.error);
-		}, err =);
 	}
 
 });
