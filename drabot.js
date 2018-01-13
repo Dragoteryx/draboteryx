@@ -21,7 +21,7 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands.CommandsHandler();
-const cleverbot = new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY);
+const cleverbot =
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -29,6 +29,8 @@ let ready = false;
 let musicChannels = new Map();
 let clever = true;
 let cvbignore = [];
+let cleversessions = new Map();
+let cleverbots = new Map();
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -78,21 +80,20 @@ client.on("message", msg => {
 
 	// CLEVERBOT
 	if (!msg.content.startsWith(config.prefix) && msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever && !cvbignore.includes(msg.author.id)) {
-		cleverbot.setNick(msg.author.id + "/" + msg.channel.id);
-		cleverbot.create((err, res) => {
+		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
+			cleverbots.set(msg.channel.id + "/" + msg.author.id, new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY));
+		let cleverbot = cleverbots.get(msg.channel.id + "/" + msg.author.id);
+		cleverbot.create((err, session) => {
 			if (err) console.error(err);
-			else {
-				let toLog = "";
-				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + res + "(" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-				else toLog += "[CLEVERBOT] Session: " + res + "(DM) " + msg.author.username + ": " + msg.content;
-				console.log(toLog);
-				cleverbot.ask(msg.content, (err, res) => {
-					if (err) console.error(err)
-					else msg.channel.lsend(res);
-				});
-			}
+			let toLog = "";
+			if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + session + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+			else toLog += "[CLEVERBOT] Session: " + session + " (DM) " + msg.author.username + ": " + msg.content;
+			console.log(toLog);
+			cleverbot.ask(msg.content, (err, res) => {
+				if (err) console.error(err)
+				else msg.channel.lsend(res);
+			});
 		});
-
 	}
 
 });
