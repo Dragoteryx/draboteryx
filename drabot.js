@@ -232,20 +232,29 @@ commands.setCommand("exec", msg => {
 
 commands.setCommand("setName", msg => {
 	let name = msg.content.replace(config.prefix + "setName ", "");
-	client.user.setName(name);
-	console.log("[DRABOT] New name: " + name);
+	client.user.setUsername(name).then(() => {
+		console.log("[DRABOT] New name: " + name);
+	}, () => {
+		console.log("[DRABOT] Couldn't change name");
+	});
 }, {owner: true, arguments: "required"});
 
 commands.setCommand("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
-	client.user.setGame(game);
-	console.log("[DRABOT] New game: " + game);
+	client.user.setGame(game).then(() => {
+		console.log("[DRABOT] New game: " + game);
+	}, () => {
+		console.log("[DRABOT] Couldn't change game");
+	});
 }, {owner: true, arguments: "required"});
 
 commands.setCommand("setAvatar", msg => {
 	let avatar = msg.content.replace(config.prefix + "setAvatar ", "");
-	client.user.setAvatar(avatar);
-	console.log("[DRABOT] New avatar: " + avatar);
+	client.user.setAvatar(avatar).then(() => {
+		console.log("[DRABOT] New avatar: " + avatar);
+	}, () => {
+		console.log("[DRABOT] Couldn't change avatar");
+	});
 }, {owner: true, arguments: "required"});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
