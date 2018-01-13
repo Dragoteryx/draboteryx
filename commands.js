@@ -99,7 +99,7 @@ module.exports = function() {
 					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
 				else {
 					let command = this.getCommand(name);
-					let result = command.check(msg, exec),
+					let result = command.check(msg, exec);
 					resolve(Object.seal({command: command, result: result}));
 				}
 			} catch(err) {

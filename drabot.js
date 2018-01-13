@@ -255,6 +255,14 @@ commands.setCommand("setAvatar", msg => {
 	});
 }, {owner: true, arguments: "required"});
 
+commands.setCommand("debug", msg => {
+	debug = !debug;
+	if (debug)
+		msg.channel.lsend("Debug mode ON");
+	else
+		msg.channel.lsend("Debug mode OFF");
+}, {owner: true, arguments: "none"});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
