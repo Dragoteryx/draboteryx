@@ -75,9 +75,9 @@ module.exports = function() {
 			throw new Error("unknownCommand");
 		return commands.get(name).active;
 	}
-	this.check = (msg, decount) => {
-		if (decount === undefined)
-			decount = true;
+	this.check = (msg, exec) => {
+		if (exec === undefined)
+			exec = true;
 		return new Promise((resolve, reject) => {
 			try {
 				let prefixed = false;
@@ -99,7 +99,8 @@ module.exports = function() {
 					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
 				else {
 					let command = this.getCommand(name);
-					resolve(Object.seal({command: command, result: command.check(msg, decount)}));
+					let result = command.check(msg, exec),
+					resolve(Object.seal({command: command, result: result}));
 				}
 			} catch(err) {
 				reject(err);
@@ -130,9 +131,9 @@ function Command(name, callback, options, handler) {
 	this._name = name;
 	this.callback = callback;
 	this.options = options;
-	this.check = (msg, decount) => {
-		if (decount === undefined)
-			decount = true;
+	this.check = (msg, exec) => {
+		if (exec === undefined)
+			exec = true;
 		let check = {valid: true};
 		let prefixed = false;
 		let usedPrefix = "";
@@ -165,7 +166,7 @@ function Command(name, callback, options, handler) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
-			check.reasons.push("owner");
+			check.reasons.push("owner only command");
 		}
 		if (this.options.guilds.length != 0) {
 			if (!this.options.guilds.includes(msg.guild.id)) {
@@ -230,10 +231,10 @@ function Command(name, callback, options, handler) {
 				check.reasons = [];
 			check.reasons.push("function: " + funcRes.reason);
 		}
-		if (this.options.uses > 0 && decount && check.valid)
+		if (this.options.uses > 0 && exec && check.valid) {
 			this.options.uses--;
-		if (check.valid)
 			this.callback(msg);
+		}
 		return Object.freeze(check);
 	}
 }

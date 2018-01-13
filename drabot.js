@@ -29,6 +29,7 @@ let musicChannels = new Map();
 let clever = true;
 let cvbignore = [];
 let cleverbots = new Map();
+let debug = false;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -57,6 +58,8 @@ client.on("message", msg => {
 
 	// COMMANDS
 	commands.check(msg).then(res => {
+		if (debug)
+			console.log(res)
 		if (res.result.valid) {
 			let toLog = "";
 			if (msg.channel.type != "dm") toLog += "[COMMAND] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
