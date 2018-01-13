@@ -21,7 +21,6 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands.CommandsHandler();
-const cleverbot =
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -29,7 +28,6 @@ let ready = false;
 let musicChannels = new Map();
 let clever = true;
 let cvbignore = [];
-let cleversessions = new Map();
 let cleverbots = new Map();
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
