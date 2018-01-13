@@ -1,4 +1,3 @@
-/* jshint node:true, evil:true, asi:true, esversion:6*/
 "use strict";
 
 // IMPORTS
@@ -115,7 +114,7 @@ module.exports = function() {
 				props.set(name, Object.freeze(this.getCommand(name).options.props));
 		return props;
 	}
-	this.changeName = (oldName, newName) => {
+	this.changeCommandName = (oldName, newName) => {
 		if (!this.hasCommand(oldName))
 			throw new Error("unknownCommand");
 		let command = this.getCommand(oldName);
@@ -233,6 +232,8 @@ function Command(name, callback, options, handler) {
 		}
 		if (this.options.uses > 0 && decount && check.valid)
 			this.options.uses--;
+		if (check.valid)
+			this.callback(msg);
 		return Object.freeze(check);
 	}
 }
