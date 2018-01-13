@@ -83,14 +83,16 @@ client.on("message", msg => {
 		let cleverbot = cleverbots.get(msg.channel.id + "/" + msg.author.id);
 		cleverbot.create((err, session) => {
 			if (err) console.error(err);
-			let toLog = "";
-			if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + session + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-			else toLog += "[CLEVERBOT] Session: " + session + " (DM) " + msg.author.username + ": " + msg.content;
-			console.log(toLog);
-			cleverbot.ask(msg.content, (err, res) => {
-				if (err) console.error(err)
-				else msg.channel.lsend(res);
-			});
+			else {
+				let toLog = "";
+				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + session + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+				else toLog += "[CLEVERBOT] Session: " + session + " (DM) " + msg.author.username + ": " + msg.content;
+				console.log(toLog);
+				cleverbot.ask(msg.content, (err, res) => {
+					if (err) console.error(err)
+					else msg.channel.lsend(res);
+				});
+			}
 		});
 	}
 
