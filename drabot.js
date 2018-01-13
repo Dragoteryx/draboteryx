@@ -21,7 +21,6 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands.CommandsHandler();
-const cleverbot = new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY);
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -29,6 +28,7 @@ let ready = false;
 let musicChannels = new Map();
 let clever = true;
 let cvbignore = [];
+let cleverbots = new Map();
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -78,6 +78,9 @@ client.on("message", msg => {
 
 	// CLEVERBOT
 	if (!msg.content.startsWith(config.prefix) && msg.channel.name.toLowerCase() == "cleverbot" && msg.author.id != client.user.id && clever && !cvbignore.includes(msg.author.id)) {
+		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
+			cleverbots.set(msg.channel.id + "/" + msg.author.id, new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY));
+		let cleverbot = cleverbots.get(msg.channel.id + "/" + msg.author.id);
 		cleverbot.create((err, session) => {
 			if (err) console.error(err);
 			else {
