@@ -7,7 +7,7 @@ const fs = require("fs");
 const snekfetch = require("snekfetch");
 const drgMusic = require("drg-music");
 const drgCommands = require("./commands.js");
-const cleverbotIO = require("better-cleverbot-io");
+const cleverbotIO = require("cleverbot.io");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -21,12 +21,7 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands.CommandsHandler();
-const cleverbot = new cleverbotIO({user: process.env.CLEVER_USER, key: process.env.CLEVER_KEY});
-cleverbot.create().then(() => {
-	console.log("[CLEVERBOT] Initialisé");
-}, err => {
-	console.error(err);
-});
+const cleverbot = new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY);
 exports.client = client;
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -88,7 +83,16 @@ client.on("message", msg => {
 		else toLog += "[CLEVERBOT] (DM) " + msg.author.username + ": " + msg.content;
 		console.log(toLog);
 		cleverbot.setNick(msg.author.id + "/" + msg.channel.id);
-		cleverbot.ask(msg.content).then(msg.channel.lsend, console.error);
+		cleverbot.create((err, res) => {
+			if (err) console.error(err);
+			else {
+				cleverbot.ask(msg.content, (err, res) => {
+					if (err) console.error(err)
+					else msg.channel.lsend(res);
+				});
+			}
+		});
+
 	}
 
 });
