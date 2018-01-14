@@ -82,7 +82,7 @@ exports.showGuildInfo = function(guild) {
 	.addField(voiceChannels.length + " voice channels",voiceChannels,true)
 	.addField("Created at", guild.createdAt.toUTCString())
 	.addField("Region", guild.region,true)
-	.addField(guild.memberCount + " total members", tools.getNbCon(guild) + " connected (" + Math.floor((tools.getNbCon(guild)/guild.memberCount)*100) + "%)",true)
+	.addField(guild.memberCount + " total members", guild.nbCon() + " connected (" + Math.floor((guild.nbCon()/guild.memberCount)*100) + "%)",true)
 	.addField("Icon URL", guild.iconURL);
 	return info;
 }

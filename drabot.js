@@ -361,3 +361,11 @@ String.prototype.getHTTP = function() {
 		});
 	});
 }
+
+discord.Guild.prototype.nbCon = function() {
+	let presences = Array.from(this.presences.values());
+	let h = 0;
+	for(let presence of presences)
+		if (presence.status != "offline") h++;
+	return h;
+}

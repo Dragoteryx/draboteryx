@@ -60,12 +60,3 @@ exports.stringToRole = function(str, guild) {
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
-
-exports.getNbCon = function(guild) {
-	let presences = Array.from(guild.presences.values());
-	let h = 0;
-	for(let i = 0; i < presences.length; i++) {
-		if (presences[i].status != "offline") h++;
-	}
-	return h;
-}
