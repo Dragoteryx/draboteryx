@@ -1,17 +1,17 @@
 "use strict";
 
 // IMPORTS
-module.exports = function() {
-	this.prefixes = [];
+module.exports = function(prefix) {
+	this.prefix = prefix;
 	this.owners = [];
 	var off = [];
 	var commands = new Map();
-	this.setCommand = (name, callback, options2) => {
+	this.set = (name, callback, opts) => {
 		if (name === undefined)
-			throw new Error("missing parameter: name");
+			throw new Error("missing parameter: command name");
 		if (callback === undefined)
 			throw new Error("missing parameter: callback function");
-		let options = options2 !== undefined ? options2 : {};
+		let options = opts !== undefined ? opts : {};
 		if (options.dms === undefined)
 			options.dms = true;
 		if (options.owner === undefined)
@@ -26,8 +26,10 @@ module.exports = function() {
 			options.permissions = [];
 		if (options.nsfw === undefined)
 			options.nsfw = false;
-		if (options.arguments === undefined)
-			options.arguments = "both";
+			if (options.minargs === undefined)
+				options.minargs = -1;
+		if (options.maxargs === undefined)
+			options.maxargs = -1;
 		if (options.uses === undefined)
 			options.uses = -1;
 		if (options.props === undefined)
@@ -42,7 +44,8 @@ module.exports = function() {
 			users: options.users,
 			permissions: options.permissions,
 			nsfw: options.nsfw,
-			arguments: options.arguments,
+			minargs: options.minargs,
+			maxargs: options.maxargs,
 			uses: options.uses,
 			props: options.props,
 			function: options.function
@@ -50,28 +53,28 @@ module.exports = function() {
 		commands.set(name, Object.seal({command: Object.seal(command), active: true}));
 		return this;
 	}
-	this.hasCommand = name => {
+	this.has = name => {
 		return commands.has(name);
 	}
-	this.getCommand = name => {
-		if (!this.hasCommand(name))
+	this.get = name => {
+		if (!this.has(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).command;
 	}
-	this.removeCommand = name => {
-		if (!this.hasCommand(name))
+	this.delete = name => {
+		if (!this.has(name))
 			throw new Error("unknownCommand");
 		commands.delete(name);
 		return this;
 	}
-	this.toggleCommand = name => {
-		if (!this.hasCommand(name))
+	this.toggle = name => {
+		if (!this.has(name))
 			throw new Error("unknownCommand");
 		commands.get(name).active = !commands.get(name).active;
 		return this;
 	}
 	this.isActive = name => {
-		if (!this.hasCommand(name))
+		if (!this.has(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).active;
 	}
@@ -80,25 +83,17 @@ module.exports = function() {
 			exec = true;
 		return new Promise((resolve, reject) => {
 			try {
-				let prefixed = false;
-				let usedPrefix = "";
-				for (let prefix of this.prefixes) {
-					if (msg.content.startsWith(prefix) && !prefixed) {
-						prefixed = true;
-						usedPrefix = prefix;
-					}
-				}
-				if (!prefixed) {
+				if (!msg.content.startsWith(this.prefix)) {
 					resolve({command: null, result: {valid: false, reasons: ["missing prefix"]}});
 					return;
 				}
-				let name = msg.content.replace(usedPrefix, "").split(" ")[0];
-				if (!this.hasCommand(name))
+				let name = msg.content.replace(this.prefix, "").split(" ")[0];
+				if (!this.has(name))
 					resolve({command: null, result: {valid: false, reasons: ["wrong/not command"]}});
 				else if (!this.isActive(name))
 					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
 				else {
-					let command = this.getCommand(name);
+					let command = this.get(name);
 					let result = command.check(msg, exec);
 					resolve(Object.seal({command: command, result: result}));
 				}
@@ -111,14 +106,14 @@ module.exports = function() {
 		let names = Array.from(commands.keys());
 		let props = new Map();
 		for (let name of names)
-			if (this.getCommand(name).options.props)
-				props.set(name, Object.freeze(this.getCommand(name).options.props));
+			if (this.get(name).options.props)
+				props.set(name, Object.freeze(this.get(name).options.props));
 		return props;
 	}
 	this.changeCommandName = (oldName, newName) => {
-		if (!this.hasCommand(oldName))
+		if (!this.has(oldName))
 			throw new Error("unknownCommand");
-		let command = this.getCommand(oldName);
+		let command = this.get(oldName);
 		let active = commands.get(oldName).active;
 		this.removeCommand(oldName);
 		command._name = newName;
@@ -134,22 +129,15 @@ function Command(name, callback, options, handler) {
 	this.check = (msg, exec) => {
 		if (exec === undefined)
 			exec = true;
-		let check = {valid: true};
-		let prefixed = false;
-		let usedPrefix = "";
-		for (let prefix of handler.prefixes) {
-			if (msg.content.startsWith(prefix) && !prefixed) {
-				prefixed = true;
-				usedPrefix = prefix;
-			}
-		}
-		if (!prefixed) {
+		let nbargs = msg.content.split(" ").slice(1).length;
+		let check = {valid: true, nbargs: nbargs};
+		if (!msg.content.startsWith(handler.prefix)) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
 			check.reasons.push("missing prefix");
 		}
-		let name = msg.content.replace(usedPrefix, "").split(" ")[0];
+		let name = msg.content.replace(handler.prefix, "").split(" ")[0];
 		if (this._name != name) {
 			check.valid = false;
 			if (check.reasons === undefined)
@@ -168,7 +156,7 @@ function Command(name, callback, options, handler) {
 				check.reasons = [];
 			check.reasons.push("owner only command");
 		}
-		if (this.options.guilds.length != 0) {
+		if (msg.channel.type == "text" && this.options.guilds.length != 0) {
 			if (!this.options.guilds.includes(msg.guild.id)) {
 				check.valid = false;
 				if (check.reasons === undefined)
@@ -192,31 +180,31 @@ function Command(name, callback, options, handler) {
 				check.reasons.push("ignored user");
 			}
 		}
-		if (this.options.permissions.length != 0) {
-			if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
+		if (msg.channel.type == "text" && this.options.permissions.length != 0) {
+			if (!msg.member.hasPermissions(this.options.permissions, false, true, true)) {
 				check.valid = false;
 				if (check.reasons === undefined)
 					check.reasons = [];
 				check.reasons.push("permissions");
 			}
 		}
-		if (!msg.channel.nsfw && this.options.nsfw) {
+		if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
 			check.reasons.push("nsfw");
 		}
-		if (msg.content.split(" ").length > 1 && this.options.arguments == "none") {
+		if (this.options.minargs > 0 && nbargs < this.options.minargs) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
-			check.reasons.push("arguments set to none");
+			check.reasons.push("min arguments: " + this.options.minargs);
 		}
-		if (msg.content.split(" ").length == 1 && this.options.arguments == "required") {
+		if (this.options.maxargs >= 0 && nbargs > this.options.maxargs) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
-			check.reasons.push("arguments required");
+			check.reasons.push("max arguments: " + this.options.maxargs);
 		}
 		if (this.options.uses == 0) {
 			check.valid = false;
@@ -224,15 +212,15 @@ function Command(name, callback, options, handler) {
 				check.reasons = [];
 			check.reasons.push("uses");
 		}
-		let funcRes = this.options.function(msg);
-		if (!funcRes.valid) {
+		if (!this.options.function(msg)) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
-			check.reasons.push("function: " + funcRes.reason);
+			check.reasons.push("boolean function");
 		}
-		if (this.options.uses > 0 && exec && check.valid) {
-			this.options.uses--;
+		if (exec && check.valid) {
+			if (this.options.uses > 0)
+				this.options.uses--;
 			this.callback(msg);
 		}
 		return Object.freeze(check);

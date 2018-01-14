@@ -1,8 +1,10 @@
 "use strict";
 const discord = require("discord.js");
 const drabot = require("./drabot.js");
+const config = require("./config.js");
 const tools = require("./tools.js");
 const pack = require("./package.json");
+const snekfetch = require("snekfetch")
 
 exports.showMemberInfo = function(member) {
 	let isAdmin = "No";
@@ -62,38 +64,31 @@ exports.showGuildInfo = function(guild) {
 	let textChannels = [];
 	let voiceChannels = [];
 	for (let channel of tempChannels) {
-		if (channel.type == "text") {
-			if (channel.id == guild.defaultChannel.id)
-				textChannels.push(channel.name + " (default channel)");
-			else
-				textChannels.push(channel.name);
-		} else if (channel.type == "voice") {
-			if (channel.id == guild.afkChannelID)
-				voiceChannels.push(channel.name + " (AFK channel)");
-			else
-				voiceChannels.push(channel.name);
-		}
+		if (channel.type == "text")
+			textChannels.push(channel.name);
+		else if (channel.type == "voice")
+			voiceChannels.push(channel.name);
 	}
 	let emojis = Array.from(guild.emojis.values());
-	let info = exports.defaultEmbed();
+	let info = tools.defaultEmbed();
 	if (guild.iconURL != null)
 		info.setThumbnail(guild.iconURL);
-	info.addField("Server name",guild.name,true)
-	.addField("Unique ID",guild.id,true)
-	.addField("Owner",guild.owner,true)
-	.addField("Custom emojis",emojis.length + "/" + 50 + " (" + (50-emojis.length) + " left)",true)
+	info.addField("Server name", guild.name,true)
+	.addField("Unique ID", guild.id,true)
+	.addField("Owner", guild.owner,true)
+	.addField("Custom emojis", emojis.length + "/" + 50 + " (" + (50-emojis.length) + " left)",true)
 	.addField(roles.length + " roles",roles)
 	.addField(textChannels.length + " text channels",textChannels,true)
 	.addField(voiceChannels.length + " voice channels",voiceChannels,true)
-	.addField("Created at",guild.createdAt.toUTCString())
-	.addField("Region",guild.region,true)
-	.addField(guild.memberCount + " total members", tools.getNbCon(guild) + " connected (" + Math.floor((getNbCon(guild)/guild.memberCount)*100) + "%)",true)
+	.addField("Created at", guild.createdAt.toUTCString())
+	.addField("Region", guild.region,true)
+	.addField(guild.memberCount + " total members", tools.getNbCon(guild) + " connected (" + Math.floor((tools.getNbCon(guild)/guild.memberCount)*100) + "%)",true)
 	.addField("Icon URL", guild.iconURL);
 	return info;
 }
 
 exports.showChannelInfo = function(channel) {
-	let info = exports.defaultEmbed();
+	let info = tools.defaultEmbed();
 	info.addField("Channel name",channel.name,true)
 	.addField("Unique ID",channel.id,true)
 	.addField("Type",channel.type)
@@ -148,4 +143,34 @@ exports.showInfo = async () => {
 	.addField("Github link", pack.homepage)
 	.addField("Invite link", "https://discordapp.com/oauth2/authorize?client_id=" + drabot.client.user.id + "&scope=bot&permissions=104193088");
 	return info;
+}
+
+exports.sendR34 = async function(msg) {
+	let searchOld = msg.content.replace(config.prefix + "r34 ","").toLowerCase();
+	let search = searchOld;
+	while (search.includes(" "))
+		search = search.replace(" ", "_");
+	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
+	link.getHTTP().then(res => {
+		let nb = Number(res.text.split('">Last</a>').shift().split(' | <a href="/post/list/').pop().split("/").pop());
+		let page = tools.random(1, nb);
+		link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
+		link.getHTTP().then(res => {
+			let html = res.text;
+			for (let i = 0; i <= 100; i++)
+				html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
+			let htmlTab = html.split("<-SPLIT->-");
+			let imgs = [];
+			for (let i = 0; i < htmlTab.length; i++)
+				if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').pop());
+			if (imgs.length != 0)
+				msg.channel.send("Search: ``" + searchOld + "``", {file: tools.randTab(imgs)});
+			else
+				msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
+		}).catch(err => {
+			msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
+		});
+	}).catch(err => {
+		msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
+	});
 }
