@@ -36,14 +36,14 @@ exports.stringToMember = function(str, guild) {
 		member = guild.members.get(str.replace("<@","").replace(">","").replace("!",""));
 	else
 		member = guild.members.find("displayName",str);
-	if (member !== null)
+	if (member !== null || member === undefined)
 		return member;
 	throw new Error("notAMember");
 }
 
 exports.stringToChannel = function(str, guild) {
 	let channel = guild.channels.find("name", str);
-	if (channel !== null)
+	if (channel !== null || channel === undefined)
 		return channel;
 	throw new Error("notAChannel");
 }
@@ -54,7 +54,7 @@ exports.stringToRole = function(str, guild) {
 		role = guild.roles.get(str.replace("<@","").replace(">","").replace("&",""));
 	else
 		role = guild.roles.find("name",str);
-	if (role !== null)
+	if (role !== null || role === undefined)
 		return role;
 	throw new Error("notARole");
 }
