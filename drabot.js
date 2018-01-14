@@ -112,6 +112,17 @@ client.on("message", msg => {
 		}
 	}
 
+	// VLT CORP ASSISTANCE ID CORRECTION
+	if (msg.content.includes(", voilà ton véritable ID : ") && msg.author.id == "273747395685122048") {
+		let tab = msg.content.split(", voilà ton véritable ID : ");
+		let member = tools.stringToMember(tab[0], msg.guild);
+		let id = tab[1];
+		if (id != member.user.id)
+			msg.channel.send("Non " + member + " ne l'écoute pas! Voilà ton véritable véritable ID: " + member.user.id);
+		else
+			msg.channel.send("Rien à redire il a raison pour une fois.");
+	}
+
 });
 
 // CONNECT THE BOT TO DISCORD ----------------------------------------------------------------------------------------------
