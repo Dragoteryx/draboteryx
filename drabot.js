@@ -137,12 +137,12 @@ client.on("error", err => {
 login();
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
-commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, minargs: 2, maxargs: 4});
-commands.set("help", msg => {
+commands.setCommand("test", msg => {msg.channel.send("It works!")}, {owner: true, minargs: 2, maxargs: 4});
+commands.setCommand("help", msg => {
 	null;
 }, {arguments: "none", props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
-commands.set("help", msg => {
+commands.setCommand("help", msg => {
 	let props = Array.from(commands.fetchProps().values());
 	let embed;
 	if (msg.channel.type != "dm")
@@ -162,17 +162,17 @@ commands.set("help", msg => {
 	}
 }, {maxargs: 0, props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
-commands.set("info", msg => {
+commands.setCommand("info", msg => {
 	funcs.showInfo().then(embed => {
 		msg.channel.send("", embed);
 	});
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});
 
-commands.set("serverinfo", msg => {
+commands.setCommand("serverinfo", msg => {
 	msg.channel.send("", funcs.showGuildInfo(msg.guild));
 }, {dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server", utilityType, true)});
 
-commands.set("channelinfo", msg => {
+commands.setCommand("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let channel = msg.channel;
 	if (nb > 0) {
@@ -189,7 +189,7 @@ commands.set("channelinfo", msg => {
 	msg.channel.send("", funcs.showChannelInfo(channel));
 }, {dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive)", utilityType, true)});
 
-commands.set("join", msg => {
+commands.setCommand("join", msg => {
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
 			music.addMusic({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
@@ -209,7 +209,7 @@ commands.set("join", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("join", "join a voice channel", musicType, true)});
 
-commands.set("leave", msg => {
+commands.setCommand("leave", msg => {
 	music.leave(msg.guild).then(() => {
 		musicChannels.delete(msg.guild.id);
 		console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
@@ -220,7 +220,7 @@ commands.set("leave", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("leave", "leave the voice channel", musicType, true)});
 
-commands.set("request", msg => {
+commands.setCommand("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
 	music.addMusic().then(added => {
 
@@ -229,7 +229,7 @@ commands.set("request", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
-commands.set("query", msg => {
+commands.setCommand("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
 	music.addMusic().then(added => {
 
@@ -238,7 +238,7 @@ commands.set("query", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
-commands.set("shitpost", msg => {
+commands.setCommand("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let link = "https://shitpostgenerator.herokuapp.com";
 	if (args.length > 0) {
@@ -258,13 +258,13 @@ commands.set("shitpost", msg => {
 	});
 }, {props: new types.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
 
-commands.set("say", msg => {
+commands.setCommand("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
 	msg.channel.send(content);
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.set("roll", msg => {
+commands.setCommand("roll", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let max = 6;
 	if (args.length == 1 && args[0] == Number(args[0]) && Number(args[0]) > 0)
@@ -273,7 +273,7 @@ commands.set("roll", msg => {
 	msg.reply(res + "/" + max + " (:game_die:)")
 }, {props: new types.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
 
-commands.set("stopclever", msg => {
+commands.setCommand("stopclever", msg => {
 	clever = false;
 	console.log("[CLEVERBOT] Off");
 	setTimeout(() => {
@@ -282,7 +282,7 @@ commands.set("stopclever", msg => {
 	}, 10000);
 }, {owner: true, maxargs: 0});
 
-commands.set("setName", msg => {
+commands.setCommand("setName", msg => {
 	let name = msg.content.replace(config.prefix + "setName ", "");
 	client.user.setUsername(name).then(() => {
 		console.log("[DRABOT] New name: " + name);
@@ -291,7 +291,7 @@ commands.set("setName", msg => {
 	});
 }, {owner: true, maxargs: 0});
 
-commands.set("setGame", msg => {
+commands.setCommand("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
 	client.user.setGame(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
@@ -300,7 +300,7 @@ commands.set("setGame", msg => {
 	});
 }, {owner: true, minargs: 1});
 
-commands.set("setAvatar", msg => {
+commands.setCommand("setAvatar", msg => {
 	let avatar = msg.content.replace(config.prefix + "setAvatar ", "");
 	client.user.setAvatar(avatar).then(() => {
 		console.log("[DRABOT] New avatar: " + avatar);
@@ -309,7 +309,7 @@ commands.set("setAvatar", msg => {
 	});
 }, {owner: true, minargs: 1, maxargs: 1});
 
-commands.set("debug", msg => {
+commands.setCommand("debug", msg => {
 	debug = !debug;
 	if (debug)
 		msg.channel.send("Debug mode ON");
@@ -317,22 +317,22 @@ commands.set("debug", msg => {
 		msg.channel.send("Debug mode OFF");
 }, {owner: true, maxargs: 0});
 
-commands.set("kill", msg => {
+commands.setCommand("kill", msg => {
 	console.log("[DRABOT] Dying...");
 	process.exit();
 }, {owner: true, maxargs: 0});
 
-commands.set("cahrcg", msg => {
+commands.setCommand("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.getHTTP().then(res => {
 		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
 	}).catch(console.error);
 }, {maxargs: 0, props: new types.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.set("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new types.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
-commands.set("r34", funcs.sendR34, {minargs: 1, nsfw: true});
+commands.setCommand("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new types.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
+commands.setCommand("r34", funcs.sendR34, {minargs: 1, nsfw: true});
 
-commands.set("waifu", msg => {
+commands.setCommand("waifu", msg => {
 	if (msg.channel.type != "dm")
 		msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");
 	else
