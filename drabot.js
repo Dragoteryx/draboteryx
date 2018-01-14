@@ -65,7 +65,7 @@ client.on("message", msg => {
 			console.log(toLog);
 		}
 		if (debug) {
-			if (res.result.reasons !== undefined && (res.result.reasons.includes("missing prefix") || res.result.reasons.includes("wrong/not command"))) return;
+			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
 			let toLog = "";
 			if (msg.channel.type != "dm") toLog += "[DEBUG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
 			else toLog += "[DEBUG] (DM) " + msg.author.username + ": " + msg.content;
@@ -87,8 +87,8 @@ client.on("message", msg => {
 			if (err) console.error(err);
 			else {
 				let toLog = "";
-				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Session: " + msg.channel.id + "/" + msg.author.id + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-				else toLog += "[CLEVERBOT] Session: " + msg.channel.id + "/" + msg.author.id + " (DM) " + msg.author.username + ": " + msg.content;
+				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Instance: " + msg.channel.id + "/" + msg.author.id + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+				else toLog += "[CLEVERBOT] Instance: " + msg.channel.id + "/" + msg.author.id + " (DM) " + msg.author.username + ": " + msg.content;
 				if (debug)
 					console.log(toLog);
 				cleverbot.ask(msg.content, (err, res) => {
@@ -156,7 +156,7 @@ commands.set("help", msg => {
 			}
 		}
 		if (type == utilityType)
-			msg.author.send("Options between brackets are ``required``. If you forget them the bot will ignore you. Those between parenthesis are ``optional``.\n\n" + type + " (" + embed.fields.length + ")", embed);
+			msg.author.send("Options between brackets are ``required``. Those between parenthesis are ``optional``.\n\n" + type + " (" + embed.fields.length + ")", embed);
 		else
 			msg.author.send(type + " (" + embed.fields.length + ")", embed);
 	}
@@ -199,7 +199,7 @@ commands.set("join", msg => {
 		musicChannels.set(msg.guild.id, msg.channel);
 		console.log("[MUSICBOT] Joined guild " + msg.guild.name + " (" + msg.guild.id + ")");
 		msg.channel.send("I'm here o/");
-	}, err => {
+	}).catch(err => {
 		if (err.message == "memberNotInAVoiceChannel") msg.channel.send("You're not in a voice channel.");
 		else if (err.message == "voiceChannelNotJoinable") msg.channel.send("I can't join this voice channel.");
 		else if (err.message == "voiceChannelNotSpeakable") msg.channel.send("I'm not allowed to speak in this voice channel.");
@@ -214,7 +214,7 @@ commands.set("leave", msg => {
 		musicChannels.delete(msg.guild.id);
 		console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
 		msg.channel.send("Goodbye o/");
-	}, err => {
+	}).catch(err => {
 		if (err.message == "clientNotInAVoiceChannel") msg.channel.send("You can't ask me to leave when I'm not connected.");
 		else console.error(err);
 	});
@@ -224,14 +224,18 @@ commands.set("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
 	music.addMusic().then(added => {
 
-	}, err => {
+	}).catch(err => {
 
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
 commands.set("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
+	music.addMusic().then(added => {
 
+	}).catch(err => {
+
+	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
 commands.set("shitpost", msg => {
@@ -325,7 +329,8 @@ commands.set("cahrcg", msg => {
 	}).catch(console.error);
 }, {maxargs: 0, props: new types.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.set("r34", funcs.sendR34, {minargs: 1, nsfw: true, props: new types.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
+commands.set("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new types.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
+commands.set("r34", funcs.sendR34, {minargs: 1, nsfw: true});
 
 commands.set("waifu", msg => {
 	if (msg.channel.type != "dm")

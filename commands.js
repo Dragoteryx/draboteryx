@@ -6,7 +6,7 @@ module.exports = function(prefix) {
 	this.owners = [];
 	var off = [];
 	var commands = new Map();
-	this.set = (name, callback, opts) => {
+	this.setCommand = (name, callback, opts) => {
 		if (name === undefined)
 			throw new Error("missing parameter: command name");
 		if (callback === undefined)
@@ -44,37 +44,37 @@ module.exports = function(prefix) {
 			users: options.users,
 			permissions: options.permissions,
 			nsfw: options.nsfw,
-			minargs: options.minargs,
-			maxargs: options.maxargs,
-			uses: options.uses,
+			minargs: Math.floor(options.minargs),
+			maxargs: Math.floor(options.maxargs),
+			uses: Math.floor(options.uses),
 			props: options.props,
 			function: options.function
 		}), this);
 		commands.set(name, Object.seal({command: Object.seal(command), active: true}));
 		return this;
 	}
-	this.has = name => {
+	this.hasCommand = name => {
 		return commands.has(name);
 	}
-	this.get = name => {
-		if (!this.has(name))
+	this.getCommand = name => {
+		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).command;
 	}
-	this.delete = name => {
-		if (!this.has(name))
+	this.removeCommand = name => {
+		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		commands.delete(name);
 		return this;
 	}
-	this.toggle = name => {
-		if (!this.has(name))
+	this.toggleCommand = name => {
+		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		commands.get(name).active = !commands.get(name).active;
 		return this;
 	}
 	this.isActive = name => {
-		if (!this.has(name))
+		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).active;
 	}
@@ -84,16 +84,16 @@ module.exports = function(prefix) {
 		return new Promise((resolve, reject) => {
 			try {
 				if (!msg.content.startsWith(this.prefix)) {
-					resolve({command: null, result: {valid: false, reasons: ["missing prefix"]}});
+					resolve({command: null, result: {valid: false, reasons: ["no prefix"]}});
 					return;
 				}
 				let name = msg.content.replace(this.prefix, "").split(" ")[0];
-				if (!this.has(name))
-					resolve({command: null, result: {valid: false, reasons: ["wrong/not command"]}});
+				if (!this.hasCommand(name))
+					resolve({command: null, result: {valid: false, reasons: ["unknown command"]}});
 				else if (!this.isActive(name))
 					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
 				else {
-					let command = this.get(name);
+					let command = this.getCommand(name);
 					let result = command.check(msg, exec);
 					resolve(Object.seal({command: command, result: result}));
 				}
@@ -106,14 +106,14 @@ module.exports = function(prefix) {
 		let names = Array.from(commands.keys());
 		let props = new Map();
 		for (let name of names)
-			if (this.get(name).options.props)
-				props.set(name, Object.freeze(this.get(name).options.props));
+			if (this.getCommand(name).options.props)
+				props.set(name, Object.freeze(this.getCommand(name).options.props));
 		return props;
 	}
-	this.changeCommandName = (oldName, newName) => {
-		if (!this.has(oldName))
+	this.setCommandName = (oldName, newName) => {
+		if (!this.hasCommand(oldName))
 			throw new Error("unknownCommand");
-		let command = this.get(oldName);
+		let command = this.getCommand(oldName);
 		let active = commands.get(oldName).active;
 		this.removeCommand(oldName);
 		command._name = newName;
@@ -122,10 +122,14 @@ module.exports = function(prefix) {
 	}
 }
 
-function Command(name, callback, options, handler) {
-	this._name = name;
+function Command(comName, callback, options, handler) {
 	this.callback = callback;
 	this.options = options;
+	this.getName = () => comName;
+	this.setName = newName => {
+		handler.setCommandName(comName, newName);
+		return this;
+	}
 	this.check = (msg, exec) => {
 		if (exec === undefined)
 			exec = true;
@@ -135,10 +139,10 @@ function Command(name, callback, options, handler) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
-			check.reasons.push("missing prefix");
+			check.reasons.push("no prefix");
 		}
 		let name = msg.content.replace(handler.prefix, "").split(" ")[0];
-		if (this._name != name) {
+		if (comName != name) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];

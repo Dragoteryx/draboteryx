@@ -146,8 +146,12 @@ exports.showInfo = async () => {
 }
 
 exports.sendR34 = async function(msg) {
-	let searchOld = msg.content.replace(config.prefix + "r34 ","").toLowerCase();
-	let search = searchOld;
+	let searchOld;
+	if (msg.content.startsWith(config.prefix + "rule34 "))
+		searchOld = msg.content.replace(config.prefix + "rule34 ","");
+	else if (msg.content.startsWith(config.prefix + "r34 "))
+		searchOld = msg.content.replace(config.prefix + "r34 ","");
+	let search = searchOld.toLowerCase();
 	while (search.includes(" "))
 		search = search.replace(" ", "_");
 	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
