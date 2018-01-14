@@ -64,6 +64,12 @@ client.on("message", msg => {
 			else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
 			console.log(toLog);
 		}
+		else if (res.result.reasons.includes("DMs not allowed"))
+			msg.channel.send("You can't use this command in private channels.");
+		else if (res.result.reasons.includes("owner only command"))
+			msg.channel.send("This is an owner only command.");
+		else if (res.result.reasons.includes("missing permissions"))
+			msg.channel.send("You don't have the necessary permissions.");
 		if (debug) {
 			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
 			let toLog = "";
@@ -180,8 +186,8 @@ commands.setCommand("info", msg => {
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});
 
 commands.setCommand("serverinfo", msg => {
-	msg.channel.send("", funcs.showGuildInfo(msg.guild));
-}, {dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server", utilityType, true)});
+	msg.channel.send("", msg.guild.embedInfo());
+}, {dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
 commands.setCommand("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -197,8 +203,45 @@ commands.setCommand("channelinfo", msg => {
 			return;
 		}
 	}
-	msg.channel.send("", funcs.showChannelInfo(channel));
-}, {dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive)", utilityType, true)});
+	msg.channel.send("", channel.embedInfo());
+}, {dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
+
+commands.setCommand("userinfo", msg => {
+	let nb = msg.content.split(" ").slice(1).length;
+	let member = msg.member;
+	if (nb > 0) {
+		try {
+			member = tools.stringToMember(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild);
+		} catch(err) {
+			if (err.message == "notAMember")
+				msg.reply("this user doesn't exist.");
+			else
+				console.error(err);
+			return;
+		}
+	}
+	if (msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
+		msg.channel.send("", member.embedInfo());
+	else
+		msg.channel.send("You don't have the necessary permissions.");
+}, {dms: false, props: new types.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
+
+commands.setCommand("roleinfo", msg => {
+	let nb = msg.content.split(" ").slice(1).length;
+	let role = msg.member.highestRole;
+	if (nb > 0) {
+		try {
+			role = tools.stringToRole(msg.content.replace(config.prefix + "roleinfo ", ""), msg.guild);
+		} catch(err) {
+			if (err.message == "notARole")
+				msg.reply("this role doesn't exist.");
+			else
+				console.error(err);
+			return;
+		}
+	}
+	msg.channel.send("", role.embedInfo());
+}, {dms: false, permissions: ["MANAGE_ROLES"], props: new types.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 commands.setCommand("join", msg => {
 	music.join(msg.member).then(() => {
@@ -379,4 +422,20 @@ discord.Guild.prototype.nbCon = function() {
 	for(let presence of presences)
 		if (presence.status != "offline") h++;
 	return h;
+}
+
+discord.Guild.prototype.embedInfo = function() {
+	return funcs.showGuildInfo(this);
+}
+
+discord.Channel.prototype.embedInfo = function() {
+	return funcs.showChannelInfo(this);
+}
+
+discord.Role.prototype.embedInfo = function() {
+	return funcs.showRoleInfo(this);
+}
+
+discord.GuildMember.prototype.embedInfo = function() {
+	return funcs.showMemberInfo(this);
 }

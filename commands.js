@@ -189,7 +189,7 @@ function Command(comName, callback, options, handler) {
 				check.valid = false;
 				if (check.reasons === undefined)
 					check.reasons = [];
-				check.reasons.push("permissions");
+				check.reasons.push("missing permissions");
 			}
 		}
 		if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {

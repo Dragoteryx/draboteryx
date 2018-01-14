@@ -23,7 +23,7 @@ exports.showMemberInfo = function(member) {
 	}
 	let info = new discord.RichEmbed()
 	.setThumbnail(member.user.displayAvatarURL)
-	.setColor(member.highestRole.color)
+	.setColor(member.colorRole.color)
 	.addField("Member",member, true)
 	.addField("Display name", member.displayName, true)
 	.addField("Username#discriminator", member.user.tag, true)
@@ -41,7 +41,7 @@ exports.showMemberInfo = function(member) {
 	else if (member.presence.status == "idle") stts += "AFK";
 	else stts += "Do not disturb";
 	info.addField("Status", stts, true);
-	if (member.presence.game !== undefined)
+	if (member.presence.game !== null)
 		info.addField("Currently playing", member.presence.game.name, true);
 	info.addField("Avatar URL", member.user.avatarURL);
 	if (member.user.id == process.env.DRAGOID)
