@@ -46,7 +46,7 @@ exports.showMemberInfo = function(member) {
 	info.addField("Avatar URL", member.user.avatarURL);
 	if (member.user.id == process.env.DRAGOID)
 		info.setFooter("He is my creator, my Senpai.. Daisuki!");
-	if (member.user.id == drabot.id)
+	if (member.user.id == drabot.client.user.id)
 		info.setFooter("Why are you looking at my info? D:");
 	return info;
 }
