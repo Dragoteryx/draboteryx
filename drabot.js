@@ -119,7 +119,7 @@ client.on("message", msg => {
 	}
 
 	// VLT CORP ASSISTANCE ID CORRECTION
-	if (msg.content.includes(", voilà ton véritable ID : ") && msg.author.id == "273747395685122048") {
+	if (msg.content.includes(", voilà ton véritable ID : ") && msg.author.id == process.env.VLTBOTID) {
 		let tab = msg.content.split(", voilà ton véritable ID : ");
 		let member = tools.stringToMember(tab[0], msg.guild);
 		let id = tab[1];
