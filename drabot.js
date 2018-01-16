@@ -403,6 +403,12 @@ commands.setCommand("waifu", msg => {
 });
 
 commands.setCommand("dicksize", msg => {
+	let xsmall = ["Life hates you.", "Did you know that the ancient Greek considered small penises as a symbol of fertility?", "At least it won't get any smaller."];
+	let small = ["It's almost cute.", "Well... it could have been worse...", "I'm sorry about that."];
+	let smedium = ["Seems like it's normal sized to me.", "The average.", "A decent size."];
+	let medium = ["You're slightly above the average.", "Good job.", "To be honest it's not that impressive."];
+	let large = ["My horse is jealous.", "This is something I would be proud of.", "Almost as long as my arm."];
+	let xlarge = ["Keep that thing away from me! D:", "You could knock down someone with that.", "Do you sometimes bang it on the ceiling?", "Don't trip over it.", "Damn son."];
 	let id = msg.author.id.split("");
 	let nb = 0;
 	for (let i of id)
@@ -416,7 +422,21 @@ commands.setCommand("dicksize", msg => {
 		msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayName +")");
 	else
 		msg.channel.send(":straight_ruler: | " + str);
-});
+	setTimeout(() => {
+		if (length == 1)
+			msg.channel.send(tools.randTab(xsmall));
+		else if (length <= 3)
+			msg.channel.send(tools.randTab(small));
+		else if (length <= 5)
+			msg.channel.send(tools.randTab(smedium));
+		else if (length <= 7)
+			msg.channel.send(tools.randTab(medium));
+		else if (length <= 9)
+			msg.channel.send(tools.randTab(large));
+		else if (length == 10)
+			msg.channel.send(tools.randTab(xlarge));
+	}, 1500);
+}, {bots: true});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
