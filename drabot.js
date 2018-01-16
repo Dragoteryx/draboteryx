@@ -398,7 +398,11 @@ commands.setCommand("waifu", msg => {
 });
 
 commands.setCommand("dicksize", msg => {
-	let length = tools.random(1, 10);
+	let id = msg.author.id.split("");
+	let nb = 0;
+	for (let i of id)
+		nb += Number(i);
+	let length = nb%10+1;
 	let str = "8";
 	for (let i = 0; i < length; i++)
 		str += "=";
