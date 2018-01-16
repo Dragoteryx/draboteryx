@@ -32,6 +32,7 @@ let debug = false;
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
+exports.vars = vars;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -137,6 +138,16 @@ client.on("ready", () => {
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		client.user.setGame(config.prefix + "help");
+		process.env.NBGUILDS = Array.from(client.guilds.keys()).length;
+		let channels = Array.from(client.channels.values());
+		let nbv = 0;
+		for (let channel of channels)
+			if (channel.type == "voice")
+				nbv++;
+		process.env.NBCHANNELS = channels.length;
+		process.env.NBVOICE = nbv;
+		process.env.NBTEXT = channels.length - nbv;
+		process.env.NBUSERS = Array.from(client.users.keys()).length;
 	}
 });
 client.on("error", err => {
@@ -173,7 +184,7 @@ commands.setCommand("help", msg => {
 }, {maxargs: 0, props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
 commands.setCommand("info", msg => {
-	funcs.showInfo(msg.guild).then(embed => {
+	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
 	});
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});

@@ -127,19 +127,28 @@ exports.cacheUser = function(user) {
 	console.log("[CACHE] '" + user.tag + "' has been cached.");
 }
 
-exports.showInfo = async guild => {
+exports.showInfo = async msg => {
+	let stats = "";
+	stats += "Uptime: ``" + tools.timestampToDuration(Date.now() - drabot.client.readyTimestamp) + "``\n";
+	stats += "``" + process.env.NBGUILDS + "`` servers\n";
+	stats += "``" + process.env.NBCHANNELS + "`` channels (``" + process.env.NBTEXT + "`` text, ``" + process.env.NBVOICE + "`` voice)\n";
+	stats += "``" + process.env.NBUSERS + "`` users";
 	let info = tools.defaultEmbed()
 	.setThumbnail(drabot.client.user.avatarURL)
 	.addField("Discord tag", drabot.client.user.tag, true);
 	let app = await drabot.client.fetchApplication();
-	await guild.fetchMember(app.owner.id).then(owner => {
-		info.addField("Author", app.owner.tag + " (" + owner + ")", true);
-	}).catch(() => {
+	if (msg.channel.type == "text")
+		await msg.guild.fetchMember(app.owner.id).then(owner => {
+			info.addField("Author", app.owner.tag + " (" + owner + ")", true);
+		}).catch(() => {
+			info.addField("Author", app.owner.tag, true);
+		});
+	else
 		info.addField("Author", app.owner.tag, true);
-	});
 	info.addField("Version", pack.version, true)
 	.addField("Library", "Discord.js", true)
 	.addField("Description", pack.description)
+	.addField("Stats", stats)
 	.addField("Homepage", pack.homepage)
 	.addField("Invite link", "http://bit.ly/2DhiN6n");
 	return info;

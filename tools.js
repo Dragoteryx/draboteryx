@@ -60,3 +60,18 @@ exports.stringToRole = function(str, guild) {
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
+
+exports.timestampToDuration = timestamp => {
+	let seconds = Math.floor(timestamp/1000);
+	let minutes = Math.floor(seconds/60);
+	let hours = Math.floor(minutes/60);
+	let days = Math.floor(hours/24);
+	let str = seconds%60 + "s";
+	if (timestamp >= 1000*60)
+		str = minutes%60 + "m " + str;
+	if (timestamp >= 1000*60*60)
+		str = hours%24 + "h " + str;
+	if (timestamp >= 1000*60*60*24)
+		str = days + "d " + str;
+	return str;
+}
