@@ -21,6 +21,7 @@ const types = require("./types.js");		// custom types
 const client = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands("/");
+const vars = {};
 
 // GLOBALS ----------------------------------------------------------------------------------------------
 let connected = false;
@@ -41,12 +42,12 @@ const nsfwType = ":cucumber: NSFW commands";
 const commandTypes = [utilityType, funType, musicType, nsfwType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
-music.on("next", (guild, musik) => {
+music.on("next", (guild, next) => {
 	if (!music.isLooping(guild)) {
-		if (!musik.file)
-			musicChannels.get(guild.id).send("Now playing: ``" + musik.title + "`` by ``" + musik.author.name + "``. (requested by " + musik.member +")");
+		if (!next.file)
+			musicChannels.get(guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
 		else
-			musicChannels.get(guild.id).send("Now playing: ``" + musik.name + "``. (requested by " + musik.member +")");
+			musicChannels.get(guild.id).send("Now playing: ``" + next.name + "``. (requested by " + next.member +")");
 	}
 });
 music.on("empty", guild => {
@@ -402,7 +403,10 @@ commands.setCommand("dicksize", msg => {
 	for (let i = 0; i < length; i++)
 		str += "=";
 	str += "D";
-	msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayName +")");
+	if (msg.channel.type == "text")
+		msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayName +")");
+	else
+		msg.channel.send(":straight_ruler: | " + str);
 });
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------

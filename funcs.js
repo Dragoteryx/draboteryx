@@ -47,6 +47,7 @@ exports.showMemberInfo = function(member) {
 }
 
 exports.showGuildInfo = async function(guild) {
+	let maxemojis = 50;
 	try {
 		let tempRoles = Array.from(guild.roles.values());
 		let roles = [];
@@ -73,7 +74,7 @@ exports.showGuildInfo = async function(guild) {
 		info.addField("Server name", guild.name, true)
 		.addField("Unique ID", guild.id, true)
 		.addField("Owner", guild.owner, true)
-		.addField("Custom emoji(s)", emojis.length + "/" + 100 + " (" + (100-emojis.length) + " remaining)", true)
+		.addField("Custom emoji(s)", emojis.length + "/" + maxemojis + " (" + (maxemojis-emojis.length) + " remaining)", true)
 		.addField(roles.length + " roles",roles)
 		.addField(textChannels.length + " text channels",textChannels, true)
 		.addField(voiceChannels.length + " voice channels",voiceChannels, true)
@@ -132,11 +133,11 @@ exports.showInfo = async () => {
 	.setThumbnail(drabot.client.user.avatarURL)
 	.addField("Discord tag", drabot.client.user.tag, true)
 	.addField("Author", app.owner.tag, true)
-	.addField("Version", pack.version)
+	.addField("Version", pack.version, true)
+	.addField("Library", "Discord.js", true)
 	.addField("Description", pack.description)
-	.addField("Website link", "https://draboteryx.herokuapp.com")
-	.addField("Github link", pack.homepage)
-	.addField("Invite link", "https://discordapp.com/oauth2/authorize?client_id=" + drabot.client.user.id + "&scope=bot&permissions=104193088");
+	.addField("Homepage", pack.homepage)
+	.addField("Invite link", "http://bit.ly/2DhiN6n");
 	return info;
 }
 

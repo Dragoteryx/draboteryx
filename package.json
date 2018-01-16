@@ -1,11 +1,11 @@
 {
   "name": "draboteryx",
   "version": "0.10.0",
-  "description": "My Discord bot, DraBOTeryx, or Drabot for short. Use /help to learn how to use the bot.",
+  "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short. Use /help to learn how to use it.",
   "main": "drabot.js",
   "dependencies": {
     "cleverbot.io": "^1.0.4",
-    "discord.js": "^11.3.0",
+    "discord.js": "^11.2.1",
     "dotenv": "^4.0.0",
     "drg-music": "^3.2.1",
     "opusscript": "0.0.4",
@@ -20,5 +20,5 @@
   },
   "author": "Dragoteryx",
   "license": "ISC",
-  "homepage": "https://github.com/Dragoteryx/draboteryx#readme"
+  "homepage": "https://draboteryx.herokuapp.com"
 }
