@@ -3,6 +3,7 @@ const discord = require("discord.js");
 const drabot = require("./drabot.js");
 const config = require("./config.js");
 const tools = require("./tools.js");
+const types = require("./types.js");
 const pack = require("./package.json");
 const snekfetch = require("snekfetch")
 
@@ -129,7 +130,7 @@ exports.cacheUser = function(user) {
 
 exports.showInfo = async msg => {
 	let stats = "";
-	stats += "Uptime: ``" + tools.timestampToDuration(Date.now() - drabot.client.readyTimestamp) + "``\n";
+	stats += "Uptime: ``" + new types.Duration(Date.now() - drabot.client.readyTimestamp).toString() + "``\n";
 	stats += "``" + process.env.NBGUILDS + "`` servers\n";
 	stats += "``" + process.env.NBCHANNELS + "`` channels (``" + process.env.NBTEXT + "`` text, ``" + process.env.NBVOICE + "`` voice)\n";
 	stats += "``" + process.env.NBUSERS + "`` users";

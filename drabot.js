@@ -189,6 +189,12 @@ commands.setCommand("info", msg => {
 	});
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});
 
+commands.setCommand("uptime", msg => {
+	let uptime = new types.Duration(Date.now() - client.readyTimestamp);
+	console.log(uptime);
+	msg.channel.send("I have been up for " + uptime.toString2() + ". My last reboot was " + client.readyAt.toUTCString() + ".")
+});
+
 commands.setCommand("serverinfo", async msg => {
 	msg.channel.send("", await msg.guild.embedInfo());
 }, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});

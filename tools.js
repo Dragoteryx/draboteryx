@@ -3,6 +3,7 @@
 
 const discord = require("discord.js");
 const config = require("./config.js");
+const types = require("./types.js");
 const noise = ["0","1","2","3","4","5","6","7","8","9",
 "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
@@ -60,18 +61,3 @@ exports.stringToRole = function(str, guild) {
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
-
-exports.timestampToDuration = timestamp => {
-	let seconds = Math.floor(timestamp/1000);
-	let minutes = Math.floor(seconds/60);
-	let hours = Math.floor(minutes/60);
-	let days = Math.floor(hours/24);
-	let str = seconds%60 + "s";
-	if (timestamp >= 1000*60)
-		str = minutes%60 + "m " + str;
-	if (timestamp >= 1000*60*60)
-		str = hours%24 + "h " + str;
-	if (timestamp >= 1000*60*60*24)
-		str = days + "d " + str;
-	return str;
-}
