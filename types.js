@@ -53,17 +53,39 @@ exports.Duration = function(timestamp) {
 		return str;
 	}
 	this.toString2 = () => {
-		let str = seconds + " seconds";
-		if (timestamp >= 1000*60)
-			str = minutes + " minutes, " + str;
-		if (timestamp >= 1000*60*60)
-			str = hours + " hours, " + str;
-		if (timestamp >= 1000*60*60*24)
-			str = days + " days, " + str;
-		if (timestamp >= 1000*60*60*24*7)
-			str = weeks + " weeks, " + str;
-		if (str.includes("minutes"))
-			str = str.replace(" minutes, ", " minutes, and ");
+		let str = "";
+		if (seconds != 1)
+			str += seconds + " seconds";
+		else
+			str += seconds + " second";
+		if (timestamp >= 1000*60) {
+			if (minutes != 1)
+				str = minutes + " minutes, " + str;
+			else
+				str = minutes + " minute, " + str;
+		}
+		if (timestamp >= 1000*60*60) {
+			if (hours != 1)
+				str = hours + " hours, " + str;
+			else
+				str = hours + " hour, " + str;
+		}
+		if (timestamp >= 1000*60*60*24) {
+			if (days != 1)
+				str = days + " days, " + str;
+			else
+				str = days + " day, " + str;
+		}
+		if (timestamp >= 1000*60*60*24*7) {
+			if (weeks != 1)
+				str = weeks + " weeks, " + str;
+			else
+				str = weeks + " week, " + str;
+		}
+		if (str.includes("minute"))
+			str = str.replace(" minute, ", " minute and ");
+		else if (str.includes("minutes"))
+			str = str.replace(" minutes, ", " minutes and ");
 		return str;
 	}
 }
