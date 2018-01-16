@@ -184,7 +184,7 @@ commands.setCommand("help", msg => {
 }, {maxargs: 0, props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
 commands.setCommand("info", msg => {
-	funcs.showInfo().then(embed => {
+	funcs.showInfo(msg.guild).then(embed => {
 		msg.channel.send("", embed);
 	});
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});

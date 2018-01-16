@@ -127,13 +127,17 @@ exports.cacheUser = function(user) {
 	console.log("[CACHE] '" + user.tag + "' has been cached.");
 }
 
-exports.showInfo = async () => {
-	let app = await drabot.client.fetchApplication();
+exports.showInfo = async guild => {
 	let info = tools.defaultEmbed()
 	.setThumbnail(drabot.client.user.avatarURL)
-	.addField("Discord tag", drabot.client.user.tag, true)
-	.addField("Author", app.owner.tag, true)
-	.addField("Version", pack.version, true)
+	.addField("Discord tag", drabot.client.user.tag, true);
+	let app = await drabot.client.fetchApplication();
+	await guild.fetchMember(app.owner.id).then(owner => {
+		info.addField("Author", app.owner.tag + " (" + owner + ")", true);
+	}).catch(() => {
+		info.addField("Author", app.owner.tag, true);
+	});
+	info.addField("Version", pack.version, true)
 	.addField("Library", "Discord.js", true)
 	.addField("Description", pack.description)
 	.addField("Homepage", pack.homepage)
