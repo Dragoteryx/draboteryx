@@ -4,7 +4,7 @@ const safeBuffer = require('safe-buffer');
 const Limiter = require('async-limiter');
 const zlib = require('zlib');
 
-const bufferUtil = require('./BufferUtil');
+const bufferUtil = require('./buffer-util');
 
 const Buffer = safeBuffer.Buffer;
 
@@ -82,7 +82,7 @@ class PerMessageDeflate {
   }
 
   /**
-   * Create extension parameters offer.
+   * Create an extension negotiation offer.
    *
    * @return {Object} Extension parameters
    * @public
@@ -109,24 +109,20 @@ class PerMessageDeflate {
   }
 
   /**
-   * Accept extension offer.
+   * Accept an extension negotiation offer/response.
    *
-   * @param {Array} paramsList Extension parameters
+   * @param {Array} configurations The extension negotiation offers/reponse
    * @return {Object} Accepted configuration
    * @public
    */
-  accept (paramsList) {
-    paramsList = this.normalizeParams(paramsList);
+  accept (configurations) {
+    configurations = this.normalizeParams(configurations);
 
-    var params;
-    if (this._isServer) {
-      params = this.acceptAsServer(paramsList);
-    } else {
-      params = this.acceptAsClient(paramsList);
-    }
+    this.params = this._isServer
+      ? this.acceptAsServer(configurations)
+      : this.acceptAsClient(configurations);
 
-    this.params = params;
-    return params;
+    return this.params;
   }
 
   /**
@@ -154,141 +150,148 @@ class PerMessageDeflate {
   }
 
   /**
-   * Accept extension offer from client.
+   *  Accept an extension negotiation offer.
    *
-   * @param {Array} paramsList Extension parameters
+   * @param {Array} offers The extension negotiation offers
    * @return {Object} Accepted configuration
    * @private
    */
-  acceptAsServer (paramsList) {
-    const accepted = {};
-    const result = paramsList.some((params) => {
+  acceptAsServer (offers) {
+    const opts = this._options;
+    const accepted = offers.find((params) => {
       if (
-        (this._options.serverNoContextTakeover === false &&
+        (opts.serverNoContextTakeover === false &&
           params.server_no_context_takeover) ||
-        (this._options.serverMaxWindowBits === false &&
-          params.server_max_window_bits) ||
-        (typeof this._options.serverMaxWindowBits === 'number' &&
-          typeof params.server_max_window_bits === 'number' &&
-          this._options.serverMaxWindowBits > params.server_max_window_bits) ||
-        (typeof this._options.clientMaxWindowBits === 'number' &&
+        (params.server_max_window_bits &&
+          (opts.serverMaxWindowBits === false ||
+            (typeof opts.serverMaxWindowBits === 'number' &&
+              opts.serverMaxWindowBits > params.server_max_window_bits))) ||
+        (typeof opts.clientMaxWindowBits === 'number' &&
           !params.client_max_window_bits)
       ) {
-        return;
+        return false;
       }
 
-      if (
-        this._options.serverNoContextTakeover ||
-        params.server_no_context_takeover
-      ) {
-        accepted.server_no_context_takeover = true;
-      }
-      if (
-        this._options.clientNoContextTakeover ||
-        (this._options.clientNoContextTakeover !== false &&
-          params.client_no_context_takeover)
-      ) {
-        accepted.client_no_context_takeover = true;
-      }
-      if (typeof this._options.serverMaxWindowBits === 'number') {
-        accepted.server_max_window_bits = this._options.serverMaxWindowBits;
-      } else if (typeof params.server_max_window_bits === 'number') {
-        accepted.server_max_window_bits = params.server_max_window_bits;
-      }
-      if (typeof this._options.clientMaxWindowBits === 'number') {
-        accepted.client_max_window_bits = this._options.clientMaxWindowBits;
-      } else if (
-        this._options.clientMaxWindowBits !== false &&
-        typeof params.client_max_window_bits === 'number'
-      ) {
-        accepted.client_max_window_bits = params.client_max_window_bits;
-      }
       return true;
     });
 
-    if (!result) throw new Error("Doesn't support the offered configuration");
+    if (!accepted) {
+      throw new Error('None of the extension offers can be accepted');
+    }
+
+    if (opts.serverNoContextTakeover) {
+      accepted.server_no_context_takeover = true;
+    }
+    if (opts.clientNoContextTakeover) {
+      accepted.client_no_context_takeover = true;
+    }
+    if (typeof opts.serverMaxWindowBits === 'number') {
+      accepted.server_max_window_bits = opts.serverMaxWindowBits;
+    }
+    if (typeof opts.clientMaxWindowBits === 'number') {
+      accepted.client_max_window_bits = opts.clientMaxWindowBits;
+    } else if (
+      accepted.client_max_window_bits === true ||
+      opts.clientMaxWindowBits === false
+    ) {
+      delete accepted.client_max_window_bits;
+    }
 
     return accepted;
   }
 
   /**
-   * Accept extension response from server.
+   * Accept the extension negotiation response.
    *
-   * @param {Array} paramsList Extension parameters
+   * @param {Array} response The extension negotiation response
    * @return {Object} Accepted configuration
    * @private
    */
-  acceptAsClient (paramsList) {
-    const params = paramsList[0];
+  acceptAsClient (response) {
+    const params = response[0];
 
     if (
       this._options.clientNoContextTakeover === false &&
       params.client_no_context_takeover
     ) {
-      throw new Error('Invalid value for "client_no_context_takeover"');
+      throw new Error('Unexpected parameter "client_no_context_takeover"');
     }
 
-    if (
+    if (!params.client_max_window_bits) {
+      if (typeof this._options.clientMaxWindowBits === 'number') {
+        params.client_max_window_bits = this._options.clientMaxWindowBits;
+      }
+    } else if (
+      this._options.clientMaxWindowBits === false ||
       (typeof this._options.clientMaxWindowBits === 'number' &&
-        (!params.client_max_window_bits ||
-          params.client_max_window_bits > this._options.clientMaxWindowBits)) ||
-      (this._options.clientMaxWindowBits === false &&
-        params.client_max_window_bits)
+        params.client_max_window_bits > this._options.clientMaxWindowBits)
     ) {
-      throw new Error('Invalid value for "client_max_window_bits"');
+      throw new Error(
+        'Unexpected or invalid parameter "client_max_window_bits"'
+      );
     }
 
     return params;
   }
 
   /**
-   * Normalize extensions parameters.
+   * Normalize parameters.
    *
-   * @param {Array} paramsList Extension parameters
-   * @return {Array} Normalized extensions parameters
+   * @param {Array} configurations The extension negotiation offers/reponse
+   * @return {Array} The offers/response with normalized parameters
    * @private
    */
-  normalizeParams (paramsList) {
-    return paramsList.map((params) => {
+  normalizeParams (configurations) {
+    configurations.forEach((params) => {
       Object.keys(params).forEach((key) => {
         var value = params[key];
+
         if (value.length > 1) {
-          throw new Error(`Multiple extension parameters for ${key}`);
+          throw new Error(`Parameter "${key}" must have only a single value`);
         }
 
         value = value[0];
 
-        switch (key) {
-          case 'server_no_context_takeover':
-          case 'client_no_context_takeover':
-            if (value !== true) {
-              throw new Error(`invalid extension parameter value for ${key} (${value})`);
+        if (key === 'client_max_window_bits') {
+          if (value !== true) {
+            const num = +value;
+            if (!Number.isInteger(num) || num < 8 || num > 15) {
+              throw new TypeError(
+                `Invalid value for parameter "${key}": ${value}`
+              );
             }
-            params[key] = true;
-            break;
-          case 'server_max_window_bits':
-          case 'client_max_window_bits':
-            if (typeof value === 'string') {
-              value = parseInt(value, 10);
-              if (
-                Number.isNaN(value) ||
-                value < zlib.Z_MIN_WINDOWBITS ||
-                value > zlib.Z_MAX_WINDOWBITS
-              ) {
-                throw new Error(`invalid extension parameter value for ${key} (${value})`);
-              }
-            }
-            if (!this._isServer && value === true) {
-              throw new Error(`Missing extension parameter value for ${key}`);
-            }
-            params[key] = value;
-            break;
-          default:
-            throw new Error(`Not defined extension parameter (${key})`);
+            value = num;
+          } else if (!this._isServer) {
+            throw new TypeError(
+              `Invalid value for parameter "${key}": ${value}`
+            );
+          }
+        } else if (key === 'server_max_window_bits') {
+          const num = +value;
+          if (!Number.isInteger(num) || num < 8 || num > 15) {
+            throw new TypeError(
+              `Invalid value for parameter "${key}": ${value}`
+            );
+          }
+          value = num;
+        } else if (
+          key === 'client_no_context_takeover' ||
+          key === 'server_no_context_takeover'
+        ) {
+          if (value !== true) {
+            throw new TypeError(
+              `Invalid value for parameter "${key}": ${value}`
+            );
+          }
+        } else {
+          throw new Error(`Unknown parameter "${key}"`);
         }
+
+        params[key] = value;
       });
-      return params;
     });
+
+    return configurations;
   }
 
   /**
@@ -485,7 +488,7 @@ function inflateOnData (chunk) {
     return;
   }
 
-  this[kError] = new Error('max payload size exceeded');
+  this[kError] = new RangeError('Max payload size exceeded');
   this[kError].closeCode = 1009;
   this.removeListener('data', inflateOnData);
   this.reset();
