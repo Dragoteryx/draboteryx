@@ -7,12 +7,6 @@ const pack = require("./package.json");
 const snekfetch = require("snekfetch")
 
 exports.showMemberInfo = function(member) {
-	let isAdmin = "No";
-	let isBot = "No";
-	if (member.hasPermission("ADMINISTRATOR"))
-		isAdmin = "Yes";
-	if (member.user.bot)
-		isBot = "Yes";
 	let tempRoles = Array.from(member.roles.values());
 	let roles = [];
 	for (let role of tempRoles) {
@@ -21,20 +15,21 @@ exports.showMemberInfo = function(member) {
 		else
 			roles.push("everyone (default role)");
 	}
-	let info = new discord.RichEmbed()
-	.setThumbnail(member.user.displayAvatarURL)
-	.setColor(member.colorRole.color)
+	let info = new discord.RichEmbed();
+	if (member.colorRole !== null)
+		info.setColor(member.colorRole.color);
+	info.setThumbnail(member.user.displayAvatarURL)
 	.addField("Member",member, true)
 	.addField("Display name", member.displayName, true)
 	.addField("Username#discriminator", member.user.tag, true)
 	.addField("Unique ID", member.user.id, true)
-	.addField(roles.length + " roles",roles)
+	.addField(roles.length + " role(s)",roles)
 	.addField("Highest role", member.highestRole, true);
 	if (member.voiceChannel !== undefined)
 		info.addField("Connected to", member.voiceChannel.name, true);
 	info.addField("Joined at", member.joinedAt.toUTCString())
-	.addField("Is admin?", isAdmin, true)
-	.addField("Is bot?", isBot, true);
+	.addField("Is admin?", member.hasPermission("ADMINISTRATOR") ? "Yes" : "No", true)
+	.addField("Is bot?", member.user.bot ? "Yes" : "No", true);
 	let stts = "";
 	if (member.presence.status == "online") stts += "Online";
 	else if (member.presence.status == "offline") stts += "Offline";
@@ -51,84 +46,84 @@ exports.showMemberInfo = function(member) {
 	return info;
 }
 
-exports.showGuildInfo = function(guild) {
-	let tempRoles = Array.from(guild.roles.values());
-	let roles = [];
-	for (let role of tempRoles) {
-		if (role.name != "@everyone")
-			roles.push(role.name);
-		else
-			roles.push("everyone (default role)");
+exports.showGuildInfo = async function(guild) {
+	try {
+		let tempRoles = Array.from(guild.roles.values());
+		let roles = [];
+		for (let role of tempRoles) {
+			if (role.name != "@everyone")
+				roles.push(role.name);
+			else
+				roles.push("everyone (default role)");
+		}
+		let tempChannels = Array.from(guild.channels.values());
+		let textChannels = [];
+		let voiceChannels = [];
+		for (let channel of tempChannels) {
+			if (channel.type == "text")
+				textChannels.push(channel.name);
+			else if (channel.type == "voice")
+				voiceChannels.push(channel.name);
+		}
+		let emojis = Array.from(guild.emojis.values());
+		let info = tools.defaultEmbed();
+		let nbCon;
+		if (guild.iconURL != null)
+			info.setThumbnail(guild.iconURL);
+		info.addField("Server name", guild.name, true)
+		.addField("Unique ID", guild.id, true)
+		.addField("Owner", guild.owner, true)
+		.addField("Custom emoji(s)", emojis.length + "/" + 100 + " (" + (100-emojis.length) + " remaining)", true)
+		.addField(roles.length + " roles",roles)
+		.addField(textChannels.length + " text channels",textChannels, true)
+		.addField(voiceChannels.length + " voice channels",voiceChannels, true)
+		.addField("Created at", guild.createdAt.toUTCString())
+		.addField("Region", guild.region, true);
+		if (!guild.large) {
+			let nbCon = await guild.nbCon();
+			info.addField(guild.memberCount + " total members", nbCon + " connected (" + Math.floor((nbCon/guild.memberCount)*100) + "%)", true);
+		} else
+			info.addField(guild.memberCount + " total members", "Disabled above 250 users", true);
+		info.addField("Icon URL", guild.iconURL);
+		return Promise.resolve(info);
+	} catch(err) {
+		return Promise.reject(err);
 	}
-	let tempChannels = Array.from(guild.channels.values());
-	let textChannels = [];
-	let voiceChannels = [];
-	for (let channel of tempChannels) {
-		if (channel.type == "text")
-			textChannels.push(channel.name);
-		else if (channel.type == "voice")
-			voiceChannels.push(channel.name);
-	}
-	let emojis = Array.from(guild.emojis.values());
-	let info = tools.defaultEmbed();
-	if (guild.iconURL != null)
-		info.setThumbnail(guild.iconURL);
-	info.addField("Server name", guild.name,true)
-	.addField("Unique ID", guild.id,true)
-	.addField("Owner", guild.owner,true)
-	.addField("Custom emojis", emojis.length + "/" + 50 + " (" + (50-emojis.length) + " left)",true)
-	.addField(roles.length + " roles",roles)
-	.addField(textChannels.length + " text channels",textChannels,true)
-	.addField(voiceChannels.length + " voice channels",voiceChannels,true)
-	.addField("Created at", guild.createdAt.toUTCString())
-	.addField("Region", guild.region,true)
-	.addField(guild.memberCount + " total members", guild.nbCon() + " connected (" + Math.floor((guild.nbCon()/guild.memberCount)*100) + "%)",true)
-	.addField("Icon URL", guild.iconURL);
-	return info;
 }
 
 exports.showChannelInfo = function(channel) {
 	let info = tools.defaultEmbed();
-	info.addField("Channel name",channel.name,true)
-	.addField("Unique ID",channel.id,true)
-	.addField("Type",channel.type)
-	.addField("Created at",channel.createdAt.toUTCString());
+	info.addField("Channel name", channel.name, true)
+	.addField("Unique ID", channel.id, true)
+	.addField("Type", channel.type)
+	.addField("Created at", channel.createdAt.toUTCString());
 	return info;
 }
 
 exports.showRoleInfo = function(role) {
-	let isAdmin = "No";
-	let isMent = "No";
-	if (role.hasPermission("ADMINISTRATOR"))
-		isAdmin = "Yes";
-	if (role.mentionable)
-		isMent = "Yes";
 	let info = new discord.RichEmbed();
 	info.setColor(role.color)
 	.addField("Role name", role.name, true)
 	.addField("Unique ID", role.id, true)
 	.addField("Color", role.hexColor)
 	.addField("Created at", role.createdAt.toUTCString())
-	.addField("Is admin?", isAdmin, true)
-	.addField("Is mentionable?", isMent, true);
+	.addField("Is admin?", role.hasPermission("ADMINISTRATOR") ? "Yes" : "No", true)
+	.addField("Is mentionable?", role.mentionable ? "Yes" : "No", true);
 	return info;
 }
 
 exports.cacheAllUsers = function(guild) {
-	guild.fetchMembers().then(guild2 => {
-		let members = Array.from(guild2.members.values());
-		let user;
-		for (let i = 0; i < members.length; i++) {
-			let user = members[i].user;
-			drabot.client.fetchUser(user.id);
-		}
-		console.log("[CACHE] All users in guild '" + guild.name + "' have been added to the cache");
+	guild.fetchMembers().then(guild => {
+		let members = Array.from(guild.members.values());
+		for (let member of members)
+			drabot.client.fetchUser(member.user.id);
+		console.log("[CACHE] All users in guild '" + guild.name + "' have been cached.");
 	});
 }
 
 exports.cacheUser = function(user) {
 	drabot.client.fetchUser(user.id);
-	console.log("[CACHE] User '" + user.username + "#" + user.discriminator + "' has been added to the cache");
+	console.log("[CACHE] '" + user.tag + "' has been cached.");
 }
 
 exports.showInfo = async () => {

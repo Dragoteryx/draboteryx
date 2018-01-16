@@ -81,8 +81,11 @@ client.on("message", msg => {
 	}).catch(console.error);
 
 	// PING
-	if (msg.content.toLowerCase() == "ping")
-		msg.reply("pong!");
+	if (msg.content.toLowerCase() == "ping") {
+		msg.channel.send(":ping_pong: Pong!").then(msg2 => {
+			msg2.edit(":ping_pong: Pong! (``" + (msg2.createdTimestamp - msg.createdTimestamp) + "`` ms)");
+		});
+	}
 
 	// CLEVERBOT
 	if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
@@ -143,7 +146,7 @@ client.on("ready", () => {
 			console.log("(local launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
-		client.user.setGame(config.prefix + "help");
+		client.user.setActivity(config.prefix + "help");
 	}
 });
 client.on("error", err => {
@@ -185,9 +188,9 @@ commands.setCommand("info", msg => {
 	});
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});
 
-commands.setCommand("serverinfo", msg => {
-	msg.channel.send("", msg.guild.embedInfo());
-}, {dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
+commands.setCommand("serverinfo", async msg => {
+	msg.channel.send("", await msg.guild.embedInfo());
+}, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
 commands.setCommand("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -204,7 +207,7 @@ commands.setCommand("channelinfo", msg => {
 		}
 	}
 	msg.channel.send("", channel.embedInfo());
-}, {dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
+}, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
 commands.setCommand("userinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -220,11 +223,11 @@ commands.setCommand("userinfo", msg => {
 			return;
 		}
 	}
-	if (msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
+	if (commands.isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
 		msg.channel.send("", member.embedInfo());
 	else
 		msg.channel.send("You don't have the necessary permissions.");
-}, {dms: false, props: new types.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
+}, {override: true, dms: false, props: new types.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
 
 commands.setCommand("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -241,7 +244,7 @@ commands.setCommand("roleinfo", msg => {
 		}
 	}
 	msg.channel.send("", role.embedInfo());
-}, {dms: false, permissions: ["MANAGE_ROLES"], props: new types.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
+}, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new types.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 commands.setCommand("join", msg => {
 	music.join(msg.member).then(() => {
@@ -347,7 +350,7 @@ commands.setCommand("setName", msg => {
 
 commands.setCommand("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
-	client.user.setGame(game).then(() => {
+	client.user.setActivity(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
 	}, () => {
 		console.log("[DRABOT] Couldn't change game");
@@ -393,6 +396,15 @@ commands.setCommand("waifu", msg => {
 		msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 });
 
+commands.setCommand("dicksize", msg => {
+	let length = tools.random(1, 10);
+	let str = "8";
+	for (let i = 0; i < length; i++)
+		str += "=";
+	str += "D";
+	msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayName +")");
+});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -416,12 +428,23 @@ String.prototype.getHTTP = function() {
 	});
 }
 
+discord.Message.prototype.dreply = function(content) {
+	if (this.channel.type == "text")
+		return this.reply(content);
+	else
+		return this.channel.send(content);
+}
+
 discord.Guild.prototype.nbCon = function() {
-	let presences = Array.from(this.presences.values());
-	let h = 0;
-	for(let presence of presences)
-		if (presence.status != "offline") h++;
-	return h;
+	return new Promise((resolve, reject) => {
+		this.fetchMembers().then(guild => {
+			let presences = Array.from(guild.presences.values());
+			let h = 0;
+			for(let presence of presences)
+				if (presence.status != "offline") h++;
+			resolve(h);
+		}).catch(reject);
+	});
 }
 
 discord.Guild.prototype.embedInfo = function() {

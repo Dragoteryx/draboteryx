@@ -12,6 +12,8 @@ module.exports = function(prefix) {
 		if (callback === undefined)
 			throw new Error("missing parameter: callback function");
 		let options = opts !== undefined ? opts : {};
+		if (options.override === undefined)
+			options.override = false;
 		if (options.dms === undefined)
 			options.dms = true;
 		if (options.owner === undefined)
@@ -26,8 +28,10 @@ module.exports = function(prefix) {
 			options.permissions = [];
 		if (options.nsfw === undefined)
 			options.nsfw = false;
-			if (options.minargs === undefined)
-				options.minargs = -1;
+		if (options.bots === undefined)
+			options.bots = false;
+		if (options.minargs === undefined)
+			options.minargs = -1;
 		if (options.maxargs === undefined)
 			options.maxargs = -1;
 		if (options.uses === undefined)
@@ -44,11 +48,13 @@ module.exports = function(prefix) {
 			users: options.users,
 			permissions: options.permissions,
 			nsfw: options.nsfw,
+			bots: options.bots,
 			minargs: Math.floor(options.minargs),
 			maxargs: Math.floor(options.maxargs),
 			uses: Math.floor(options.uses),
 			props: options.props,
-			function: options.function
+			function: options.function,
+			override: options.override,
 		}), this);
 		commands.set(name, Object.seal({command: Object.seal(command), active: true}));
 		return this;
@@ -120,6 +126,9 @@ module.exports = function(prefix) {
 		commands.set(newName, Object.seal({command: Object.seal(command), active: active}));
 		return command;
 	}
+	this.isOwner = user => {
+		return this.owners.includes(user.id);
+	}
 }
 
 function Command(comName, callback, options, handler) {
@@ -154,13 +163,13 @@ function Command(comName, callback, options, handler) {
 				check.reasons = [];
 			check.reasons.push("DMs not allowed");
 		}
-		if (!handler.owners.includes(msg.author.id) && this.options.owner) {
+		if (!handler.isOwner(msg.author) && this.options.owner) {
 			check.valid = false;
 			if (check.reasons === undefined)
 				check.reasons = [];
 			check.reasons.push("owner only command");
 		}
-		if (msg.channel.type == "text" && this.options.guilds.length != 0) {
+		if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
 			if (!this.options.guilds.includes(msg.guild.id)) {
 				check.valid = false;
 				if (check.reasons === undefined)
@@ -168,7 +177,7 @@ function Command(comName, callback, options, handler) {
 				check.reasons.push("ignored guild");
 			}
 		}
-		if (this.options.channels.length != 0) {
+		if (this.options.channels.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
 			if (!this.options.channels.includes(msg.channel.id)) {
 				check.valid = false;
 				if (check.reasons === undefined)
@@ -176,7 +185,7 @@ function Command(comName, callback, options, handler) {
 				check.reasons.push("ignored channel");
 			}
 		}
-		if (this.options.users.length != 0) {
+		if (this.options.users.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
 			if (!this.options.users.includes(msg.author.id)) {
 				check.valid = false;
 				if (check.reasons === undefined)
@@ -184,8 +193,8 @@ function Command(comName, callback, options, handler) {
 				check.reasons.push("ignored user");
 			}
 		}
-		if (msg.channel.type == "text" && this.options.permissions.length != 0) {
-			if (!msg.member.hasPermissions(this.options.permissions, false, true, true)) {
+		if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+			if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
 				check.valid = false;
 				if (check.reasons === undefined)
 					check.reasons = [];
@@ -197,6 +206,12 @@ function Command(comName, callback, options, handler) {
 			if (check.reasons === undefined)
 				check.reasons = [];
 			check.reasons.push("nsfw");
+		}
+		if (msg.author.bot && !this.options.bots) {
+			check.valid = false;
+			if (check.reasons === undefined)
+				check.reasons = [];
+			check.reasons.push("bot user");
 		}
 		if (this.options.minargs > 0 && nbargs < this.options.minargs) {
 			check.valid = false;

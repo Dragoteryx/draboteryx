@@ -10,6 +10,7 @@
     "drg-music": "^3.2.1",
     "opusscript": "0.0.4",
     "redis": "^2.8.0",
+    "websocket": "^1.0.25",
     "youtube-search": "^1.0.10",
     "ytdl-core": "^0.18.1"
   },
