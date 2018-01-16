@@ -21,7 +21,7 @@ exports.randomFloor = function(max) {
 
 //donner une valeur aléatoire d'un tableau
 exports.randTab = function(tab) {
-	return tab[this.randomFloor(tab.length-1)];
+	return tab[exports.randomFloor(tab.length-1)];
 }
 
 // écrire dans un fichier
