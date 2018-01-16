@@ -82,10 +82,10 @@ exports.Duration = function(timestamp) {
 			else
 				str = weeks + " week, " + str;
 		}
-		if (str.includes("minute"))
-			str = str.replace(" minute, ", " minute and ");
-		else if (str.includes("minutes"))
+		if (str.includes("minutes"))
 			str = str.replace(" minutes, ", " minutes and ");
+		else if (str.includes("minute"))
+			str = str.replace(" minute, ", " minute and ");
 		return str;
 	}
 }
