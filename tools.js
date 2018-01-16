@@ -11,17 +11,15 @@ const noise = ["0","1","2","3","4","5","6","7","8","9",
 
 // valeur random entre min et max
 exports.random = function(min, max) {
-	return Math.floor(Math.random()*max+min);
-}
-
-// donner une valeur aléatoire entre 0 et max (inclus)
-exports.randomFloor = function(max) {
-	return exports.random(0, max)
+	if (max === undefined)
+		return Math.floor(Math.random()*(min+1));
+	else
+		return Math.floor(Math.random()*(max-min+1))+min;
 }
 
 //donner une valeur aléatoire d'un tableau
 exports.randTab = function(tab) {
-	return tab[exports.randomFloor(tab.length-1)];
+	return tab[exports.random(tab.length-1)];
 }
 
 // écrire dans un fichier
