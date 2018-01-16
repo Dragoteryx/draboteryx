@@ -97,17 +97,6 @@ client.on("message", msg => {
 		}
 	}
 
-	// VLT CORP ASSISTANCE ID CORRECTION
-	else if (msg.content.includes(", voilà ton véritable ID : ") && msg.author.id == process.env.VLTBOTID) {
-		let tab = msg.content.split(", voilà ton véritable ID : ");
-		let member = tools.stringToMember(tab[0], msg.guild);
-		let id = tab[1];
-		if (id != member.user.id)
-			msg.channel.send("Non " + member + " ne l'écoute pas! Voilà ton véritable véritable ID: " + member.user.id);
-		else
-			msg.channel.send("Rien à redire il a raison pour une fois.");
-	}
-
 	// CLEVERBOT
 	else if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
 		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
