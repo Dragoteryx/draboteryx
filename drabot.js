@@ -88,8 +88,28 @@ client.on("message", msg => {
 		});
 	}
 
+	// EXEC (special command)
+	else if (msg.content.startsWith("$exec ") && config.owners.includes(msg.author.id)) {
+		try {
+			eval(msg.content.replace("$exec ", ""));
+		} catch(err) {
+			console.error(err);
+		}
+	}
+
+	// VLT CORP ASSISTANCE ID CORRECTION
+	else if (msg.content.includes(", voilà ton véritable ID : ") && msg.author.id == process.env.VLTBOTID) {
+		let tab = msg.content.split(", voilà ton véritable ID : ");
+		let member = tools.stringToMember(tab[0], msg.guild);
+		let id = tab[1];
+		if (id != member.user.id)
+			msg.channel.send("Non " + member + " ne l'écoute pas! Voilà ton véritable véritable ID: " + member.user.id);
+		else
+			msg.channel.send("Rien à redire il a raison pour une fois.");
+	}
+
 	// CLEVERBOT
-	if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
+	else if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
 		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
 			cleverbots.set(msg.channel.id + "/" + msg.author.id, new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY));
 		let cleverbot = cleverbots.get(msg.channel.id + "/" + msg.author.id);
@@ -111,26 +131,6 @@ client.on("message", msg => {
 				});
 			}
 		});
-	}
-
-	// EXEC (special command)
-	if (msg.content.startsWith("$exec ") && config.owners.includes(msg.author.id)) {
-		try {
-			eval(msg.content.replace("$exec ", ""));
-		} catch(err) {
-			console.error(err);
-		}
-	}
-
-	// VLT CORP ASSISTANCE ID CORRECTION
-	if (msg.content.includes(", voilà ton véritable ID : ") && msg.author.id == process.env.VLTBOTID) {
-		let tab = msg.content.split(", voilà ton véritable ID : ");
-		let member = tools.stringToMember(tab[0], msg.guild);
-		let id = tab[1];
-		if (id != member.user.id)
-			msg.channel.send("Non " + member + " ne l'écoute pas! Voilà ton véritable véritable ID: " + member.user.id);
-		else
-			msg.channel.send("Rien à redire il a raison pour une fois.");
 	}
 
 });
