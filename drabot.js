@@ -193,7 +193,7 @@ commands.setCommand("uptime", msg => {
 	let uptime = new types.Duration(Date.now() - client.readyTimestamp);
 	console.log(uptime);
 	msg.channel.send("I have been up for " + uptime.toString2() + ". My last reboot was " + client.readyAt.toUTCString() + ".")
-});
+}, {maxargs: 0, props: new types.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
 commands.setCommand("serverinfo", async msg => {
 	msg.channel.send("", await msg.guild.embedInfo());
