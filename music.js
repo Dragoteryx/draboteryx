@@ -1,4 +1,12 @@
+"use strict";
+
+// IMPORTS
+const ytdl = require("ytdl-core");
+const youtubeSearch = require("youtube-search");
+const EventEmitter = require("events");
+
 module.exports = function(client) {
+  EventEmitter.call(this);
   if (client === undefined)
     throw new Error("missingParameter: client");
   var playlists = new Map();
@@ -33,7 +41,8 @@ module.exports = function(client) {
     return new Promise((resolve, reject) => {
 			if (!this.isConnected(guild))
 				reject(new Error("clientNotInAVoiceChannel"));
-			guild.me.voiceChannel.leave();
+      playlists.get(guild.id).kill();
+			guild.me.voiceChannel.leave();  
 			playlists.delete(guild.id);
 			resolve();
 		});
@@ -45,8 +54,6 @@ module.exports = function(client) {
       if (options === undefined) reject(new Error("missingParameter: options"));
       if (options.type === undefined) options.type = "link";
       if (options.passes === undefined) options.passes = 1;
-
-      // LINKS
       if (options.type == "link") {
         if (options.link === undefined) reject(new Error("missingParameter: options.link"));
         let info = await ytdl.getInfo(link);
@@ -66,20 +73,11 @@ module.exports = function(client) {
 					music.props = options.props;
 				playlists.get(member.guild.id).playlist.add(music);
 				resolve(Object.freeze(music.info()));
-      }
+      } else if (options.type == "ytquery") {
 
-      // YOUTUBE QUERIES
-      else if (options.type == "ytquery") {
+      } else if (options.type == "file") {
 
-      }
-
-      // LOCAL FILES
-      else if (options.type == "file") {
-
-      }
-
-      //invalid options.type
-      else reject(new Error("invalidParameter: options.type => " + options.type + " is not a valid option ('link', 'ytquery' or 'file')"));
+      } else reject(new Error("invalidParameter: options.type => " + options.type + " is not a valid option ('link', 'ytquery' or 'file')"));
     } catch(err) {
       reject(err)
     }});
@@ -96,11 +94,21 @@ module.exports = function(client) {
   }
 }
 
+module.exports.prototype = Object.create(EventEmitter.prototype);
+module.exports.prototype.constructor = module.exports;
+
 function Playlist(guild, client) {
-  var loop = client.setInterval(() => {
+  EventEmitter.call(this);
+  this.kill = () => {
+    clearInterval(this.loop);
+  }
+  this.loop = client.setInterval(() => {
     console.log("lol");
   }, 1000);
 }
+
+Playlist.prototype = Object.create(EventEmitter.prototype);
+Playlist.prototype.constructor = Playlist;
 
 function Music(link, member, passes) {
   this.link = link;

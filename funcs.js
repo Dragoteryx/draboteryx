@@ -131,9 +131,14 @@ exports.cacheUser = function(user) {
 exports.showInfo = async msg => {
 	let stats = "";
 	stats += "Uptime: ``" + new types.Duration(Date.now() - drabot.client.readyTimestamp).toString() + "``\n";
-	stats += "``" + Array.from(client.guilds.keys()).length + "`` servers\n";
-	stats += "``" + process.env.NBCHANNELS + "`` channels (``" + process.env.NBTEXT + "`` text, ``" + process.env.NBVOICE + "`` voice)\n";
-	stats += "``" + process.env.NBUSERS + "`` users";
+	stats += "``" + Array.from(drabot.client.guilds.keys()).length + "`` servers\n";
+	let channels = Array.from(drabot.client.channels.values());
+	let nbv = 0;
+	for (let channel of channels)
+		if (channel.type == "voice")
+			nbv++;
+	stats += "``" + channels.length + "`` channels (``" + (channels.length - nbv) + "`` text, ``" + nbv + "`` voice)\n";
+	stats += "``" + Array.from(drabot.client.users.keys()).length + "`` users";
 	let info = tools.defaultEmbed()
 	.setThumbnail(drabot.client.user.avatarURL)
 	.addField("Discord tag", drabot.client.user.tag, true);
