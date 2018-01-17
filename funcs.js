@@ -131,7 +131,7 @@ exports.cacheUser = function(user) {
 exports.showInfo = async msg => {
 	let stats = "";
 	stats += "Uptime: ``" + new types.Duration(Date.now() - drabot.client.readyTimestamp).toString() + "``\n";
-	stats += "``" + process.env.NBGUILDS + "`` servers\n";
+	stats += "``" + Array.from(client.guilds.keys()).length + "`` servers\n";
 	stats += "``" + process.env.NBCHANNELS + "`` channels (``" + process.env.NBTEXT + "`` text, ``" + process.env.NBVOICE + "`` voice)\n";
 	stats += "``" + process.env.NBUSERS + "`` users";
 	let info = tools.defaultEmbed()

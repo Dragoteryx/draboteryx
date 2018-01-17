@@ -5,8 +5,6 @@ require("dotenv").config();
 const discord = require("discord.js");
 const fs = require("fs");
 const snekfetch = require("snekfetch");
-const drgMusic = require("drg-music");
-const drgCommands = require("./commands.js");
 const cleverbotIO = require("cleverbot.io");
 
 // FILES ----------------------------------------------------------------------------------------------
@@ -14,13 +12,15 @@ const config = require("./config.js"); 	// configs
 const tools = require("./tools.js");		// useful functions
 const funcs = require("./funcs.js");		// commands related functions
 const types = require("./types.js");		// custom types
+const musicHandler = require("./music.js"); // music
+const comHandler = require("./commands.js");	// commands
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
 // CONSTS ----------------------------------------------------------------------------------------------
 const client = new discord.Client();
-const music = new drgMusic.MusicHandler(client);
-const commands = new drgCommands("/");
+const music = new musicHandler(client);
+const commands = new comHandler("/");
 const vars = {};
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -138,16 +138,6 @@ client.on("ready", () => {
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		client.user.setGame(config.prefix + "help");
-		process.env.NBGUILDS = Array.from(client.guilds.keys()).length;
-		let channels = Array.from(client.channels.values());
-		let nbv = 0;
-		for (let channel of channels)
-			if (channel.type == "voice")
-				nbv++;
-		process.env.NBCHANNELS = channels.length;
-		process.env.NBVOICE = nbv;
-		process.env.NBTEXT = channels.length - nbv;
-		process.env.NBUSERS = Array.from(client.users.keys()).length;
 	}
 });
 client.on("error", err => {
