@@ -438,6 +438,21 @@ commands.setCommand("dicksize", msg => {
 	}, 1500);
 }, {bots: true});
 
+commands.setCommand("crystal", msg => {
+	msg.channel.fetchMessages().then(msgs => {
+  let tab = Array.from(msgs.values());
+  let todel = [];
+  for (let message of tab) {
+    if (message.id == "141629369150865408")
+      todel.push(message);
+  }
+  if (todel.length > 0) {
+    msg.channel.bulkDelete(todel);
+		msg.channel.send("No need to thank me.");
+	}
+}).catch(console.error);
+}, {guilds: ["191560973922992128"]});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
