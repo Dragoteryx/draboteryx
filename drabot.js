@@ -215,20 +215,20 @@ commands.setCommand("channelinfo", msg => {
 	msg.channel.send("", channel.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
-commands.setCommand("userinfo", msg => {
+commands.setCommand("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let member = msg.member;
 	if (nb > 0) {
-		try {
-			member = tools.stringToMember(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild);
-		} catch(err) {
+		member = await tools.stringToMember(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild)
+		.catch(err => {
 			if (err.message == "notAMember")
 				msg.reply("this user doesn't exist.");
 			else
 				console.error(err);
-			return;
-		}
+		});
 	}
+	if (member === undefined)
+		return;
 	if (commands.isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
 		msg.channel.send("", member.embedInfo());
 	else
@@ -290,7 +290,7 @@ commands.setCommand("request", msg => {
 	}).catch(err => {
 
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
+}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, false)});
 
 commands.setCommand("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
@@ -299,7 +299,7 @@ commands.setCommand("query", msg => {
 	}).catch(err => {
 
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
+}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, false)});
 
 commands.setCommand("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -339,10 +339,17 @@ commands.setCommand("roll", msg => {
 commands.setCommand("stopclever", msg => {
 	clever = false;
 	console.log("[CLEVERBOT] Off");
-	setTimeout(() => {
-		clever = true;
-		console.log("[CLEVERBOT] On")
-	}, 10000);
+	msg.channel.send("Cleverbot has been disabled for ``10`` seconds.").then(msg2 => {
+		setTimeout(() => {
+			msg2.edit("Cleverbot will be back in ``5`` seconds.");
+		}, 5000);
+		setTimeout(() => {
+			clever = true;
+			msg2.edit("Cleverbot is back!");
+			msg2.delete(5000);
+			console.log("[CLEVERBOT] On");
+		}, 10000);
+	});
 }, {owner: true, maxargs: 0});
 
 commands.setCommand("setName", msg => {
@@ -451,7 +458,7 @@ commands.setCommand("crystal", msg => {
 		msg.channel.send("No need to thank me.").then(msg2 => {msg2.delete(2500)});
 	}
 }).catch(console.error);
-}, {guilds: ["191560973922992128"]});
+}, {owner: true, guilds: ["191560973922992128"]});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

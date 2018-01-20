@@ -30,14 +30,17 @@ exports.write = function(file) {
 exports.defaultEmbed = () => new discord.RichEmbed().setColor("#7289DA");
 
 exports.stringToMember = function(str, guild) {
-	let member;
-	if (str.startsWith("<@") && str.endsWith(">"))
-		member = guild.members.get(str.replace("<@","").replace(">","").replace("!",""));
-	else
-		member = guild.members.find("displayName",str);
-	if (member !== null || member === undefined)
-		return member;
-	throw new Error("notAMember");
+	return new Promise(async (resolve, reject) => {
+		let member;
+		let guildFetched = await guild.fetchMembers();
+		if (str.startsWith("<@") && str.endsWith(">"))
+			member = await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""));
+		else
+			member = guildFetched.members.find("displayName",str);
+		if (member !== null || member === undefined)
+			resolve(member);
+		reject(new Error("notAMember"));
+});
 }
 
 exports.stringToChannel = function(str, guild) {

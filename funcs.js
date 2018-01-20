@@ -16,7 +16,7 @@ exports.showMemberInfo = function(member) {
 		else
 			roles.push("everyone (default role)");
 	}
-	let info = new discord.RichEmbed();
+	let info = tools.defaultEmbed();
 	if (member.colorRole !== null)
 		info.setColor(member.colorRole.color);
 	info.setThumbnail(member.user.displayAvatarURL)
@@ -103,9 +103,10 @@ exports.showChannelInfo = function(channel) {
 }
 
 exports.showRoleInfo = function(role) {
-	let info = new discord.RichEmbed();
-	info.setColor(role.color)
-	.addField("Role name", role.name, true)
+	let info = tools.defaultEmbed();
+	if (role.color != 0)
+		info.setColor(role.color);
+	info.addField("Role name", role.name, true)
 	.addField("Unique ID", role.id, true)
 	.addField("Color", role.hexColor)
 	.addField("Created at", role.createdAt.toUTCString())
