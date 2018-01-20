@@ -448,7 +448,7 @@ commands.setCommand("crystal", msg => {
   }
   if (todel.length > 0) {
     msg.channel.bulkDelete(todel);
-		msg.channel.send("No need to thank me.");
+		msg.channel.send("No need to thank me.").then(msg2 => {msg2.delete(2500)});
 	}
 }).catch(console.error);
 }, {guilds: ["191560973922992128"]});
