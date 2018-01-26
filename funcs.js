@@ -194,3 +194,21 @@ exports.sendR34 = async function(msg) {
 		msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
 	});
 }
+
+exports.logError = (msg, err) => {
+	drabot.client.fetchApplication().then(app => {
+		msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``.```\n" + err.stack + "\n```");
+		console.error(err);
+	}).catch(console.error);
+}
+
+exports.musicErrors = (msg, err) => {
+	if (err.message == "memberNotInAVoiceChannel") msg.channel.send("You're not in a voice channel.");
+	else if (err.message == "voiceChannelNotJoinable") msg.channel.send("I can't join this voice channel.");
+	else if (err.message == "voiceChannelNotSpeakable") msg.channel.send("I'm not allowed to speak in this voice channel.");
+	else if (err.message == "voiceChannelFull") msg.channel.send("This voice channel is full.");
+	else if (err.message == "clientAlreadyInAVoiceChannel") msg.channel.send("I'm already in a voice channel.");
+	else if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I am not in a voice channel.");
+	else if (err.message == "clientNotPlaying") msg.channel.send("I am not playing music at the moment.");
+	else exports.logError(msg, err);
+}

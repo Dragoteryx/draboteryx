@@ -52,7 +52,7 @@ exports.Duration = function(timestamp) {
 			str = weeks + "w " + str;
 		return str;
 	}
-	this.toString2 = () => {
+	this.toStringText = () => {
 		let str = "";
 		if (seconds != 1)
 			str += seconds + " seconds";
@@ -87,5 +87,12 @@ exports.Duration = function(timestamp) {
 		else if (str.includes("minute"))
 			str = str.replace(" minute, ", " minute and ");
 		return str;
+	}
+	this.toStringTimer = () => {
+		if (hours > 0) {
+			return hoursAbs + ":" + minutes + ":" + seconds;
+		} else {
+			return minutesAbs + ":" + seconds;
+		}
 	}
 }

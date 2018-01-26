@@ -5,7 +5,7 @@ require("dotenv").config();
 const discord = require("discord.js");
 const fs = require("fs");
 const snekfetch = require("snekfetch");
-const drgMusic = require("drg-music");
+const drgMusic = require("./music.js");
 const drgCommands = require("./commands.js");
 const cleverbotIO = require("cleverbot.io");
 
@@ -19,6 +19,7 @@ const types = require("./types.js");		// custom types
 
 // CONSTS ----------------------------------------------------------------------------------------------
 const client = new discord.Client();
+const baby = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
 const commands = new drgCommands("/");
 const vars = {};
@@ -29,6 +30,7 @@ let musicChannels = new Map();
 let clever = true;
 let cleverbots = new Map();
 let debug = false;
+let babylogged = false;
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -44,12 +46,10 @@ const commandTypes = [utilityType, funType, musicType, nsfwType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
 music.on("next", (guild, next) => {
-	if (!music.isLooping(guild)) {
-		if (!next.file)
-			musicChannels.get(guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
-		else
-			musicChannels.get(guild.id).send("Now playing: ``" + next.name + "``. (requested by " + next.member +")");
-	}
+	if (!next.file)
+		musicChannels.get(guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
+	else
+		musicChannels.get(guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member +")");
 });
 music.on("empty", guild => {
 	musicChannels.get(guild.id).send("The playlist is empty.");
@@ -80,7 +80,9 @@ client.on("message", msg => {
 			console.log(toLog);
 			console.log(res)
 		}
-	}).catch(console.error);
+	}).catch(err => {
+		funcs.logError(msg, err);
+	});
 
 	// PING
 	if (msg.content.toLowerCase() == "ping") {
@@ -94,7 +96,7 @@ client.on("message", msg => {
 		try {
 			eval(msg.content.replace("$exec ", ""));
 		} catch(err) {
-			console.error(err);
+			funcs.logError(msg, err);
 		}
 	}
 
@@ -208,7 +210,7 @@ commands.setCommand("channelinfo", msg => {
 			if (err.message == "notAChannel")
 				msg.reply("this channel doesn't exist.");
 			else
-				console.error(err);
+				funcs.logError(msg, err);
 			return;
 		}
 	}
@@ -224,7 +226,7 @@ commands.setCommand("userinfo", async msg => {
 			if (err.message == "notAMember")
 				msg.reply("this user doesn't exist.");
 			else
-				console.error(err);
+				funcs.logError(msg, err);
 		});
 	}
 	if (member === undefined)
@@ -245,7 +247,7 @@ commands.setCommand("roleinfo", msg => {
 			if (err.message == "notARole")
 				msg.reply("this role doesn't exist.");
 			else
-				console.error(err);
+				funcs.logError(msg, err);
 			return;
 		}
 	}
@@ -263,12 +265,7 @@ commands.setCommand("join", msg => {
 		console.log("[MUSICBOT] Joined guild " + msg.guild.name + " (" + msg.guild.id + ")");
 		msg.channel.send("I'm here o/");
 	}).catch(err => {
-		if (err.message == "memberNotInAVoiceChannel") msg.channel.send("You're not in a voice channel.");
-		else if (err.message == "voiceChannelNotJoinable") msg.channel.send("I can't join this voice channel.");
-		else if (err.message == "voiceChannelNotSpeakable") msg.channel.send("I'm not allowed to speak in this voice channel.");
-		else if (err.message == "voiceChannelFull") msg.channel.send("This voice channel is full.");
-		else if (err.message == "clientAlreadyInAVoiceChannel") msg.channel.send("I'm already in a voice channel.");
-		else console.error(err);
+		funcs.musicErrors(msg, err);
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("join", "join a voice channel", musicType, true)});
 
@@ -278,28 +275,62 @@ commands.setCommand("leave", msg => {
 		console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
 		msg.channel.send("Goodbye o/");
 	}).catch(err => {
-		if (err.message == "clientNotInAVoiceChannel") msg.channel.send("You can't ask me to leave when I'm not connected.");
-		else console.error(err);
+		funcs.musicErrors(msg, err);
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("leave", "leave the voice channel", musicType, true)});
 
 commands.setCommand("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
-	music.addMusic().then(added => {
-
-	}).catch(err => {
-
+	try {
+		drgMusic.videoWebsite(link);
+	} catch(err) {
+		msg.channel.send("This link is not valid.");
+		return;
+	}
+	msg.channel.send("Adding ``" + link + "`` to the playlist.").then(msg2 => {
+		music.addMusic(link, msg.member, {type: "link", passes: 3}).then(added => {
+			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
+		}).catch(err => {
+			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+			else funcs.logError(msg, err);
+		});
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, false)});
+}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
 commands.setCommand("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
-	music.addMusic().then(added => {
-
-	}).catch(err => {
-
+	msg.channel.send("Searching for ``" + query + "`` on Youtube.").then(msg2 => {
+		music.addMusic(query, msg.member, {type: "ytquery", passes: 3, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
+			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
+		}).catch(err => {
+			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+			else funcs.logError(msg, err);
+		});
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, false)});
+}, {dms: false, minargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
+
+commands.setCommand("skip", msg => {
+	music.playNext(msg.guild).then(current => {
+		msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	})
+}, {dms: false, maxargs: 0, props: new types.Command("skip", "skip the current music", musicType, true)})
+
+commands.setCommand("loop", msg => {
+	music.toggleLooping(msg.guild).then(async looping => {
+		music.currentInfo(msg.guild).then(current => {
+			if (looping)
+				msg.channel.send("The current music (''" + current.title + "'') is now looping.");
+			else
+				msg.channel.send("The current music is not looping anymore.");
+		}).catch(err => {
+			funcs.musicErrors(msg, err);
+		});
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("loop", "loop the current music", musicType, true)});
 
 commands.setCommand("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -396,7 +427,9 @@ commands.setCommand("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.getHTTP().then(res => {
 		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
-	}).catch(console.error);
+	}).catch(err => {
+		funcs.logError(msg, err);
+	});
 }, {maxargs: 0, props: new types.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
 commands.setCommand("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new types.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
@@ -417,10 +450,10 @@ commands.setCommand("dicksize", msg => {
 	let large = ["My horse is jealous.", "This is something I would be proud of.", "Almost as long as my arm."];
 	let xlarge = ["Keep that thing away from me! D:", "You could knock down someone with that.", "Do you sometimes bang it on the ceiling?", "Don't trip over it.", "Damn son."];
 	let id = msg.author.id.split("");
-	let nb = 0;
+	let sum = 0;
 	for (let i of id)
-		nb += Number(i);
-	let length = nb%10+1;
+		sum += Number(i);
+	let length = sum%10+1;
 	let str = "8";
 	for (let i = 0; i < length; i++)
 		str += "=";
@@ -459,6 +492,16 @@ commands.setCommand("crystal", msg => {
 	}
 }).catch(console.error);
 }, {owner: true, guilds: ["191560973922992128"]});
+
+commands.setCommand("babybot", msg => {
+	if (!babylogged)
+		babybot.login(process.env.BABYBOTDISCORDTOKEN).then(() => {
+			babybot.guilds.get(msg.guild.id).channels.get(msg.channel.if).send("Coucou o/");
+		});
+	else
+		babybot.destroy();
+	babylogged = !babylogged;
+}, {owner: true});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
