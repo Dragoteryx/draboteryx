@@ -232,7 +232,8 @@ function Playlist(guild, client) {
 	}
 	this.loop = this.client.setInterval(() => {
 		if (this.toNext)
-			this.playNext();
+			setTimeout(this.playNext, 1000);
+		this.toNext = false;
 	}, 1000);
 }
 
