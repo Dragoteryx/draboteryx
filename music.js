@@ -130,7 +130,7 @@ exports.MusicHandler = function(client) {
 							music.props = options.props;
 						playlists.get(member.guild.id).playlist.addMusic(music);
 						resolve(music.info());
-					}).catch(console.error);
+					}).catch(reject);
 		    } else if (options.type == "ytquery") {
 					if (options.apiKey === undefined) reject(new Error("MissingParameter: apiKey"));
 					exports.queryYoutube(request, options.apiKey).then(link => {
