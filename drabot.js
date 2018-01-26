@@ -321,7 +321,7 @@ commands.setCommand("loop", msg => {
 	music.toggleLooping(msg.guild).then(async looping => {
 		music.currentInfo(msg.guild).then(current => {
 			if (looping)
-				msg.channel.send("The current music (''" + current.title + "'') is now looping.");
+				msg.channel.send("The current music (``" + current.title + "``) is now looping.");
 			else
 				msg.channel.send("The current music is not looping anymore.");
 		}).catch(err => {

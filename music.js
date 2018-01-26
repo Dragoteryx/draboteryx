@@ -132,13 +132,19 @@ exports.MusicHandler = function(client) {
 						resolve(music.info());
 					}).catch(reject);
 		    } else if (options.type == "ytquery") {
-					if (options.apiKey === undefined) reject(new Error("MissingParameter: apiKey"));
-					exports.queryYoutube(request, options.apiKey).then(link => {
-						options.type = "link";
-						resolve(this.addMusic(link, member, options));
-					}).catch(reject)
+					if (options.apiKey === undefined) reject(new Error("MissingParameter: options.apiKey"));
+					else {
+						exports.queryYoutube(request, options.apiKey).then(link => {
+							options.type = "link";
+							resolve(this.addMusic(link, member, options));
+						}).catch(reject);
+					}
 		    } else if (options.type == "file") {
-					reject(new Error("FeatureNotImplementedYet"));
+					let music = new Music(request, member, options.passes, true);
+					if (options.props !== undefined)
+						music.props = options.props;
+					playlists.get(member.guild.id).playlist.addMusic(music);
+					resolve(music.info());
 		    } else reject(new Error("InvalidParameter: options.type => '" + options.type + "' is not a valid option ('link', 'ytquery' or 'file')"));
 			}
 		});
@@ -251,26 +257,30 @@ function Music(link, member, passes, file) {
 			if (website == "Youtube")
 				return exports.playYoutube(this.member.guild.me.voiceChannel.connection, this.link, this.passes);
 		}
-		return this.member.guild.me.voiceChannel.connection.playFile(this.link);
+		else
+			return this.member.guild.me.voiceChannel.connection.playFile(this.link, {passes: this.passes, bitrate:"auto"});
 	}
 	this.info = () => {
 		if (!this.file) {
 			return Object.freeze({
-				link: this.link,
-				member: this.member,
 				title: this.title,
+				link: this.link,
 				description:  this.description,
 				author: this.author,
 				thumbnailURL: this.thumbnailURL,
 				length: this.length,
 				keywords: this.keywords,
-				file: false
+				file: false,
+				member: this.member,
+				props: this.props
 			});
 		} else {
 			return Object.freeze({
 				title: this.title,
 				path: this.link,
-				file: true
+				file: true,
+				member: this.member,
+				props: this.props
 			});
 		}
 	}
