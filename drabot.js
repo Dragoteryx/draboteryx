@@ -193,7 +193,7 @@ commands.setCommand("info", msg => {
 
 commands.setCommand("uptime", msg => {
 	let uptime = new types.Duration(Date.now() - client.readyTimestamp);
-	msg.channel.send("I have been up for " + uptime.toString2() + ". My last reboot was " + client.readyAt.toUTCString() + ".")
+	msg.channel.send("I have been up for " + uptime.toStringText() + ". My last reboot was " + client.readyAt.toUTCString() + ".")
 }, {maxargs: 0, props: new types.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
 commands.setCommand("serverinfo", async msg => {
@@ -501,6 +501,13 @@ commands.setCommand("babybot", msg => {
 	else
 		babybot.destroy();
 	babylogged = !babylogged;
+}, {owner: true});
+
+commands.setCommand("test", msg => {
+	let guilds = Array.from(client.guilds.values());
+	console.log(guilds);
+	for (let guild of guilds)
+		console.log(guild.name + ": " + guild.owner.user.tag);
 }, {owner: true});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------

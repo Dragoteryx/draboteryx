@@ -156,6 +156,7 @@ exports.MusicHandler = function(client) {
 			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else {
 				let current = playlists.get(guild.id).playlist.current;
+				playlists.get(guild.id).playlist.loop = false;
 				playlists.get(guild.id).playlist.dispatcher.end();
 				resolve(current.info());
 			}
