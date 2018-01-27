@@ -205,7 +205,7 @@ function Command(comName, callback, options, handler) {
 			}
 		}
 		if (msg.channel.type == "text" && this.options.roles.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-			if (!player.roles.some(r => this.options.roles.includes(r.name))) {
+			if (!player.roles.some(role => this.options.roles.includes(role.name.toLowerCase()))) {
 				check.valid = false;
 				if (check.reasons === undefined)
 					check.reasons = [];

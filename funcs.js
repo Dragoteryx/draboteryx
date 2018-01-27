@@ -5,7 +5,7 @@ const config = require("./config.js");
 const tools = require("./tools.js");
 const types = require("./types.js");
 const pack = require("./package.json");
-const snekfetch = require("snekfetch")
+const snekfetch = require("snekfetch");
 
 exports.showMemberInfo = function(member) {
 	let tempRoles = Array.from(member.roles.values());
@@ -131,7 +131,7 @@ exports.cacheUser = function(user) {
 
 exports.showInfo = async msg => {
 	let stats = "";
-	stats += "Uptime: ``" + new types.Duration(Date.now() - drabot.client.readyTimestamp).toString() + "``\n";
+	stats += "Uptime: ``" + drabot.uptime.strings().simple + "``\n";
 	stats += "``" + Array.from(drabot.client.guilds.keys()).length + "`` servers\n";
 	let channels = Array.from(drabot.client.channels.values());
 	let nbv = 0;

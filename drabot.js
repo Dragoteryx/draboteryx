@@ -14,6 +14,7 @@ const config = require("./config.js"); 	// configs
 const tools = require("./tools.js");		// useful functions
 const funcs = require("./funcs.js");		// commands related functions
 const types = require("./types.js");		// custom types
+const Duration = require("./duration.js"); // durations
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -32,10 +33,13 @@ let cleverbots = new Map();
 let debug = false;
 let babylogged = false;
 let testServID = "406794281110601728";
+let uptime = new Duration();
+uptime.auto = true;
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
 exports.vars = vars;
+exports.uptime = uptime;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.owners = config.owners;
@@ -143,16 +147,6 @@ client.on("ready", () => {
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		client.user.setGame(config.prefix + "help");
-		process.env.NBGUILDS = Array.from(client.guilds.keys()).length;
-		let channels = Array.from(client.channels.values());
-		let nbv = 0;
-		for (let channel of channels)
-			if (channel.type == "voice")
-				nbv++;
-		process.env.NBCHANNELS = channels.length;
-		process.env.NBVOICE = nbv;
-		process.env.NBTEXT = channels.length - nbv;
-		process.env.NBUSERS = Array.from(client.users.keys()).length;
 	}
 });
 client.on("error", err => {
@@ -195,8 +189,7 @@ commands.setCommand("info", msg => {
 }, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});
 
 commands.setCommand("uptime", msg => {
-	let uptime = new types.Duration(Date.now() - client.readyTimestamp);
-	msg.channel.send("I have been up for " + uptime.toStringText() + ". My last reboot was " + client.readyAt.toUTCString() + ".")
+	msg.channel.send("I have been up for " + uptime.strings().text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
 }, {maxargs: 0, props: new types.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
 commands.setCommand("serverinfo", async msg => {
@@ -313,15 +306,6 @@ commands.setCommand("query", msg => {
 	});
 }, {dms: false, minargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
-/*for (let i = 0; i < players.length; i++) {
-	setTimeout(() => {
-		let player = players[i];
-		console.log(player)
-		// and other stuff
-	}, i*1000);
-}*/
-
-
 commands.setCommand("skip", msg => {
 	music.playNext(msg.guild).then(current => {
 		msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
@@ -333,15 +317,15 @@ commands.setCommand("skip", msg => {
 commands.setCommand("current", msg => {
 	music.currentInfo(msg.guild).then(current => {
 		let info = tools.defaultEmbed();
-		let timer = new types.Duration(current.time);
-		let end = new types.Duration(current.length);
+		let timer = new Duration(current.time);
+		let end = new Duration(current.length);
 		if (!current.file) {
 			info.setThumbnail(current.thumbnailURL)
 			.addField("Title", current.title, true)
 			.addField("Author", current.author.name + " (" + current.author.channelURL + ")", true)
 			.addField("Link", current.link, true)
 			.addField("Requested by", current.member, true);
-			msg.channel.send("Playing: ``" + timer.toStringTimer() + " / " + end.toStringTimer() + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
+			msg.channel.send("Playing: ``" + timer.strings().timer + " / " + end.strings().timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
 		} else {
 			info.addField("File name", current.title, true)
 			.addField("Requested by", current.member, true);
@@ -530,19 +514,12 @@ commands.setCommand("crystal", msg => {
 
 commands.setCommand("babybot", msg => {
 	if (!babylogged)
-		babybot.login(process.env.BABYBOTDISCORDTOKEN).then(() => {
-			babybot.guilds.get(msg.guild.id).channels.get(msg.channel.if).send("Coucou o/");
+		baby.login(process.env.BABYBOTDISCORDTOKEN).then(() => {
+			baby.guilds.get(msg.guild.id).channels.get(msg.channel.id).send("Coucou o/");
 		});
 	else
-		babybot.destroy();
+		baby.destroy();
 	babylogged = !babylogged;
-}, {owner: true});
-
-commands.setCommand("test", msg => {
-	let guilds = Array.from(client.guilds.values());
-	console.log(guilds);
-	for (let guild of guilds)
-		console.log(guild.name + ": " + guild.owner.user.tag);
 }, {owner: true});
 
 commands.setCommand("invite", msg => {
@@ -551,6 +528,17 @@ commands.setCommand("invite", msg => {
 	else
 		msg.channel.send("And... you're arrived!");
 }, {maxargs: 0, props: new types.Command("invite", "get an invite to the test server", utilityType, true)});
+
+commands.setCommand("timer", msg => {
+	let duration = msg.content.split(" ").pop();
+	let t = new Duration(Number(duration));
+	let o = t.getTimer();
+	o.on("run", msg.channel.send);
+	o.on("end", () => {
+		msg.channel.send("Fini :v");
+	})
+	o.run();
+}, {minargs: 1, maxargs: 1});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
