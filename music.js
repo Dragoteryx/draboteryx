@@ -32,7 +32,8 @@ exports.youtubeInfo = link => {
 					avatarURL: info.author.avatar,
 					channelURL: info.author.channel_url
 				},
-				thumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
+				thumbnailURL: info.thumbnail_url,
+				maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
 				length: Number(info.length_seconds)*1000,
 				keywords: info.keywords
 			}));
@@ -46,7 +47,10 @@ exports.queryYoutube = (query, apiKey) => {
 	return new Promise((resolve, reject) => {
 		youtubeSearch(query, {key: apiKey, maxResults: 1, type: "video"}, (err, res) => {
 			if (err) reject(err);
-			else resolve(res.shift().link);
+			else if (res[0] !== undefined)
+				resolve(res.shift().link);
+			else
+				reject(new Error("noResults"));
 		});
 	});
 }
@@ -87,18 +91,19 @@ exports.MusicHandler = function(client) {
 		playlists.get(member.guild.id).playlist.on("end", (guild, music) => {
 			this.emit("end", guild, music);
 		});
-		member.voiceChannel.join();
-		return Promise.resolve();
+		let connection = member.voiceChannel.join().then(connection => {
+			connection.on("error", console.error);
+		});
+		return connection;
 	}
 	this.leave = guild => {
 		return new Promise((resolve, reject) => {
-			if (guild === undefined) reject(new Error("MissingParameter: request"));
-			else if (!this.isConnected(guild))
-				reject(new Error("clientNotInAVoiceChannel"));
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else {
 				playlists.get(guild.id).playlist.kill();
-				guild.me.voiceChannel.leave();
 				playlists.delete(guild.id);
+				guild.me.voiceChannel.leave();
 				resolve();
 			}
 		});
@@ -151,20 +156,24 @@ exports.MusicHandler = function(client) {
 	}
 	this.playNext = guild => {
 		return new Promise((resolve, reject) => {
-			if (guild === undefined) reject(new Error("MissingParameter: request"));
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else {
-				let current = playlists.get(guild.id).playlist.current;
-				playlists.get(guild.id).playlist.looping = false;
-				playlists.get(guild.id).playlist.dispatcher.end();
-				resolve(current.info());
+				this.currentInfo(guild).then(current => {
+					playlists.get(guild.id).playlist.looping = false;
+					playlists.get(guild.id).playlist.dispatcher.pause();
+					setTimeout(() => {
+						playlists.get(guild.id).playlist.dispatcher.end("playnext");
+						resolve(playlists.get(guild.id).playlist.current.info());
+					}, 2500);
+				});
 			}
 		});
 	}
 	this.toggleLooping = guild => {
 		return new Promise((resolve, reject) => {
-			if (guild === undefined) reject(new Error("MissingParameter: request"));
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else {
@@ -182,10 +191,14 @@ exports.MusicHandler = function(client) {
 	}
 	this.currentInfo = guild => {
 		return new Promise((resolve, reject) => {
-			if (guild === undefined) reject(new Error("MissingParameter: request"));
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
-			else resolve(playlists.get(guild.id).playlist.current.info());
+			else {
+				let info = Object.assign({}, playlists.get(guild.id).playlist.current.info());
+				info.time = playlists.get(guild.id).playlist.dispatcher.time;
+				resolve(Object.freeze(info));
+			}
 		});
 	}
 }
@@ -216,8 +229,8 @@ function Playlist(guild, client) {
 			this.playing = true;
 			//dispatcher.setVolume(this.volume/100.0);
 			this.dispatcher.once("end", () => {
-				this.toNext = true;
 				this.emit("end", this.guild, this.current.info());
+				this.toNext = true;
 			});
 			if (!this.looping)
 				this.emit("next", this.guild, this.current.info());
@@ -228,18 +241,19 @@ function Playlist(guild, client) {
 	}
 	this.reset = () => {
 		if (this.dispatcher !== undefined)
-			this.dispatcher.end();
+			this.dispatcher.end("killing playlist");
 		this.dispatcher = undefined;
 		this.playing = false;
+		this.paused = false;
 		this.current = undefined;
 	}
 	this.kill = () => {
 		this.reset();
-		clearInterval(this.loop);
+		this.client.clearInterval(this.loop);
 	}
 	this.loop = this.client.setInterval(() => {
 		if (this.toNext)
-			setTimeout(this.playNext, 1000);
+			this.playNext();
 		this.toNext = false;
 	}, 1000);
 }
@@ -256,10 +270,10 @@ function Music(link, member, passes, file) {
 		if (!this.file) {
 			let website = exports.videoWebsite(this.link);
 			if (website == "Youtube")
-				return exports.playYoutube(this.member.guild.me.voiceChannel.connection, this.link, this.passes);
+				return exports.playYoutube(this.member.guild.voiceConnection, this.link, this.passes);
 		}
 		else
-			return this.member.guild.me.voiceChannel.connection.playFile(this.link, {passes: this.passes, bitrate:"auto"});
+			return this.member.guild.voiceConnection.playFile(this.link, {passes: this.passes, bitrate:"auto"});
 	}
 	this.info = () => {
 		if (!this.file) {
@@ -269,7 +283,9 @@ function Music(link, member, passes, file) {
 				description:  this.description,
 				author: this.author,
 				thumbnailURL: this.thumbnailURL,
+				maxResThumbnailURL: this.thumbnailURL.replace("default.jpg", "maxresdefault.jpg"),
 				length: this.length,
+				time: 0,
 				keywords: this.keywords,
 				file: false,
 				member: this.member,
@@ -279,6 +295,7 @@ function Music(link, member, passes, file) {
 			return Object.freeze({
 				title: this.title,
 				path: this.link,
+				time: 0,
 				file: true,
 				member: this.member,
 				props: this.props

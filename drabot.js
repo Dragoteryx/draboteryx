@@ -31,6 +31,7 @@ let clever = true;
 let cleverbots = new Map();
 let debug = false;
 let babylogged = false;
+let testServID = "406794281110601728";
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -54,6 +55,8 @@ music.on("next", (guild, next) => {
 music.on("empty", guild => {
 	musicChannels.get(guild.id).send("The playlist is empty.");
 });
+
+
 
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
@@ -292,7 +295,7 @@ commands.setCommand("request", msg => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			else funcs.logError(msg, err);
+			else funcs.musicErrors(msg, err);
 		});
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
@@ -304,18 +307,50 @@ commands.setCommand("query", msg => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			else funcs.logError(msg, err);
+			else if (err.message == "noResults") msg2.edit("Sorry but I did not find anything.");
+			else funcs.musicErrors(msg, err);
 		});
 	});
 }, {dms: false, minargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
+
+/*for (let i = 0; i < players.length; i++) {
+	setTimeout(() => {
+		let player = players[i];
+		console.log(player)
+		// and other stuff
+	}, i*1000);
+}*/
+
 
 commands.setCommand("skip", msg => {
 	music.playNext(msg.guild).then(current => {
 		msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
-	})
-}, {dms: false, maxargs: 0, props: new types.Command("skip", "skip the current music", musicType, true)})
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("skip", "skip the current music", musicType, true)});
+
+commands.setCommand("current", msg => {
+	music.currentInfo(msg.guild).then(current => {
+		let info = tools.defaultEmbed();
+		let timer = new types.Duration(current.time);
+		let end = new types.Duration(current.length);
+		if (!current.file) {
+			info.setThumbnail(current.thumbnailURL)
+			.addField("Title", current.title, true)
+			.addField("Author", current.author.name + " (" + current.author.channelURL + ")", true)
+			.addField("Link", current.link, true)
+			.addField("Requested by", current.member, true);
+			msg.channel.send("Playing: ``" + timer.toStringTimer() + " / " + end.toStringTimer() + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
+		} else {
+			info.addField("File name", current.title, true)
+			.addField("Requested by", current.member, true);
+			msg.channel.send("Playing:", info);
+		}
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("current", "info about the current music", musicType, true)});
 
 commands.setCommand("loop", msg => {
 	music.toggleLooping(msg.guild).then(async looping => {
@@ -509,6 +544,13 @@ commands.setCommand("test", msg => {
 	for (let guild of guilds)
 		console.log(guild.name + ": " + guild.owner.user.tag);
 }, {owner: true});
+
+commands.setCommand("invite", msg => {
+	if (msg.channel.type != "text" || msg.guild.id != testServID)
+		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
+	else
+		msg.channel.send("And... you're arrived!");
+}, {maxargs: 0, props: new types.Command("invite", "get an invite to the test server", utilityType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

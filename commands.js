@@ -26,6 +26,8 @@ module.exports = function(prefix) {
 			options.users = [];
 		if (options.permissions === undefined)
 			options.permissions = [];
+		if (options.roles === undefined)
+			options.roles = [];
 		if (options.nsfw === undefined)
 			options.nsfw = false;
 		if (options.bots === undefined)
@@ -47,6 +49,7 @@ module.exports = function(prefix) {
 			channels: options.channels,
 			users: options.users,
 			permissions: options.permissions,
+			roles: options.roles,
 			nsfw: options.nsfw,
 			bots: options.bots,
 			minargs: Math.floor(options.minargs),
@@ -199,6 +202,14 @@ function Command(comName, callback, options, handler) {
 				if (check.reasons === undefined)
 					check.reasons = [];
 				check.reasons.push("missing permissions");
+			}
+		}
+		if (msg.channel.type == "text" && this.options.roles.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+			if (!player.roles.some(r => this.options.roles.includes(r.name))) {
+				check.valid = false;
+				if (check.reasons === undefined)
+					check.reasons = [];
+				check.reasons.push("missing role");
 			}
 		}
 		if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {

@@ -89,10 +89,16 @@ exports.Duration = function(timestamp) {
 		return str;
 	}
 	this.toStringTimer = () => {
-		if (hours > 0) {
-			return hoursAbs + ":" + minutes + ":" + seconds;
+		let secs = "" + seconds;
+		if (secs.length == 1)
+			secs = "0" + seconds;
+		let mins = "" + minutes;
+		if (mins.length == 1)
+			mins = "0" + minutes;
+		if (hoursAbs > 0) {
+			return hoursAbs + ":" + mins + ":" + secs;
 		} else {
-			return minutesAbs + ":" + seconds;
+			return minutesAbs + ":" + secs;
 		}
 	}
 }

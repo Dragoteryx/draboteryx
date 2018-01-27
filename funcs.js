@@ -197,7 +197,7 @@ exports.sendR34 = async function(msg) {
 
 exports.logError = (msg, err) => {
 	drabot.client.fetchApplication().then(app => {
-		msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``.```\n" + err.stack + "\n```");
+		msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "invite`` to join the test server.```\n" + err.stack + "\n```");
 		console.error(err);
 	}).catch(console.error);
 }
