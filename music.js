@@ -163,10 +163,8 @@ exports.MusicHandler = function(client) {
 				this.currentInfo(guild).then(current => {
 					playlists.get(guild.id).playlist.looping = false;
 					playlists.get(guild.id).playlist.dispatcher.pause();
-					setTimeout(() => {
-						playlists.get(guild.id).playlist.dispatcher.end("playnext");
-						resolve(playlists.get(guild.id).playlist.current.info());
-					}, 2500);
+					playlists.get(guild.id).playlist.dispatcher.end("playnext");
+					resolve(playlists.get(guild.id).playlist.current.info());
 				});
 			}
 		});
