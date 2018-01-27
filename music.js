@@ -199,6 +199,18 @@ exports.MusicHandler = function(client) {
 			}
 		});
 	}
+	this.playlistInfo = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else {
+				let tab = [];
+				for (let music of playlists.get(guild.id).playlist.list)
+					tab.push(music.info());
+				return tab;
+			}
+		});
+	}
 }
 
 exports.MusicHandler.prototype = Object.create(EventEmitter.prototype);

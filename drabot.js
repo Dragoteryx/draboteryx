@@ -336,6 +336,30 @@ commands.setCommand("current", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("current", "info about the current music", musicType, true)});
 
+commands.setCommand("current", msg => {
+	music.playlistInfo(msg.guild).then(playlist => {
+		music.currentInfo(msg.guild).then(current => {
+			let info = tools.defaultEmbed();
+			let timer;
+			if (!current.file) {
+				timer = new Duration(playing.time);
+				let end = new Duration(playing.length);
+				info.addField("Playing (" + timer.strings().timer + " / " + end.strings().timer + ") - " + current.title + " by " + current.author.name, "Requested by " + current.member);
+			} else
+				info.addField("Playing - " + current.title, "Requested by " + current.member);
+			for (let i = 0; i < playlist.length; i++) {
+				if (!playlist[i].file) {
+					timer = new Duration(playlist[i].length);
+					embed.addField((i+1) + " - " + playlist[i].title + " by " + playlist[i].author.name + " (" + timer.strings().timer + ")", "Requested by " + playlist[i].member);
+				}
+				else
+					embed.addField((i+1) + " - " + playlist[i].title, "Requested by " + playlist[i].member);
+			}
+			msg.channel.send("Here's the playlist:", embed);
+		}).catch(err => funcs.musicErrors(msg, err));
+	}).catch(err => funcs.musicErrors(msg, err));
+}, {dms: false, maxargs: 0, props: new types.Command("playlist", "info about the playlist", musicType, true)});
+
 commands.setCommand("loop", msg => {
 	music.toggleLooping(msg.guild).then(async looping => {
 		music.currentInfo(msg.guild).then(current => {
@@ -533,10 +557,12 @@ commands.setCommand("timer", msg => {
 	let duration = msg.content.split(" ").pop();
 	let t = new Duration(Number(duration));
 	let o = t.getTimer();
-	o.on("run", msg.channel.send);
+	o.on("run", nb => {
+		msg.channel.send(nb);
+	});
 	o.on("end", () => {
 		msg.channel.send("Fini :v");
-	})
+	});
 	o.run();
 }, {minargs: 1, maxargs: 1});
 

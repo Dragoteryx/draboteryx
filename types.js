@@ -8,9 +8,4 @@ exports.Command = function(name, desc, type, show) {
 	this.desc = desc;
 	this.type = type;
 	this.show = show;
-	this.toString = function() {
-		let str = "visible";
-		if (!this.show) str = "hidden";
-		return this.name + " : " + this.desc + " (type : " + this.type.name +", " + str + ")";
-	}
 }
