@@ -155,11 +155,12 @@ exports.MusicHandler = function(client) {
 	this.removeMusic = (guild, id) => {
 		return new Promise((resolve, reject) => {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			if (guild === undefined) reject(new Error("MissingParameter: id"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else if (id < 0) reject(new Error("invalidMusicIndex"));
-			else if (id >= playlists.get(member.guild.id).playlist.list.length) reject(new Error("invalidMusicIndex"));
-			else resolve(playlists.get(member.guild.id).playlist.list.splice(id, 1)[0].info());
+			else if (id >= playlists.get(guild.id).playlist.list.length) reject(new Error("invalidMusicIndex"));
+			else resolve(playlists.get(guild.id).playlist.list.splice(id, 1)[0].info());
 		});
 	}
 	this.playNext = guild => {
@@ -269,13 +270,14 @@ exports.MusicHandler = function(client) {
 	this.setVolume = (guild, volume) => {
 		return new Promise((resolve, reject) => {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			if (guild === undefined) reject(new Error("MissingParameter: volume"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
-			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else if (volume < 0) reject(new Error("invalidVolume"));
 			else {
 				let old = this.getVolume(guild);
 				playlists.get(guild.id).playlist.volume = volume;
-				playlists.get(guild.id).playlist.dispatcher.setVolume(volume/100.0);
+				if (this.isPlaying(guild))
+					playlists.get(guild.id).playlist.dispatcher.setVolume(volume/100.0);
 				resolve(old);
 			}
 		});
@@ -318,6 +320,11 @@ exports.MusicHandler = function(client) {
 			}
 		});
 	}
+	this.getVolume = guild => {
+		if (guild === undefined) throw new Error("MissingParameter: guild");
+		if (!this.isConnected(guild)) return undefined;
+		return playlists.get(guild.id).playlist.volume;
+	}
 }
 
 exports.MusicHandler.prototype = Object.create(EventEmitter.prototype);
@@ -345,7 +352,7 @@ function Playlist(guild, client) {
 		if (this.current !== undefined) {
 			this.dispatcher = this.current.play();
 			this.playing = true;
-			dispatcher.setVolume(this.volume/100.0);
+			this.dispatcher.setVolume(this.volume/100.0);
 			this.dispatcher.once("end", () => {
 				this.emit("end", this.guild, this.current.info());
 				this.toNext = true;
@@ -381,8 +388,10 @@ Playlist.prototype.constructor = Playlist;
 
 function Music(link, member, passes, file) {
 	this.link = link;
-	if (file)
+	if (file) {
 		this.title = this.link.split("/").pop();
+		this.length = 0;
+	}
 	this.member = member;
 	this.passes = passes;
 	this.file = file;

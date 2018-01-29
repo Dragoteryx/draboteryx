@@ -311,6 +311,10 @@ commands.setCommand("query", msg => {
 
 commands.setCommand("plremove", msg => {
 	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
+	if (!tools.validStringInt(id)) {
+		msg.channel.send("This ID is invalid.");
+		return;
+	}
 	music.removeMusic(msg.guild, id).then(removed => {
 		msg.channel.send("``" + removed.title + "`` has been removed from the playlist.");
 	}).catch(err => {
@@ -363,9 +367,9 @@ commands.setCommand("loop", msg => {
 commands.setCommand("toggle", msg => {
 	music.toggle(msg.guild).then(paused => {
 		if (paused)
-			msg.channel.send("The music has been paused");
+			msg.channel.send("The music has been paused.");
 		else
-			msg.channel.send("The music has been resumed");
+			msg.channel.send("The music has been resumed.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	})
@@ -373,10 +377,12 @@ commands.setCommand("toggle", msg => {
 
 commands.setCommand("volume", msg => {
 	let volume = Number(msg.content.split(" ").pop());
+	if (!tools.validStringInt(volume))
+		volume = 100;
 	music.setVolume(msg.guild, volume).then(old => {
 		msg.channel.send("The volume has been set to ``" + volume + "%``.")
 	}).catch(err => {
-		if (err.message == "invalidVolume") msg.channel.send("The volume can't be set less than ``0``.");
+		if (err.message == "invalidVolume") msg.channel.send("The volume must be above ``0``.");
 		else funcs.musicErrors(msg, err);
 	})
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("volume [value]", "set the volume of the music", musicType, true)});
@@ -409,7 +415,7 @@ commands.setCommand("playlist", msg => {
 		let i = 1;
 		for (let music of playlist) {
 			if (!music.file) {
-				info.addField(i + " - " + music.title + " by " + music.author.name, "Requested by " + music.member);
+				info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
 			}	else
 				info.addField(i + " - " + music.title, "Requested by " + music.member);
 			i++;
@@ -452,7 +458,7 @@ commands.setCommand("say", msg => {
 commands.setCommand("roll", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let max = 6;
-	if (args.length == 1 && args[0] == Number(args[0]) && Number(args[0]) > 0)
+	if (args.length == 1 && tools.validStringInt(args[0]) && Number(args[0]) > 0)
 		max = Number(args[0]);
 	let res = tools.random(1, max);
 	msg.reply(res + "/" + max + " (:game_die:)")
