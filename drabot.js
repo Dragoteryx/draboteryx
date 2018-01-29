@@ -22,7 +22,7 @@ const Duration = require("./duration.js"); // durations
 const client = new discord.Client();
 const baby = new discord.Client();
 const music = new drgMusic.MusicHandler(client);
-const commands = new drgCommands("/");
+const commands = new drgCommands(config.prefix);
 const vars = {};
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -32,7 +32,6 @@ let clever = true;
 let cleverbots = new Map();
 let debug = false;
 let babylogged = false;
-let testServID = "406794281110601728";
 let uptime = new Duration();
 uptime.auto = true;
 let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns"];
@@ -333,12 +332,12 @@ commands.setCommand("plshuffle", msg => {
 }, {dms: false, maxargs: 0, props: new types.Command("plshuffle", "shuffle the playlist", musicType, true)});
 
 commands.setCommand("loop", msg => {
-	music.toggleLooping(msg.guild).then(async looping => {
+	music.toggleLooping(msg.guild).then(looping => {
 		music.currentInfo(msg.guild).then(current => {
 			if (looping)
 				msg.channel.send("The current music (``" + current.title + "``) is now looping.");
 			else
-				msg.channel.send("The current music is not looping anymore.");
+				msg.channel.send("The current music is no longer looping.");
 		}).catch(err => {
 			funcs.musicErrors(msg, err);
 		});
@@ -346,6 +345,17 @@ commands.setCommand("loop", msg => {
 		funcs.musicErrors(msg, err);
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("loop", "loop the current music", musicType, true)});
+
+commands.setCommand("plloop", msg => {
+	music.togglePlaylistLooping(msg.guild).then(looping => {
+		if (looping)
+			msg.channel.send("The playlist is now looping.");
+		else
+			msg.channel.send("The playlist is no longer looping.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("plloop", "loop the playlist", musicType, true)});
 
 commands.setCommand("toggle", msg => {
 	music.toggle(msg.guild).then(paused => {
@@ -558,21 +568,6 @@ commands.setCommand("dicksize", msg => {
 	}, 1500);
 }, {bots: true});
 
-commands.setCommand("crystal", msg => {
-	msg.channel.fetchMessages().then(msgs => {
-  let tab = Array.from(msgs.values());
-  let todel = [];
-  for (let message of tab) {
-    if (message.id == "141629369150865408")
-      todel.push(message);
-  }
-  if (todel.length > 0) {
-    msg.channel.bulkDelete(todel);
-		msg.channel.send("No need to thank me.").then(msg2 => {msg2.delete(2500)});
-	}
-}).catch(console.error);
-}, {owner: true, guilds: ["191560973922992128"]});
-
 commands.setCommand("babybot", msg => {
 	if (!babylogged)
 		baby.login(process.env.BABYBOTDISCORDTOKEN).then(() => {
@@ -584,7 +579,7 @@ commands.setCommand("babybot", msg => {
 }, {owner: true});
 
 commands.setCommand("invite", msg => {
-	if (msg.channel.type != "text" || msg.guild.id != testServID)
+	if (msg.channel.type != "text" || msg.guild.id != process.env.TESTSERVID)
 		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
 	else
 		msg.channel.send("And... you're arrived!");

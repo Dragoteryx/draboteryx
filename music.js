@@ -185,8 +185,21 @@ exports.MusicHandler = function(client) {
 			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else {
 				let playlist = playlists.get(guild.id).playlist;
+				playlist.pllooping = false;
 				playlist.looping = !playlist.looping;
 				resolve(playlist.looping);
+			}
+		});
+	}
+	this.togglePlaylistLooping = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else {
+				let playlist = playlists.get(guild.id).playlist;
+				playlist.looping = false;
+				playlist.pllooping = !playlist.pllooping;
+				resolve(playlist.pllooping);
 			}
 		});
 	}
@@ -339,6 +352,7 @@ function Playlist(guild, client) {
 	this.playing = false;
 	this.paused = false;
 	this.looping = false;
+	this.pllooping = false;
 	this.volume = 100;
 	this.addMusic = music => {
 		this.list.push(music);
@@ -354,6 +368,8 @@ function Playlist(guild, client) {
 			this.playing = true;
 			this.dispatcher.setVolume(this.volume/100.0);
 			this.dispatcher.once("end", () => {
+				if (this.pllooping)
+					this.list.push(this.current);
 				this.emit("end", this.guild, this.current.info());
 				this.toNext = true;
 			});
@@ -371,6 +387,8 @@ function Playlist(guild, client) {
 		this.playing = false;
 		this.paused = false;
 		this.current = undefined;
+		this.looping = false;
+		this.pllooping = false;
 	}
 	this.kill = () => {
 		this.reset();
