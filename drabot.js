@@ -99,9 +99,9 @@ client.on("message", msg => {
 	}
 
 	// EXEC (special command)
-	else if (msg.content.startsWith("$exec ") && config.owners.includes(msg.author.id)) {
+	else if (msg.content.startsWith(config.prefix + "exec ") && config.owners.includes(msg.author.id)) {
 		try {
-			eval(msg.content.replace("$exec ", ""));
+			eval(msg.content.replace(config.prefix + "exec ", ""));
 		} catch(err) {
 			funcs.logError(msg, err);
 		}
@@ -160,9 +160,6 @@ for (let meme of memes)
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
 commands.setCommand("test", msg => {msg.channel.send("It works!")}, {owner: true, minargs: 2, maxargs: 4});
-commands.setCommand("help", msg => {
-	null;
-}, {arguments: "none", props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
 commands.setCommand("help", msg => {
 	let props = Array.from(commands.fetchProps().values());
@@ -183,6 +180,10 @@ commands.setCommand("help", msg => {
 			msg.author.send(type + " (" + embed.fields.length + ")", embed);
 	}
 }, {maxargs: 0, props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
+
+commands.setCommand("prefix", msg => {
+	msg.channel.send("Really ? My prefix is ``" + config.prefix + "``.");
+}, {maxargs: 0, props: new types.Command("prefix", "if you don't know my prefix despite reading this", utilityType, true)});
 
 commands.setCommand("info", msg => {
 	funcs.showInfo(msg).then(embed => {
@@ -480,7 +481,7 @@ commands.setCommand("setName", msg => {
 	}, () => {
 		console.log("[DRABOT] Couldn't change name");
 	});
-}, {owner: true, maxargs: 0});
+}, {owner: true, minargs: 1});
 
 commands.setCommand("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
@@ -568,18 +569,8 @@ commands.setCommand("dicksize", msg => {
 	}, 1500);
 }, {bots: true});
 
-commands.setCommand("babybot", msg => {
-	if (!babylogged)
-		baby.login(process.env.BABYBOTDISCORDTOKEN).then(() => {
-			baby.guilds.get(msg.guild.id).channels.get(msg.channel.id).send("Coucou o/");
-		});
-	else
-		baby.destroy();
-	babylogged = !babylogged;
-}, {owner: true});
-
 commands.setCommand("invite", msg => {
-	if (msg.channel.type != "text" || msg.guild.id != process.env.TESTSERVID)
+	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
 		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
 	else
 		msg.channel.send("And... you're arrived!");
@@ -625,7 +616,7 @@ function addMeme(name) {
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
-				let dispatcher = connection.playFile("./files/" + name + ".mp3", {passes: 3}).on("end", () => {
+				connection.playFile("./files/" + name + ".mp3", {passes: 3}).on("end", () => {
 					msg.guild.me.voiceChannel.leave();
 				}).setVolume(2);
 			});

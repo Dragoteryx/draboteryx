@@ -1,5 +1,22 @@
-/* jshint node:true, evil:true, asi:true, esversion:6*/
+let users = {
+    drago: "100224663937908736",
+    vlt: "111519851494846464",
+    vltbot: "273747395685122048",
+    fran: "111527653420363776",
+    nis: "111519938572791808",
+    drabot: "273576577512767488",
+    babybot: "275222406107496458"
+};
+
+let guilds = {
+  test: "406794281110601728",
+  patate: "191560973922992128",
+  drg: "255312496250978305"
+};
+
 module.exports = {
   prefix : "/",
-  owners : [process.env.DRAGOID]
+  users: users,
+  guilds: guilds,
+  owners : [users.drago]
 }

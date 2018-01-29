@@ -40,7 +40,7 @@ exports.showMemberInfo = function(member) {
 	if (member.presence.game !== null)
 		info.addField("Currently playing", member.presence.game.name, true);
 	info.addField("Avatar URL", member.user.avatarURL);
-	if (member.user.id == process.env.DRAGOID)
+	if (member.user.id == config.users.drago)
 		info.setFooter("He is my creator, my Senpai.. Daisuki!");
 	if (member.user.id == drabot.client.user.id)
 		info.setFooter("Why are you looking at my info? D:");
