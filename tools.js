@@ -40,15 +40,15 @@ exports.stringToMember = function(str, guild) {
 			member = guildFetched.members.find("displayName",str);
 		if (member !== null || member === undefined)
 			resolve(member);
-		reject(new Error("notAMember"));
-});
+		resolve(undefined);
+	});
 }
 
 exports.stringToChannel = function(str, guild) {
 	let channel = guild.channels.find("name", str);
 	if (channel !== null || channel === undefined)
 		return channel;
-	throw new Error("notAChannel");
+	return undefined;
 }
 
 exports.stringToRole = function(str, guild) {
@@ -59,7 +59,7 @@ exports.stringToRole = function(str, guild) {
 		role = guild.roles.find("name",str);
 	if (role !== null || role === undefined)
 		return role;
-	throw new Error("notARole");
+	return undefined;
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);

@@ -202,55 +202,38 @@ commands.setCommand("serverinfo", async msg => {
 commands.setCommand("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let channel = msg.channel;
-	if (nb > 0) {
-		try {
-			channel = tools.stringToChannel(msg.content.replace(config.prefix + "channelinfo ", ""), msg.guild);
-		} catch(err) {
-			if (err.message == "notAChannel")
-				msg.reply("this channel doesn't exist.");
-			else
-				funcs.logError(msg, err);
-			return;
-		}
-	}
-	msg.channel.send("", channel.embedInfo());
+	if (nb > 0)
+		channel = tools.stringToChannel(msg.content.replace(config.prefix + "channelinfo ", ""), msg.guild);
+	if (channel === undefined)
+		msg.channel.send("This channel doesn't exist.");
+	else
+		msg.channel.send("", channel.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
 commands.setCommand("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let member = msg.member;
-	if (nb > 0) {
-		member = await tools.stringToMember(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild)
-		.catch(err => {
-			if (err.message == "notAMember")
-				msg.reply("this user doesn't exist.");
-			else
-				funcs.logError(msg, err);
-		});
-	}
+	if (nb > 0)
+		member = await tools.stringToMember(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild);
 	if (member === undefined)
-		return;
-	if (commands.isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
-		msg.channel.send("", member.embedInfo());
-	else
-		msg.channel.send("You don't have the necessary permissions.");
+		msg.channel.send("This user doesn't exist.");
+	else {
+		if (commands.isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
+			msg.channel.send("", member.embedInfo());
+		else
+			msg.channel.send("You don't have the necessary permissions.");
+	}
 }, {override: true, dms: false, props: new types.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
 
 commands.setCommand("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let role = msg.member.highestRole;
-	if (nb > 0) {
-		try {
-			role = tools.stringToRole(msg.content.replace(config.prefix + "roleinfo ", ""), msg.guild);
-		} catch(err) {
-			if (err.message == "notARole")
-				msg.reply("this role doesn't exist.");
-			else
-				funcs.logError(msg, err);
-			return;
-		}
-	}
-	msg.channel.send("", role.embedInfo());
+	if (nb > 0)
+		role = tools.stringToRole(msg.content.replace(config.prefix + "roleinfo ", ""), msg.guild);
+	if (role === undefined)
+		msg.channel.send("This role doesn't exist.");
+	else
+		msg.channel.send("", role.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new types.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 commands.setCommand("join", msg => {
@@ -639,13 +622,20 @@ function login() {
 }
 
 function addMeme(name) {
-	commands.setCommand(name, msg => {
-		msg.member.voiceChannel.join().then(connection => {
-			let dispatcher = connection.playFile("./files/" + name + ".mp3").on("end", () => {
-				msg.guild.me.voiceChannel.leave();
-			}).setVolume(2);
-		});
-	}, {dms: false, maxargs: 0, function: msg => !music.isConnected(msg.guild) && msg.member.voiceChannel !== undefined});
+	commands.setCommand(name, async msg => {
+		let member = msg.member;
+		if (msg.content.split(" ").length != 1) {
+			let text = msg.content.replace(config.prefix + name + " ", "");
+			member = await tools.stringToMember(text, msg.guild);
+		}
+		if (member !== undefined && member.voiceChannel !== undefined) {
+			member.voiceChannel.join().then(connection => {
+				let dispatcher = connection.playFile("./files/" + name + ".mp3", {passes: 3}).on("end", () => {
+					msg.guild.me.voiceChannel.leave();
+				}).setVolume(2);
+			});
+		}
+	}, {dms: false, function: msg => !music.isConnected(msg.guild)});
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
