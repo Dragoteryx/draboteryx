@@ -152,6 +152,16 @@ exports.MusicHandler = function(client) {
 			}
 		});
 	}
+	this.removeMusic = (guild, id) => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
+			else if (id < 0) reject(new Error("invalidMusicIndex"));
+			else if (id >= playlists.get(member.guild.id).playlist.list.length) reject(new Error("invalidMusicIndex"));
+			else resolve(playlists.get(member.guild.id).playlist.list.splice(id, 1)[0].info());
+		});
+	}
 	this.playNext = guild => {
 		return new Promise((resolve, reject) => {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
@@ -183,6 +193,7 @@ exports.MusicHandler = function(client) {
 		return new Promise((resolve, reject) => {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else {
 				let nb = playlists.get(guild.id).playlist.list.length;
 				playlists.get(guild.id).playlist.list = [];
@@ -194,10 +205,78 @@ exports.MusicHandler = function(client) {
 		return new Promise((resolve, reject) => {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else if (playlists.get(guild.id).playlist.list.length == 0) reject(new Error("emptyPlaylist"));
 			else {
 				playlists.get(guild.id).playlist.list.sort(() => Math.random() - 0.5);
 				resolve();
+			}
+		});
+	}
+	this.pause = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
+			else if (playlists.get(guild.id).playlist.list.length == 0) reject(new Error("emptyPlaylist"));
+			else {
+				playlists.get(guild.id).playlist.list.sort(() => Math.random() - 0.5);
+				resolve();
+			}
+		});
+	}
+	this.resume = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
+			else if (!this.isPaused(guild)) reject(new Error("musicNotPaused"));
+			else {
+				playlists.get(guild.id).playlist.dispatcher.resume();
+				playlists.get(guild.id).playlist.paused = false;
+				resolve(playlists.get(guild.id).playlist.current.info());
+			}
+		});
+	}
+	this.pause = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
+			else if (this.isPaused(guild)) reject(new Error("musicAlreadyPaused"));
+			else {
+				playlists.get(guild.id).playlist.dispatcher.pause();
+				playlists.get(guild.id).playlist.paused = true;
+				resolve(playlists.get(guild.id).playlist.current.info());
+			}
+		});
+	}
+	this.toggle = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
+			else {
+				playlists.get(guild.id).playlist.paused = !playlists.get(guild.id).playlist.paused;
+				if (playlists.get(guild.id).playlist.paused)
+					playlists.get(guild.id).playlist.dispatcher.pause();
+				else
+					playlists.get(guild.id).playlist.dispatcher.resume();
+				resolve(playlists.get(guild.id).playlist.paused);
+			}
+		});
+	}
+	this.setVolume = (guild, volume) => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
+			else if (volume < 0) reject(new Error("invalidVolume"));
+			else {
+				let old = this.getVolume(guild);
+				playlists.get(guild.id).playlist.volume = volume;
+				playlists.get(guild.id).playlist.dispatcher.setVolume(volume/100.0);
+				resolve(old);
 			}
 		});
 	}
@@ -208,6 +287,11 @@ exports.MusicHandler = function(client) {
 		if (!this.isConnected(guild))
 			return false;
 		return playlists.get(guild.id).playlist.playing;
+	}
+	this.isPaused = guild => {
+		if (!this.isPlaying(guild))
+			return false;
+		return playlists.get(guild.id).playlist.paused;
 	}
 	this.currentInfo = guild => {
 		return new Promise((resolve, reject) => {
@@ -225,6 +309,7 @@ exports.MusicHandler = function(client) {
 		return new Promise((resolve, reject) => {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (!this.isPlaying(guild)) reject(new Error("clientNotPlaying"));
 			else {
 				let tab = [];
 				for (let music of playlists.get(guild.id).playlist.list)
@@ -247,6 +332,7 @@ function Playlist(guild, client) {
 	this.playing = false;
 	this.paused = false;
 	this.looping = false;
+	this.volume = 100;
 	this.addMusic = music => {
 		this.list.push(music);
 		if (!this.playing)
@@ -259,7 +345,7 @@ function Playlist(guild, client) {
 		if (this.current !== undefined) {
 			this.dispatcher = this.current.play();
 			this.playing = true;
-			//dispatcher.setVolume(this.volume/100.0);
+			dispatcher.setVolume(this.volume/100.0);
 			this.dispatcher.once("end", () => {
 				this.emit("end", this.guild, this.current.info());
 				this.toNext = true;

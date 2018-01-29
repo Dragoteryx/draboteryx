@@ -309,6 +309,15 @@ commands.setCommand("query", msg => {
 	});
 }, {dms: false, minargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
+commands.setCommand("plremove", msg => {
+	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
+	music.removeMusic(msg.guild, id).then(removed => {
+		msg.channel.send("``" + removed.title + "`` has been removed from the playlist.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
+
 commands.setCommand("skip", msg => {
 	music.playNext(msg.guild).then(current => {
 		msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
@@ -316,6 +325,61 @@ commands.setCommand("skip", msg => {
 		funcs.musicErrors(msg, err);
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("skip", "skip the current music", musicType, true)});
+
+commands.setCommand("plclear", msg => {
+	music.clearPlaylist(msg.guild).then(nb => {
+		if (nb == 1)
+			msg.channel.send("``1`` music has been removed from the playlist.");
+		else
+			msg.channel.send("``" + nb + "`` musics have been removed from the playlist.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err)
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("plclear", "clear the playlist", musicType, true)});
+
+commands.setCommand("plshuffle", msg => {
+	music.shufflePlaylist(msg.guild).then(() => {
+		msg.channel.send("The playlist has been shuffled.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("plshuffle", "shuffle the playlist", musicType, true)});
+
+commands.setCommand("loop", msg => {
+	music.toggleLooping(msg.guild).then(async looping => {
+		music.currentInfo(msg.guild).then(current => {
+			if (looping)
+				msg.channel.send("The current music (``" + current.title + "``) is now looping.");
+			else
+				msg.channel.send("The current music is not looping anymore.");
+		}).catch(err => {
+			funcs.musicErrors(msg, err);
+		});
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("loop", "loop the current music", musicType, true)});
+
+commands.setCommand("toggle", msg => {
+	music.toggle(msg.guild).then(paused => {
+		if (paused)
+			msg.channel.send("The music has been paused");
+		else
+			msg.channel.send("The music has been resumed");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	})
+}, {dms: false, maxargs: 0, props: new types.Command("toggle", "pause/resume the music", musicType, true)});;
+
+commands.setCommand("volume", msg => {
+	let volume = Number(msg.content.split(" ").pop());
+	music.setVolume(msg.guild, volume).then(old => {
+		msg.channel.send("The volume has been set to ``" + volume + "%``.")
+	}).catch(err => {
+		if (err.message == "invalidVolume") msg.channel.send("The volume can't be set less than ``0``.");
+		else funcs.musicErrors(msg, err);
+	})
+}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("volume [value]", "set the volume of the music", musicType, true)});
 
 commands.setCommand("current", msg => {
 	music.currentInfo(msg.guild).then(current => {
@@ -358,40 +422,6 @@ commands.setCommand("playlist", msg => {
 		funcs.musicErrors(msg, err)
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("playlist", "info about the playlist", musicType, true)});
-
-commands.setCommand("plclear", msg => {
-	music.clearPlaylist(msg.guild).then(nb => {
-		if (nb == 1)
-			msg.channel.send("``1`` music has been removed from the playlist.");
-		else
-			msg.channel.send("``" + nb + "`` musics have been removed from the playlist.");
-	}).catch(err => {
-		funcs.musicErrors(msg, err)
-	});
-}, {dms: false, maxargs: 0, props: new types.Command("plclear", "clear the playlist", musicType, true)});
-
-commands.setCommand("plshuffle", msg => {
-	music.shufflePlaylist(msg.guild).then(() => {
-		msg.channel.send("The playlist has been shuffled.");
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {dms: false, maxargs: 0, props: new types.Command("plshuffle", "shuffle the playlist", musicType, true)});
-
-commands.setCommand("loop", msg => {
-	music.toggleLooping(msg.guild).then(async looping => {
-		music.currentInfo(msg.guild).then(current => {
-			if (looping)
-				msg.channel.send("The current music (``" + current.title + "``) is now looping.");
-			else
-				msg.channel.send("The current music is not looping anymore.");
-		}).catch(err => {
-			funcs.musicErrors(msg, err);
-		});
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {dms: false, maxargs: 0, props: new types.Command("loop", "loop the current music", musicType, true)});
 
 commands.setCommand("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -609,7 +639,7 @@ function addMeme(name) {
 				msg.guild.me.voiceChannel.leave();
 			}).setVolume(2);
 		});
-	}, {maxargs: 0, function: msg => !music.isConnected(msg.guild) && msg.member.voiceChannel !== undefined});
+	}, {dms: false, maxargs: 0, function: msg => !music.isConnected(msg.guild) && msg.member.voiceChannel !== undefined});
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
