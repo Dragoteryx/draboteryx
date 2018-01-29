@@ -35,6 +35,7 @@ let babylogged = false;
 let testServID = "406794281110601728";
 let uptime = new Duration();
 uptime.auto = true;
+let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns"];
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -155,6 +156,8 @@ client.on("error", err => {
 	login();
 })
 login();
+for (let meme of memes)
+	addMeme(meme);
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
 commands.setCommand("test", msg => {msg.channel.send("It works!")}, {owner: true, minargs: 2, maxargs: 4});
@@ -336,29 +339,44 @@ commands.setCommand("current", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new types.Command("current", "info about the current music", musicType, true)});
 
-commands.setCommand("current", msg => {
+commands.setCommand("playlist", msg => {
 	music.playlistInfo(msg.guild).then(playlist => {
-		music.currentInfo(msg.guild).then(current => {
-			let info = tools.defaultEmbed();
-			let timer;
-			if (!current.file) {
-				timer = new Duration(playing.time);
-				let end = new Duration(playing.length);
-				info.addField("Playing (" + timer.strings().timer + " / " + end.strings().timer + ") - " + current.title + " by " + current.author.name, "Requested by " + current.member);
-			} else
-				info.addField("Playing - " + current.title, "Requested by " + current.member);
-			for (let i = 0; i < playlist.length; i++) {
-				if (!playlist[i].file) {
-					timer = new Duration(playlist[i].length);
-					embed.addField((i+1) + " - " + playlist[i].title + " by " + playlist[i].author.name + " (" + timer.strings().timer + ")", "Requested by " + playlist[i].member);
-				}
-				else
-					embed.addField((i+1) + " - " + playlist[i].title, "Requested by " + playlist[i].member);
-			}
-			msg.channel.send("Here's the playlist:", embed);
-		}).catch(err => funcs.musicErrors(msg, err));
-	}).catch(err => funcs.musicErrors(msg, err));
+		let info = tools.defaultEmbed();
+		let i = 1;
+		for (let music of playlist) {
+			if (!music.file) {
+				info.addField(i + " - " + music.title + " by " + music.author.name, "Requested by " + music.member);
+			}	else
+				info.addField(i + " - " + music.title, "Requested by " + music.member);
+			i++;
+		}
+		if (playlist.length > 0) {
+			msg.channel.send("Here's the playlist:", info);
+			msg.channel.send("Use ``" + config.prefix + "current`` to have information about the current music.");
+		} else msg.channel.send("The playlist is empty. Use ``" + config.prefix + "current`` to have information about the current music.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err)
+	});
 }, {dms: false, maxargs: 0, props: new types.Command("playlist", "info about the playlist", musicType, true)});
+
+commands.setCommand("plclear", msg => {
+	music.clearPlaylist(msg.guild).then(nb => {
+		if (nb == 1)
+			msg.channel.send("``1`` music has been removed from the playlist.");
+		else
+			msg.channel.send("``" + nb + "`` musics have been removed from the playlist.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err)
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("plclear", "clear the playlist", musicType, true)});
+
+commands.setCommand("plshuffle", msg => {
+	music.shufflePlaylist(msg.guild).then(() => {
+		msg.channel.send("The playlist has been shuffled.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {dms: false, maxargs: 0, props: new types.Command("plshuffle", "shuffle the playlist", musicType, true)});
 
 commands.setCommand("loop", msg => {
 	music.toggleLooping(msg.guild).then(async looping => {
@@ -566,6 +584,14 @@ commands.setCommand("timer", msg => {
 	o.run();
 }, {minargs: 1, maxargs: 1});
 
+commands.setCommand("filetest", msg => {
+	music.addMusic("./files/test.oga", msg.member, {type: "file"}).then(added => {
+		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
+	}).catch(err => {
+		funcs.musicErrors(msg, err);
+	});
+}, {owner: true});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -574,6 +600,16 @@ function login() {
 		console.error(err);
 		setTimeout(login, 60000);
 	});
+}
+
+function addMeme(name) {
+	commands.setCommand(name, msg => {
+		msg.member.voiceChannel.join().then(connection => {
+			let dispatcher = connection.playFile("./files/" + name + ".mp3").on("end", () => {
+				msg.guild.me.voiceChannel.leave();
+			}).setVolume(2);
+		});
+	}, {maxargs: 0, function: msg => !music.isConnected(msg.guild) && msg.member.voiceChannel !== undefined});
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------

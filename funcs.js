@@ -210,5 +210,6 @@ exports.musicErrors = (msg, err) => {
 	else if (err.message == "clientAlreadyInAVoiceChannel") msg.channel.send("I'm already in a voice channel.");
 	else if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I am not in a voice channel.");
 	else if (err.message == "clientNotPlaying") msg.channel.send("I am not playing music at the moment.");
+	else if (err.message == "emptyPlaylist") msg.channel.send("The playlist is empty.");
 	else exports.logError(msg, err);
 }

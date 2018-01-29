@@ -69,7 +69,8 @@ exports.MusicHandler = function(client) {
 			guilds.set(id, playlists.get(id).guild);
 		return guilds;
 	}
-	this.nbJoined = () => playlists.size;
+
+	//----------
 	this.join = member => {
 		if (this.isConnected(member.guild))
 			return Promise.reject(new Error("clientAlreadyInAVoiceChannel"));
@@ -91,10 +92,7 @@ exports.MusicHandler = function(client) {
 		playlists.get(member.guild.id).playlist.on("end", (guild, music) => {
 			this.emit("end", guild, music);
 		});
-		let connection = member.voiceChannel.join().then(connection => {
-			connection.on("error", console.error);
-		});
-		return connection;
+		return member.voiceChannel.join();
 	}
 	this.leave = guild => {
 		return new Promise((resolve, reject) => {
@@ -181,6 +179,30 @@ exports.MusicHandler = function(client) {
 			}
 		});
 	}
+	this.clearPlaylist = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else {
+				let nb = playlists.get(guild.id).playlist.list.length;
+				playlists.get(guild.id).playlist.list = [];
+				resolve(nb);
+			}
+		});
+	}
+	this.shufflePlaylist = guild => {
+		return new Promise((resolve, reject) => {
+			if (guild === undefined) reject(new Error("MissingParameter: guild"));
+			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
+			else if (playlists.get(guild.id).playlist.list.length == 0) reject(new Error("emptyPlaylist"));
+			else {
+				playlists.get(guild.id).playlist.list.sort(() => Math.random() - 0.5);
+				resolve();
+			}
+		});
+	}
+
+	//----------
 	this.isConnected = guild => playlists.has(guild.id);
 	this.isPlaying = guild => {
 		if (!this.isConnected(guild))
@@ -207,7 +229,7 @@ exports.MusicHandler = function(client) {
 				let tab = [];
 				for (let music of playlists.get(guild.id).playlist.list)
 					tab.push(music.info());
-				return tab;
+				resolve(tab);
 			}
 		});
 	}
@@ -273,6 +295,8 @@ Playlist.prototype.constructor = Playlist;
 
 function Music(link, member, passes, file) {
 	this.link = link;
+	if (file)
+		this.title = this.link.split("/").pop();
 	this.member = member;
 	this.passes = passes;
 	this.file = file;

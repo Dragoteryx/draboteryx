@@ -41,7 +41,7 @@ module.exports = function(prefix) {
 		if (options.props === undefined)
 			options.props = {};
 		if (options.function === undefined)
-			options.function = () => {return {valid: true}};
+			options.function = () => true;
 		let command = new Command(name, callback, Object.seal({
 			dms: options.dms,
 			owner: options.owner,
