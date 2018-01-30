@@ -1,7 +1,7 @@
 "use strict";
 const EventEmitter = require("events");
 
-module.exports = function(timestamp) {
+function Duration(timestamp) {
 	if (timestamp === undefined)
 		timestamp = 0;
   this.auto = false;
@@ -137,3 +137,6 @@ function DurationTimer(duration) {
 
 DurationTimer.prototype = Object.create(EventEmitter.prototype);
 DurationTimer.prototype.constructor = DurationTimer;
+
+// EXPORTS
+module.exports = Duration;

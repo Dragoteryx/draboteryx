@@ -5,8 +5,8 @@ require("dotenv").config();
 const discord = require("discord.js");
 const fs = require("fs");
 const snekfetch = require("snekfetch");
-const drgMusic = require("./music.js");
-const drgCommands = require("./commands.js");
+const DrgMusic = require("./music.js");
+const DrgCommands = require("./commands.js");
 const cleverbotIO = require("cleverbot.io");
 
 // FILES ----------------------------------------------------------------------------------------------
@@ -21,8 +21,8 @@ const Duration = require("./duration.js"); // durations
 // CONSTS ----------------------------------------------------------------------------------------------
 const client = new discord.Client();
 const baby = new discord.Client();
-const music = new drgMusic.MusicHandler(client);
-const commands = new drgCommands(config.prefix);
+const music = new DrgMusic(client);
+const commands = new DrgCommands(config.prefix);
 const vars = {};
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -100,10 +100,18 @@ client.on("message", msg => {
 
 	// EXEC (special command)
 	else if (msg.content.startsWith(config.prefix + "exec ") && config.owners.includes(msg.author.id)) {
+		console.log("[EXEC]");
 		try {
-			eval(msg.content.replace(config.prefix + "exec ", ""));
+			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
+			console.log(val);
+			msg.channel.send("Executed: ```" + val + "```")
+			.catch(err => {
+				msg.channel.send("Execution sent to console.");
+			});
+			msg.react("✅");
 		} catch(err) {
 			funcs.logError(msg, err);
+			msg.react("⛔");
 		}
 	}
 
@@ -366,7 +374,7 @@ commands.setCommand("toggle", msg => {
 			msg.channel.send("The music has been resumed.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
-	})
+	});
 }, {dms: false, maxargs: 0, props: new types.Command("toggle", "pause/resume the music", musicType, true)});;
 
 commands.setCommand("volume", msg => {
@@ -378,7 +386,7 @@ commands.setCommand("volume", msg => {
 	}).catch(err => {
 		if (err.message == "invalidVolume") msg.channel.send("The volume must be above ``0``.");
 		else funcs.musicErrors(msg, err);
-	})
+	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("volume [value]", "set the volume of the music", musicType, true)});
 
 commands.setCommand("current", msg => {

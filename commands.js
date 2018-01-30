@@ -1,7 +1,7 @@
 "use strict";
 
 // IMPORTS
-module.exports = function(prefix) {
+function CommandsHandler(prefix) {
 	this.prefix = prefix;
 	this.owners = [];
 	var off = [];
@@ -256,3 +256,6 @@ function Command(comName, callback, options, handler) {
 		return Object.freeze(check);
 	}
 }
+
+// EXPORTS
+module.exports = CommandsHandler;

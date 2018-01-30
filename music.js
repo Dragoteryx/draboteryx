@@ -11,12 +11,8 @@ const EventEmitter = require("events");
 // GLOBALS
 let scInit = false;
 
-//EXPORTS
-/*exports.initSoundcloud = object => {
-	SC.init(object);
-}*/
-
-exports.videoWebsite = str => {
+// FUNCTIONS
+function videoWebsite(str) {
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
 	else if (str.startsWith("https://soundcloud.com/") && scInit)
@@ -28,15 +24,15 @@ exports.videoWebsite = str => {
 	else throw new Error("unknownOrNotSupportedVideoWebsite");
 }
 
-exports.playYoutube = (voiceConnection, link, passes) => {
+function playYoutube(voiceConnection, link, passes) {
 	return voiceConnection.playStream(ytdl(link, {filter:"audioonly"}), {passes: passes, bitrate:"auto"});
 }
 
-exports.playSoundcloud = (voiceConnection, link, passes) => {
+function playSoundcloud(voiceConnection, link, passes) {
 	return voiceConnection.playStream(link, {passes: passes, bitrate:"auto"});
 }
 
-exports.youtubeInfo = link => {
+function youtubeInfo(link) {
 	return new Promise((resolve, reject) => {
 		ytdl.getInfo(link).then(info => {
 			resolve(Object.freeze({
@@ -59,7 +55,7 @@ exports.youtubeInfo = link => {
 	});
 }
 
-exports.fileInfo = path => {
+function fileInfo(path) {
 	return new Promise((resolve, reject) => {
 		let readableStream = fs.createReadStream(path);
 		let parser = mm(readableStream, {duration: true, fileSize: fs.statSync(path).size}, (err, metadata) => {
@@ -73,7 +69,7 @@ exports.fileInfo = path => {
 	});
 }
 
-exports.soundcloudInfo = link => {
+function soundcloudInfo(link){
 	return new Promise((resolve, reject) => {
 		lafonction(link).then(info => {
 			resolve(Object.freeze({
@@ -96,7 +92,7 @@ exports.soundcloudInfo = link => {
 	});
 }
 
-exports.queryYoutube = (query, apiKey) => {
+function queryYoutube(query, apiKey) {
 	return new Promise((resolve, reject) => {
 		youtubeSearch(query, {key: apiKey, maxResults: 1, type: "video"}, (err, res) => {
 			if (err) reject(err);
@@ -109,7 +105,7 @@ exports.queryYoutube = (query, apiKey) => {
 }
 
 //CLASSES
-exports.MusicHandler = function(client) {
+function MusicHandler(client) {
 	EventEmitter.call(this);
 	if (client === undefined)
 		throw new Error("MissingParameter: client");
@@ -171,9 +167,9 @@ exports.MusicHandler = function(client) {
 		    if (options.passes === undefined) options.passes = 1;
 		    if (options.type == "link") {
 					try {
-						let website = exports.videoWebsite(request);
+						let website = videoWebsite(request);
 						if (website == "Youtube") {
-							exports.youtubeInfo(request).then(info => {
+							youtubeInfo(request).then(info => {
 								let music = new Music(request, member, options.passes, false);
 				        music.title = info.title;
 								music.description = info.description;
@@ -197,13 +193,13 @@ exports.MusicHandler = function(client) {
 		    } else if (options.type == "ytquery") {
 					if (options.apiKey === undefined) reject(new Error("MissingParameter: options.apiKey"));
 					else {
-						exports.queryYoutube(request, options.apiKey).then(link => {
+						queryYoutube(request, options.apiKey).then(link => {
 							options.type = "link";
 							resolve(this.addMusic(link, member, options));
 						}).catch(reject);
 					}
 		    } else if (options.type == "file") {
-					exports.fileInfo(request).then(info => {
+					fileInfo(request).then(info => {
 						let music = new Music(request, member, options.passes, true);
 						music.length = Math.round(info.duration*1000);
 						if (options.props !== undefined)
@@ -403,8 +399,8 @@ exports.MusicHandler = function(client) {
 	}
 }
 
-exports.MusicHandler.prototype = Object.create(EventEmitter.prototype);
-exports.MusicHandler.prototype.constructor = exports.MusicHandler;
+MusicHandler.prototype = Object.create(EventEmitter.prototype);
+MusicHandler.prototype.constructor = MusicHandler;
 
 function Playlist(guild, client) {
 	EventEmitter.call(this);
@@ -472,16 +468,16 @@ function Music(link, member, passes, file) {
 	if (file) {
 		this.title = this.link.split("/").pop();
 		this.length = 0;
-	} else this.website = exports.videoWebsite(this.link);
+	} else this.website = videoWebsite(this.link);
 	this.member = member;
 	this.passes = passes;
 	this.file = file;
 	this.play = () => {
 		if (!this.file) {
 			if (this.website == "Youtube")
-				return exports.playYoutube(this.member.guild.voiceConnection, this.link, this.passes);
+				return playYoutube(this.member.guild.voiceConnection, this.link, this.passes);
 			else if (this.website == "Soundcloud")
-				return exports.playSoundcloud(this.member.guild.voiceConnection, this.link, this.passes);
+				return playSoundcloud(this.member.guild.voiceConnection, this.link, this.passes);
 		}
 		else
 			return this.member.guild.voiceConnection.playFile(this.link, {passes: this.passes, bitrate:"auto"});
@@ -518,3 +514,12 @@ function Music(link, member, passes, file) {
 		}
 	}
 }
+
+// MODULES
+MusicHandler.videoWebsite = videoWebsite;
+MusicHandler.playYoutube = playYoutube;
+MusicHandler.youtubeInfo = youtubeInfo;
+MusicHandler.queryYoutube = queryYoutube;
+MusicHandler.fileInfo = fileInfo;
+
+module.exports = MusicHandler;
