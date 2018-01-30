@@ -34,7 +34,7 @@ let debug = false;
 let babylogged = false;
 let uptime = new Duration();
 uptime.auto = true;
-let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns"];
+let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"];
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -392,12 +392,11 @@ commands.setCommand("current", msg => {
 			.addField("Author", current.author.name + " (" + current.author.channelURL + ")", true)
 			.addField("Link", current.link, true)
 			.addField("Requested by", current.member, true);
-			msg.channel.send("Playing: ``" + timer.strings().timer + " / " + end.strings().timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
 		} else {
 			info.addField("File name", current.title, true)
 			.addField("Requested by", current.member, true);
-			msg.channel.send("Playing:", info);
 		}
+		msg.channel.send("Playing: ``" + timer.strings().timer + " / " + end.strings().timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
@@ -411,7 +410,7 @@ commands.setCommand("playlist", msg => {
 			if (!music.file) {
 				info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
 			}	else
-				info.addField(i + " - " + music.title, "Requested by " + music.member);
+				info.addField(i + " - " + music.title + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
 			i++;
 		}
 		if (playlist.length > 0) {
@@ -457,6 +456,10 @@ commands.setCommand("roll", msg => {
 	let res = tools.random(1, max);
 	msg.reply(res + "/" + max + " (:game_die:)")
 }, {props: new types.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
+
+commands.setCommand("z0r", msg => {
+	msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
+}, {props: new types.Command("z0r", "get a random z0r.de link", funType, true)});
 
 commands.setCommand("stopclever", msg => {
 	clever = false;
@@ -590,7 +593,8 @@ commands.setCommand("timer", msg => {
 }, {minargs: 1, maxargs: 1});
 
 commands.setCommand("filetest", msg => {
-	music.addMusic("./files/test.oga", msg.member, {type: "file"}).then(added => {
+	music.addMusic("./files/dewae.mp3", msg.member, {type: "file"}).then(added => {
+		console.log(added);
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
@@ -611,8 +615,8 @@ function addMeme(name) {
 	commands.setCommand(name, async msg => {
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
-			let text = msg.content.replace(config.prefix + name + " ", "");
-			member = await tools.stringToMember(text, msg.guild);
+			let str = msg.content.replace(config.prefix + name + " ", "");
+			member = await tools.stringToMember(str, msg.guild);
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {

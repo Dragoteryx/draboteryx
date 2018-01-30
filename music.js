@@ -2,13 +2,25 @@
 
 // IMPORTS
 const ytdl = require("ytdl-core");
+const fs = require("fs");
+const sc = require("node-soundcloud");
+const mm = require("musicmetadata");
 const youtubeSearch = require("youtube-search");
 const EventEmitter = require("events");
 
+// GLOBALS
+let scInit = false;
+
 //EXPORTS
+/*exports.initSoundcloud = object => {
+	SC.init(object);
+}*/
+
 exports.videoWebsite = str => {
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
+	else if (str.startsWith("https://soundcloud.com/") && scInit)
+		return "Soundcloud"
 	/*else if (str.startsWith("http://www.dailymotion.com/video/") || str.startsWith("http://dai.ly/"))
 		return "Dailymotion";
 	else if (str.startsWith("http://www.nicovideo.jp/watch/") || str.startsWith("http://nico.ms/"))
@@ -18,6 +30,10 @@ exports.videoWebsite = str => {
 
 exports.playYoutube = (voiceConnection, link, passes) => {
 	return voiceConnection.playStream(ytdl(link, {filter:"audioonly"}), {passes: passes, bitrate:"auto"});
+}
+
+exports.playSoundcloud = (voiceConnection, link, passes) => {
+	return voiceConnection.playStream(link, {passes: passes, bitrate:"auto"});
 }
 
 exports.youtubeInfo = link => {
@@ -37,7 +53,44 @@ exports.youtubeInfo = link => {
 				length: Number(info.length_seconds)*1000,
 				keywords: info.keywords
 			}));
-		}, err => {
+		}).catch(err => {
+			reject(err);
+		});
+	});
+}
+
+exports.fileInfo = path => {
+	return new Promise((resolve, reject) => {
+		let readableStream = fs.createReadStream(path);
+		let parser = mm(readableStream, {duration: true, fileSize: fs.statSync(path).size}, (err, metadata) => {
+		  if (err) reject(err);
+			else {
+				readableStream.close();
+				resolve(metadata);
+			}
+		});
+
+	});
+}
+
+exports.soundcloudInfo = link => {
+	return new Promise((resolve, reject) => {
+		lafonction(link).then(info => {
+			resolve(Object.freeze({
+				title: info.title,
+				link: link,
+				description: info.description,
+				author: {
+					name: info.author.name,
+					avatarURL: info.author.avatar,
+					channelURL: info.author.channel_url
+				},
+				thumbnailURL: info.thumbnail_url,
+				maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
+				length: Number(info.length_seconds)*1000,
+				keywords: info.keywords
+			}));
+		}).catch(err => {
 			reject(err);
 		});
 	});
@@ -117,23 +170,30 @@ exports.MusicHandler = function(client) {
 		    if (options.type === undefined) options.type = "link";
 		    if (options.passes === undefined) options.passes = 1;
 		    if (options.type == "link") {
-		      exports.youtubeInfo(request).then(info => {
-						let music = new Music(request, member, options.passes, false);
-		        music.title = info.title;
-						music.description = info.description;
-						music.author = {
-							name: info.author.name,
-							avatarURL: info.author.avatarURL,
-							channelURL: info.author.channelURL
+					try {
+						let website = exports.videoWebsite(request);
+						if (website == "Youtube") {
+							exports.youtubeInfo(request).then(info => {
+								let music = new Music(request, member, options.passes, false);
+				        music.title = info.title;
+								music.description = info.description;
+								music.author = {
+									name: info.author.name,
+									avatarURL: info.author.avatarURL,
+									channelURL: info.author.channelURL
+								}
+								music.thumbnailURL = info.thumbnailURL;
+								music.length = info.length;
+								music.keywords = info.keywords;
+				        if (options.props !== undefined)
+									music.props = options.props;
+								playlists.get(member.guild.id).playlist.addMusic(music);
+								resolve(music.info());
+							}).catch(reject);
 						}
-						music.thumbnailURL = info.thumbnailURL;
-						music.length = info.length;
-						music.keywords = info.keywords;
-		        if (options.props !== undefined)
-							music.props = options.props;
-						playlists.get(member.guild.id).playlist.addMusic(music);
-						resolve(music.info());
-					}).catch(reject);
+					} catch(err) {
+						reject(err);
+					}
 		    } else if (options.type == "ytquery") {
 					if (options.apiKey === undefined) reject(new Error("MissingParameter: options.apiKey"));
 					else {
@@ -143,11 +203,14 @@ exports.MusicHandler = function(client) {
 						}).catch(reject);
 					}
 		    } else if (options.type == "file") {
-					let music = new Music(request, member, options.passes, true);
-					if (options.props !== undefined)
-						music.props = options.props;
-					playlists.get(member.guild.id).playlist.addMusic(music);
-					resolve(music.info());
+					exports.fileInfo(request).then(info => {
+						let music = new Music(request, member, options.passes, true);
+						music.length = info.duration*1000;
+						if (options.props !== undefined)
+							music.props = options.props;
+						playlists.get(member.guild.id).playlist.addMusic(music);
+						resolve(music.info());
+					}).catch(reject);
 		    } else reject(new Error("InvalidParameter: options.type => '" + options.type + "' is not a valid option ('link', 'ytquery' or 'file')"));
 			}
 		});
@@ -409,39 +472,44 @@ function Music(link, member, passes, file) {
 	if (file) {
 		this.title = this.link.split("/").pop();
 		this.length = 0;
-	}
+	} else this.website = exports.videoWebsite(this.link);
 	this.member = member;
 	this.passes = passes;
 	this.file = file;
 	this.play = () => {
 		if (!this.file) {
-			let website = exports.videoWebsite(this.link);
-			if (website == "Youtube")
+			if (this.website == "Youtube")
 				return exports.playYoutube(this.member.guild.voiceConnection, this.link, this.passes);
+			else if (this.website == "Soundcloud")
+				return exports.playSoundcloud(this.member.guild.voiceConnection, this.link, this.passes);
 		}
 		else
 			return this.member.guild.voiceConnection.playFile(this.link, {passes: this.passes, bitrate:"auto"});
 	}
 	this.info = () => {
 		if (!this.file) {
-			return Object.freeze({
-				title: this.title,
-				link: this.link,
-				description:  this.description,
-				author: this.author,
-				thumbnailURL: this.thumbnailURL,
-				maxResThumbnailURL: this.thumbnailURL.replace("default.jpg", "maxresdefault.jpg"),
-				length: this.length,
-				time: 0,
-				keywords: this.keywords,
-				file: false,
-				member: this.member,
-				props: this.props
-			});
+			if (this.website == "Youtube") {
+				return Object.freeze({
+					title: this.title,
+					link: this.link,
+					description: this.description,
+					author: this.author,
+					thumbnailURL: this.thumbnailURL,
+					maxResThumbnailURL: this.thumbnailURL.replace("default.jpg", "maxresdefault.jpg"),
+					length: this.length,
+					time: 0,
+					keywords: this.keywords,
+					file: false,
+					website: "Youtube",
+					member: this.member,
+					props: this.props
+				});
+			}
 		} else {
 			return Object.freeze({
 				title: this.title,
 				path: this.link,
+				length: this.length,
 				time: 0,
 				file: true,
 				member: this.member,

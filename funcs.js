@@ -212,5 +212,6 @@ exports.musicErrors = (msg, err) => {
 	else if (err.message == "clientNotPlaying") msg.channel.send("I am not playing music at the moment.");
 	else if (err.message == "emptyPlaylist") msg.channel.send("The playlist is empty.");
 	else if (err.message == "invalidMusicIndex") msg.channel.send("There is no music with that ID in the playlist.");
+	else if (err.message == "unknownOrNotSupportedVideoWebsite") msg.channel.send("Sorry but I don't know this website.");
 	else exports.logError(msg, err);
 }
