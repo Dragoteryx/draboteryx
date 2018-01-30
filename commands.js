@@ -103,8 +103,9 @@ function CommandsHandler(prefix) {
 					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
 				else {
 					let command = this.getCommand(name);
-					let result = command.check(msg, exec);
-					resolve(Object.seal({command: command, result: result}));
+					command.check(msg, exec).then(result => {
+						resolve(Object.seal({command: command, result: result}));
+					}).catch(reject);
 				}
 			} catch(err) {
 				reject(err);
@@ -143,117 +144,126 @@ function Command(comName, callback, options, handler) {
 		return this;
 	}
 	this.check = (msg, exec) => {
-		if (exec === undefined)
-			exec = true;
-		let nbargs = msg.content.split(" ").slice(1).length;
-		let check = {valid: true, nbargs: nbargs};
-		if (!msg.content.startsWith(handler.prefix)) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("no prefix");
-		}
-		let name = msg.content.replace(handler.prefix, "").split(" ")[0];
-		if (comName != name) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("wrong name");
-		}
-		if (msg.channel.type != "text" && !this.options.dms) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("DMs not allowed");
-		}
-		if (!handler.isOwner(msg.author) && this.options.owner) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("owner only command");
-		}
-		if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-			if (!this.options.guilds.includes(msg.guild.id)) {
-				check.valid = false;
-				if (check.reasons === undefined)
-					check.reasons = [];
-				check.reasons.push("ignored guild");
+		return new Promise((resolve, reject) => {
+			try {
+				if (exec === undefined)
+					exec = true;
+				let nbargs = msg.content.split(" ").slice(1).length;
+				let check = {valid: true, nbargs: nbargs};
+				if (!msg.content.startsWith(handler.prefix)) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("no prefix");
+				}
+				let name = msg.content.replace(handler.prefix, "").split(" ")[0];
+				if (comName != name) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("wrong name");
+				}
+				if (msg.channel.type != "text" && !this.options.dms) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("DMs not allowed");
+				}
+				if (!handler.isOwner(msg.author) && this.options.owner) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("owner only command");
+				}
+				if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+					if (!this.options.guilds.includes(msg.guild.id)) {
+						check.valid = false;
+						if (check.reasons === undefined)
+							check.reasons = [];
+						check.reasons.push("ignored guild");
+					}
+				}
+				if (this.options.channels.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+					if (!this.options.channels.includes(msg.channel.id)) {
+						check.valid = false;
+						if (check.reasons === undefined)
+							check.reasons = [];
+						check.reasons.push("ignored channel");
+					}
+				}
+				if (this.options.users.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+					if (!this.options.users.includes(msg.author.id)) {
+						check.valid = false;
+						if (check.reasons === undefined)
+							check.reasons = [];
+						check.reasons.push("ignored user");
+					}
+				}
+				if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+					if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
+						check.valid = false;
+						if (check.reasons === undefined)
+							check.reasons = [];
+						check.reasons.push("missing permissions");
+					}
+				}
+				if (msg.channel.type == "text" && this.options.roles.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+					if (!player.roles.some(role => this.options.roles.includes(role.name.toLowerCase()))) {
+						check.valid = false;
+						if (check.reasons === undefined)
+							check.reasons = [];
+						check.reasons.push("missing role");
+					}
+				}
+				if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("nsfw");
+				}
+				if (msg.author.bot && !this.options.bots) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("bot user");
+				}
+				if (this.options.minargs > 0 && nbargs < this.options.minargs) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("min arguments: " + this.options.minargs);
+				}
+				if (this.options.maxargs >= 0 && nbargs > this.options.maxargs) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("max arguments: " + this.options.maxargs);
+				}
+				if (this.options.uses == 0) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("uses");
+				}
+				if (!this.options.function(msg)) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("boolean function");
+				}
+				if (exec && check.valid) {
+					if (this.options.uses > 0)
+						this.options.uses--;
+					let called = this.callback(msg);
+					if (called instanceof Promise)
+						called.catch(reject);
+				}
+				resolve(Object.freeze(check));
+			} catch(err) {
+				reject(err);
+				return;
 			}
-		}
-		if (this.options.channels.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-			if (!this.options.channels.includes(msg.channel.id)) {
-				check.valid = false;
-				if (check.reasons === undefined)
-					check.reasons = [];
-				check.reasons.push("ignored channel");
-			}
-		}
-		if (this.options.users.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-			if (!this.options.users.includes(msg.author.id)) {
-				check.valid = false;
-				if (check.reasons === undefined)
-					check.reasons = [];
-				check.reasons.push("ignored user");
-			}
-		}
-		if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-			if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
-				check.valid = false;
-				if (check.reasons === undefined)
-					check.reasons = [];
-				check.reasons.push("missing permissions");
-			}
-		}
-		if (msg.channel.type == "text" && this.options.roles.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-			if (!player.roles.some(role => this.options.roles.includes(role.name.toLowerCase()))) {
-				check.valid = false;
-				if (check.reasons === undefined)
-					check.reasons = [];
-				check.reasons.push("missing role");
-			}
-		}
-		if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("nsfw");
-		}
-		if (msg.author.bot && !this.options.bots) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("bot user");
-		}
-		if (this.options.minargs > 0 && nbargs < this.options.minargs) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("min arguments: " + this.options.minargs);
-		}
-		if (this.options.maxargs >= 0 && nbargs > this.options.maxargs) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("max arguments: " + this.options.maxargs);
-		}
-		if (this.options.uses == 0) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("uses");
-		}
-		if (!this.options.function(msg)) {
-			check.valid = false;
-			if (check.reasons === undefined)
-				check.reasons = [];
-			check.reasons.push("boolean function");
-		}
-		if (exec && check.valid) {
-			if (this.options.uses > 0)
-				this.options.uses--;
-			this.callback(msg);
-		}
-		return Object.freeze(check);
+		});
 	}
 }
 

@@ -281,10 +281,12 @@ commands.setCommand("request", msg => {
 		return;
 	}
 	msg.channel.send("Adding ``" + link + "`` to the playlist.").then(msg2 => {
-		music.addMusic(link, msg.member, {type: "link", passes: 10}).then(added => {
+		music.addMusic(link, msg.member, {passes: 10}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+			else if (err.message == "invalidYoutubeLink") msg2.edit("Something looks odd about this Youtube link. The ID doesn't seem to be complete");
+			else if (err.message == "unavailableYoutubeVideo") msg2.edit("There doesn't seem to exist a video sporting such an ID.");
 			else funcs.musicErrors(msg, err);
 		});
 	});
@@ -629,7 +631,7 @@ commands.setCommand("nis", async msg => {
 			}).setVolume(2);
 		});
 	}
-}, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild)});
+}, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
 
 commands.setCommand("test", msg => {
 	for (let connection of client.voiceConnections) {
@@ -670,7 +672,7 @@ function addMeme(name) {
 				}).setVolume(2);
 			});
 		}
-	}, {dms: false, function: msg => !music.isConnected(msg.guild)});
+	}, {dms: false, function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------

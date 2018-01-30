@@ -157,7 +157,7 @@ function MusicHandler(client) {
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else {
 				playlists.get(guild.id).playlist.leaving = true;
-				playlists.get(guild.id).playlist.kill();
+				playlists.get(guild.id).playlist.reset();
 				playlists.delete(guild.id);
 				guild.me.voiceChannel.leave();
 				resolve();
@@ -194,7 +194,14 @@ function MusicHandler(client) {
 									music.props = options.props;
 								playlists.get(member.guild.id).playlist.addMusic(music);
 								resolve(music.info());
-							}).catch(reject);
+							}).catch(err => {
+								if (err.message.includes("TypeError: Video id (") && err.message.includes(") does not match expected format (/^[a-zA-Z0-9-_]{11}$/)"))
+									reject(new Error("invalidYoutubeLink"));
+								else if (err.message == "This video is unavailable.")
+									reject(new Error("unavailableYoutubeVideo"));
+								else
+									reject(err)
+							});
 						}
 					} catch(err) {
 						reject(err);
@@ -462,10 +469,6 @@ function Playlist(guild, client) {
 		this.looping = false;
 		this.pllooping = false;
 	}
-	this.kill = () => {
-		this.reset();
-	}
-	this.client.on
 }
 
 Playlist.prototype = Object.create(EventEmitter.prototype);
