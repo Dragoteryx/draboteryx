@@ -278,7 +278,7 @@ commands.setCommand("request", msg => {
 		return;
 	}
 	msg.channel.send("Adding ``" + link + "`` to the playlist.").then(msg2 => {
-		music.addMusic(link, msg.member, {type: "link", passes: 3}).then(added => {
+		music.addMusic(link, msg.member, {type: "link", passes: 10}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
@@ -290,7 +290,7 @@ commands.setCommand("request", msg => {
 commands.setCommand("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
 	msg.channel.send("Searching for ``" + query + "`` on Youtube.").then(msg2 => {
-		music.addMusic(query, msg.member, {type: "ytquery", passes: 3, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
+		music.addMusic(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
@@ -600,7 +600,7 @@ commands.setCommand("timer", msg => {
 }, {minargs: 1, maxargs: 1});
 
 commands.setCommand("chrischansong", msg => {
-	music.addMusic("./files/chrischan.oga", msg.member, {type: "file"}).then(added => {
+	music.addMusic("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
@@ -615,9 +615,9 @@ commands.setCommand("nis", async msg => {
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
 		member.voiceChannel.join().then(connection => {
-			connection.playFile("./files/fart.mp3", {passes: 3}).on("end", () => {
+			connection.playFile("./files/fart.mp3", {passes: 10}).on("end", () => {
 				setTimeout(() => {
-					connection.playFile("./files/burp.mp3", {passes: 3}).on("end", () => {
+					connection.playFile("./files/burp.mp3", {passes: 10}).on("end", () => {
 						msg.guild.me.voiceChannel.leave();
 					}).setVolume(2);
 				}, 500);
@@ -646,7 +646,7 @@ function addMeme(name) {
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
-				connection.playFile("./files/" + name + ".mp3", {passes: 3}).on("end", () => {
+				connection.playFile("./files/" + name + ".mp3", {passes: 10}).on("end", () => {
 					setTimeout(() => {
 						msg.guild.me.voiceChannel.leave();
 					}, 500);
