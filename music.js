@@ -12,6 +12,9 @@ const EventEmitter = require("events");
 let scInit = false;
 
 // FUNCTIONS
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 function videoWebsite(str) {
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
@@ -407,7 +410,6 @@ function Playlist(guild, client) {
 	this.guild = guild;
 	this.client = client;
 	this.list = [];
-	this.toNext = false;
 	this.playing = false;
 	this.paused = false;
 	this.looping = false;
@@ -415,24 +417,23 @@ function Playlist(guild, client) {
 	this.volume = 100;
 	this.addMusic = music => {
 		this.list.push(music);
+		await sleep(500);
 		if (!this.playing)
 			this.playNext();
 	}
 	this.playNext = () => {
-		this.toNext = false;
 		if (!this.looping)
 			this.current = this.list.shift();
 		if (this.current !== undefined) {
 			this.dispatcher = this.current.play();
 			this.playing = true;
 			this.dispatcher.setVolume(this.volume/100.0);
-			this.dispatcher.once("end", () => {
-				setTimeout(() => {
-					if (this.pllooping)
-						this.list.push(this.current);
-					this.emit("end", this.guild, this.current.info());
-					this.playNext();
-				}, 500);
+			this.dispatcher.once("end", async () => {
+				await sleep(500);
+				if (this.pllooping)
+					this.list.push(this.current);
+				this.emit("end", this.guild, this.current.info());
+				this.playNext();
 			});
 			if (!this.looping)
 				this.emit("next", this.guild, this.current.info());
@@ -453,13 +454,7 @@ function Playlist(guild, client) {
 	}
 	this.kill = () => {
 		this.reset();
-		//this.client.clearInterval(this.loop);
 	}
-	/*this.loop = this.client.setInterval(() => {
-		if (this.toNext)
-			this.playNext();
-		this.toNext = false;
-	}, 1000);*/
 }
 
 Playlist.prototype = Object.create(EventEmitter.prototype);
