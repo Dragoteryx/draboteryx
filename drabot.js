@@ -35,6 +35,7 @@ let babylogged = false;
 let uptime = new Duration();
 uptime.auto = true;
 let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"];
+let memeing = new Map();
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -51,10 +52,12 @@ const commandTypes = [utilityType, funType, musicType, nsfwType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
 music.on("next", (guild, next) => {
-	if (!next.file)
-		musicChannels.get(guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
-	else
-		musicChannels.get(guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member +")");
+	let msg = !next.file ?
+	musicChannels.get(guild.id).send("Next: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")")
+	: musicChannels.get(guild.id).send("Next: ``" + next.title + "``. (requested by " + next.member +")");
+	msg.then(msg2 => {
+		music.once("start" + guild.id, () => msg2.edit(msg2.content.replace("Next: ", "Now playing: ")));
+	});
 });
 music.on("empty", guild => {
 	musicChannels.get(guild.id).send("The playlist is empty.");
@@ -257,7 +260,7 @@ commands.setCommand("join", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("join", "join a voice channel", musicType, true)});
+}, {dms: false, maxargs: 0, function: msg => !memeing.has(msg.guild.id), props: new types.Command("join", "join a voice channel", musicType, true)});
 
 commands.setCommand("leave", msg => {
 	music.leave(msg.guild).then(() => {
@@ -614,10 +617,12 @@ commands.setCommand("nis", async msg => {
 		member = await tools.stringToMember(str, msg.guild);
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
+		memeing.set(member.guild.id, true);
 		member.voiceChannel.join().then(connection => {
 			connection.playFile("./files/fart.mp3", {passes: 10}).on("end", () => {
 				setTimeout(() => {
 					connection.playFile("./files/burp.mp3", {passes: 10}).on("end", () => {
+						memeing.delete(member.guild.id);
 						msg.guild.me.voiceChannel.leave();
 					}).setVolume(2);
 				}, 500);
@@ -625,6 +630,16 @@ commands.setCommand("nis", async msg => {
 		});
 	}
 }, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild)});
+
+commands.setCommand("test", msg => {
+	for (let connection of client.voiceConnections) {
+		if (connection[1].dispatcher !== undefined) {
+			console.log(connection[1].dispatcher);
+			connection[1].dispatcher.pause();
+			connection[1].dispatcher.resume();
+		}
+	}
+}, {owner: true});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
@@ -646,8 +661,10 @@ function addMeme(name) {
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
+				memeing.set(member.guild.id, true);
 				connection.playFile("./files/" + name + ".mp3", {passes: 10}).on("end", () => {
 					setTimeout(() => {
+						memeing.delete(member.guild.id);
 						msg.guild.me.voiceChannel.leave();
 					}, 500);
 				}).setVolume(2);

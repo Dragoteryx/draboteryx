@@ -15,6 +15,7 @@ let scInit = false;
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
+
 function videoWebsite(str) {
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
@@ -135,6 +136,10 @@ function MusicHandler(client) {
 		if (member.voiceChannel.full)
 			return Promise.reject(new Error("voiceChannelFull"));
 		playlists.set(member.guild.id, {playlist: new Playlist(member.guild, client), guild: member.guild});
+		playlists.get(member.guild.id).playlist.on("start", (guild, music) => {
+			this.emit("start", guild, music);
+			this.emit("start" + guild.id);
+		});
 		playlists.get(member.guild.id).playlist.on("next", (guild, music) => {
 			this.emit("next", guild, music);
 		});
@@ -151,6 +156,7 @@ function MusicHandler(client) {
 			if (guild === undefined) reject(new Error("MissingParameter: guild"));
 			else if (!this.isConnected(guild)) reject(new Error("clientNotInAVoiceChannel"));
 			else {
+				playlists.get(guild.id).playlist.leaving = true;
 				playlists.get(guild.id).playlist.kill();
 				playlists.delete(guild.id);
 				guild.me.voiceChannel.leave();
@@ -415,6 +421,7 @@ function Playlist(guild, client) {
 	this.looping = false;
 	this.pllooping = false;
 	this.volume = 100;
+	this.leaving = false;
 	this.addMusic = async music => {
 		this.list.push(music);
 		await sleep(500);
@@ -428,18 +435,21 @@ function Playlist(guild, client) {
 			this.dispatcher = this.current.play();
 			this.playing = true;
 			this.dispatcher.setVolume(this.volume/100.0);
+			this.dispatcher.once("start", () => {
+				if (!this.leaving) this.emit("start", this.guild, this.current.info());
+			});
 			this.dispatcher.once("end", async () => {
 				await sleep(500);
 				if (this.pllooping)
 					this.list.push(this.current);
-				this.emit("end", this.guild, this.current.info());
+				if (!this.leaving) this.emit("end", this.guild, this.current.info());
 				this.playNext();
 			});
 			if (!this.looping)
-				this.emit("next", this.guild, this.current.info());
+				if (!this.leaving) this.emit("next", this.guild, this.current.info());
 		} else {
 			this.reset();
-			this.emit("empty", this.guild);
+			if (!this.leaving) this.emit("empty", this.guild);
 		}
 	}
 	this.reset = () => {
@@ -455,6 +465,7 @@ function Playlist(guild, client) {
 	this.kill = () => {
 		this.reset();
 	}
+	this.client.on
 }
 
 Playlist.prototype = Object.create(EventEmitter.prototype);
