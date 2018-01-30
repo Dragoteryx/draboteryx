@@ -154,7 +154,7 @@ client.on("ready", () => {
 			console.log("(local launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
-		client.user.setGame(config.prefix + "help");
+		client.user.setActivity(config.prefix + "help");
 	}
 });
 client.on("error", err => {
