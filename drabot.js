@@ -275,7 +275,7 @@ commands.setCommand("leave", msg => {
 commands.setCommand("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
 	try {
-		drgMusic.videoWebsite(link);
+		DrgMusic.videoWebsite(link);
 	} catch(err) {
 		msg.channel.send("This link is not valid.");
 		return;

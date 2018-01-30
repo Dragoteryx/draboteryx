@@ -20,7 +20,7 @@ function videoWebsite(str) {
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
 	else if (str.startsWith("https://soundcloud.com/") && scInit)
-		return "Soundcloud"
+		return "Soundcloud";
 	/*else if (str.startsWith("http://www.dailymotion.com/video/") || str.startsWith("http://dai.ly/"))
 		return "Dailymotion";
 	else if (str.startsWith("http://www.nicovideo.jp/watch/") || str.startsWith("http://nico.ms/"))
