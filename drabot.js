@@ -607,6 +607,25 @@ commands.setCommand("chrischansong", msg => {
 	});
 }, {owner: true});
 
+commands.setCommand("nis", async msg => {
+	let member = msg.member;
+	if (msg.content.split(" ").length != 1) {
+		let str = msg.content.replace(config.prefix + name + " ", "");
+		member = await tools.stringToMember(str, msg.guild);
+	}
+	if (member !== undefined && member.voiceChannel !== undefined) {
+		member.voiceChannel.join().then(connection => {
+			connection.playFile("./files/fart.mp3", {passes: 3}).on("end", () => {
+				setTimeout(() => {
+					connection.playFile("./files/burp.mp3", {passes: 3}).on("end", () => {
+						msg.guild.me.voiceChannel.leave();
+					}).setVolume(2);
+				}, 500);
+			}).setVolume(2);
+		});
+	}
+}, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild)});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -628,7 +647,9 @@ function addMeme(name) {
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
 				connection.playFile("./files/" + name + ".mp3", {passes: 3}).on("end", () => {
-					msg.guild.me.voiceChannel.leave();
+					setTimeout(() => {
+						msg.guild.me.voiceChannel.leave();
+					}, 500);
 				}).setVolume(2);
 			});
 		}
