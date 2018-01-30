@@ -3,6 +3,9 @@
   "version": "0.10.0",
   "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short. Use /help to learn how to use it.",
   "main": "drabot.js",
+  "engines": {
+    "node": "9.3.0"
+  },
   "dependencies": {
     "cleverbot.io": "^1.0.4",
     "discord.js": "^11.3.0",
