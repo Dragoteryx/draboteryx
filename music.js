@@ -427,10 +427,12 @@ function Playlist(guild, client) {
 			this.playing = true;
 			this.dispatcher.setVolume(this.volume/100.0);
 			this.dispatcher.once("end", () => {
-				if (this.pllooping)
-					this.list.push(this.current);
-				this.emit("end", this.guild, this.current.info());
-				this.toNext = true;
+				setTimeout(() => {
+					if (this.pllooping)
+						this.list.push(this.current);
+					this.emit("end", this.guild, this.current.info());
+					this.playNext();
+				}, 500);
 			});
 			if (!this.looping)
 				this.emit("next", this.guild, this.current.info());
@@ -451,13 +453,13 @@ function Playlist(guild, client) {
 	}
 	this.kill = () => {
 		this.reset();
-		this.client.clearInterval(this.loop);
+		//this.client.clearInterval(this.loop);
 	}
-	this.loop = this.client.setInterval(() => {
+	/*this.loop = this.client.setInterval(() => {
 		if (this.toNext)
 			this.playNext();
 		this.toNext = false;
-	}, 1000);
+	}, 1000);*/
 }
 
 Playlist.prototype = Object.create(EventEmitter.prototype);

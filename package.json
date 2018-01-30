@@ -11,6 +11,7 @@
     "musicmetadata": "^2.0.5",
     "node-soundcloud": "0.0.6",
     "opusscript": "0.0.4",
+    "prism-media": "^0.1.0",
     "redis": "^2.8.0",
     "youtube-search": "^1.0.10",
     "ytdl-core": "^0.18.1"
