@@ -416,7 +416,7 @@ function Playlist(guild, client) {
 	this.addMusic = music => {
 		this.list.push(music);
 		if (!this.playing)
-			this.toNext = true;
+			this.playNext();
 	}
 	this.playNext = () => {
 		this.toNext = false;
