@@ -36,6 +36,7 @@ let uptime = new Duration();
 uptime.auto = true;
 let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"];
 let memeing = new Map();
+let musicLeaves = new Map();
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -62,8 +63,28 @@ music.on("next", (guild, next) => {
 music.on("empty", guild => {
 	musicChannels.get(guild.id).send("The playlist is empty.");
 });
-
-
+music.on("memberJoin", (member, channel) => {
+	if (musicLeaves.has(member.guild.id)) {
+		client.clearTimeout(musicLeaves.get(member.guild.id));
+		musicLeaves.delete(member.guild.id);
+		musicChannels.get(member.guild.id).send("Someone joined, staying for a little longer.");
+	}
+});
+music.on("memberLeave", (member, channel) => {
+	if (channel.members.size == 1) {
+		musicChannels.get(member.guild.id).send("The voice channel is empty, I will leave in ``one minute``.");
+		musicLeaves.set(member.guild.id,
+		client.setTimeout(() => {
+			music.leave(member.guild).then(() => {
+				musicChannels.get(member.guild.id).send("Goodbye o/");
+				musicChannels.delete(member.guild.id);
+				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
+			}).catch(err => {
+				funcs.musicErrors(msg, err);
+			});
+		}, 60000));
+	}
+});
 
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {

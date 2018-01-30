@@ -113,6 +113,26 @@ function MusicHandler(client) {
 	EventEmitter.call(this);
 	if (client === undefined)
 		throw new Error("MissingParameter: client");
+	client.on("voiceStateUpdate", (oldMember, newMember) => {
+		let musicChannel = newMember.guild.me.voiceChannel;
+		if (musicChannel === undefined) return;
+		try {
+			if (oldMember.voiceChannel === undefined && newMember.voiceChannel.id == musicChannel.id)
+				this.emit("memberJoin", newMember, musicChannel);
+		} catch(err) {null}
+		try {
+			if (oldMember.voiceChannel.id != musicChannel.id && newMember.voiceChannel.id == musicChannel.id)
+				this.emit("memberJoin", newMember, musicChannel);
+		} catch(err) {null}
+		try {
+			if (oldMember.voiceChannel.id == musicChannel.id && newMember.voiceChannel === undefined)
+				this.emit("memberLeave", newMember, musicChannel);
+		} catch(err) {null}
+		try {
+			if (oldMember.voiceChannel.id == musicChannel.id && newMember.voiceChannel.id != musicChannel.id)
+				this.emit("memberLeave", newMember, musicChannel);
+		} catch(err) {null}
+	});
 	var playlists = new Map();
 	this.getClient = () => client;
 	this.joined = () => {
