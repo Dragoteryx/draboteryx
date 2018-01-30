@@ -592,9 +592,8 @@ commands.setCommand("timer", msg => {
 	o.run();
 }, {minargs: 1, maxargs: 1});
 
-commands.setCommand("filetest", msg => {
-	music.addMusic("./files/dewae.mp3", msg.member, {type: "file"}).then(added => {
-		console.log(added);
+commands.setCommand("chrischansong", msg => {
+	music.addMusic("./files/chrischan.oga", msg.member, {type: "file"}).then(added => {
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);

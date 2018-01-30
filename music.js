@@ -205,7 +205,7 @@ exports.MusicHandler = function(client) {
 		    } else if (options.type == "file") {
 					exports.fileInfo(request).then(info => {
 						let music = new Music(request, member, options.passes, true);
-						music.length = info.duration*1000;
+						music.length = Math.round(info.duration*1000);
 						if (options.props !== undefined)
 							music.props = options.props;
 						playlists.get(member.guild.id).playlist.addMusic(music);
