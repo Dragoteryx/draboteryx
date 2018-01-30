@@ -116,27 +116,7 @@ function Duration(timestamp) {
 			timer: timer
 		});
 	}
-  this.getTimer = () => new DurationTimer(timestamp);
 }
-
-function DurationTimer(duration) {
-  EventEmitter.call(this);
-  this.duration = duration;
-  this.run = () => {
-    let array = [...Array(duration + 1).keys()];
-    for (let nb of array) {
-			setTimeout(() => {
-				this.emit("run", nb);
-			}, nb*1000);
-		}
-    setTimeout(() => {
-      this.emit("end");
-    }, (duration+1)*1000);
-  }
-}
-
-DurationTimer.prototype = Object.create(EventEmitter.prototype);
-DurationTimer.prototype.constructor = DurationTimer;
 
 // EXPORTS
 module.exports = Duration;

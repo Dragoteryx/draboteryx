@@ -13,10 +13,10 @@ const Ultron = require('ultron');
 const http = require('http');
 const url = require('url');
 
-const PerMessageDeflate = require('./PerMessageDeflate');
-const Extensions = require('./Extensions');
-const constants = require('./Constants');
-const WebSocket = require('./WebSocket');
+const PerMessageDeflate = require('./permessage-deflate');
+const extension = require('./extension');
+const constants = require('./constants');
+const WebSocket = require('./websocket');
 
 const Buffer = safeBuffer.Buffer;
 
@@ -60,7 +60,9 @@ class WebSocketServer extends EventEmitter {
     }, options);
 
     if (options.port == null && !options.server && !options.noServer) {
-      throw new TypeError('missing or invalid options');
+      throw new TypeError(
+        'One of the "port", "server", or "noServer" options must be specified'
+      );
     }
 
     if (options.port != null) {
@@ -169,7 +171,7 @@ class WebSocketServer extends EventEmitter {
       );
 
       try {
-        const offers = Extensions.parse(
+        const offers = extension.parse(
           req.headers['sec-websocket-extensions']
         );
 
@@ -208,15 +210,7 @@ class WebSocketServer extends EventEmitter {
         this.options.verifyClient(info, (verified, code, message) => {
           if (!verified) return abortConnection(socket, code || 401, message);
 
-          this.completeUpgrade(
-            protocol,
-            extensions,
-            version,
-            req,
-            socket,
-            head,
-            cb
-          );
+          this.completeUpgrade(protocol, extensions, req, socket, head, cb);
         });
         return;
       }
@@ -224,7 +218,7 @@ class WebSocketServer extends EventEmitter {
       if (!this.options.verifyClient(info)) return abortConnection(socket, 401);
     }
 
-    this.completeUpgrade(protocol, extensions, version, req, socket, head, cb);
+    this.completeUpgrade(protocol, extensions, req, socket, head, cb);
   }
 
   /**
@@ -232,14 +226,13 @@ class WebSocketServer extends EventEmitter {
    *
    * @param {String} protocol The chosen subprotocol
    * @param {Object} extensions The accepted extensions
-   * @param {Number} version The WebSocket protocol version
    * @param {http.IncomingMessage} req The request object
    * @param {net.Socket} socket The network socket between the server and client
    * @param {Buffer} head The first packet of the upgraded stream
    * @param {Function} cb Callback
    * @private
    */
-  completeUpgrade (protocol, extensions, version, req, socket, head, cb) {
+  completeUpgrade (protocol, extensions, req, socket, head, cb) {
     //
     // Destroy the socket if the client has already sent a FIN packet.
     //
@@ -256,13 +249,19 @@ class WebSocketServer extends EventEmitter {
       `Sec-WebSocket-Accept: ${key}`
     ];
 
-    if (protocol) headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
+    const ws = new WebSocket(null);
+
+    if (protocol) {
+      headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
+      ws.protocol = protocol;
+    }
     if (extensions[PerMessageDeflate.extensionName]) {
       const params = extensions[PerMessageDeflate.extensionName].params;
-      const value = Extensions.format({
+      const value = extension.format({
         [PerMessageDeflate.extensionName]: [params]
       });
       headers.push(`Sec-WebSocket-Extensions: ${value}`);
+      ws._extensions = extensions;
     }
 
     //
@@ -271,21 +270,16 @@ class WebSocketServer extends EventEmitter {
     this.emit('headers', headers, req);
 
     socket.write(headers.concat('\r\n').join('\r\n'));
+    socket.removeListener('error', socketError);
 
-    const client = new WebSocket([socket, head], null, {
-      maxPayload: this.options.maxPayload,
-      protocolVersion: version,
-      extensions,
-      protocol
-    });
+    ws.setSocket(socket, head, this.options.maxPayload);
 
     if (this.clients) {
-      this.clients.add(client);
-      client.on('close', () => this.clients.delete(client));
+      this.clients.add(ws);
+      ws.on('close', () => this.clients.delete(ws));
     }
 
-    socket.removeListener('error', socketError);
-    cb(client);
+    cb(ws);
   }
 }
 

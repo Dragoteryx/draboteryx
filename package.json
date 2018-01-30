@@ -5,7 +5,7 @@
   "main": "drabot.js",
   "dependencies": {
     "cleverbot.io": "^1.0.4",
-    "discord.js": "^11.2.1",
+    "discord.js": "^11.3.0",
     "dotenv": "^4.0.0",
     "drg-music": "^3.2.1",
     "musicmetadata": "^2.0.5",

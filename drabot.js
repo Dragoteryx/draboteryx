@@ -472,16 +472,16 @@ commands.setCommand("z0r", msg => {
 commands.setCommand("stopclever", msg => {
 	clever = false;
 	console.log("[CLEVERBOT] Off");
-	msg.channel.send("Cleverbot has been disabled for ``10`` seconds.").then(msg2 => {
-		setTimeout(() => {
-			msg2.edit("Cleverbot will be back in ``5`` seconds.");
-		}, 5000);
-		setTimeout(() => {
-			clever = true;
-			msg2.edit("Cleverbot is back!");
-			msg2.delete(5000);
-			console.log("[CLEVERBOT] On");
-		}, 10000);
+	msg.channel.send("Cleverbot has been disabled for ``10`` seconds.").then(async msg2 => {
+		for (let i = 8; i > 0; i = i - 2) {
+			await tools.sleep(2000);
+			msg2.edit("Cleverbot will be back in ``" + i + "`` seconds.");
+		}
+		await tools.sleep(2000);
+		clever = true;
+		console.log("[CLEVERBOT] On");
+		msg2.edit("Cleverbot is back!");
+		msg2.delete(3000);
 	});
 }, {owner: true, maxargs: 0});
 
@@ -496,7 +496,7 @@ commands.setCommand("setName", msg => {
 
 commands.setCommand("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
-	client.user.setGame(game).then(() => {
+	client.user.setActivity(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
 	}, () => {
 		console.log("[DRABOT] Couldn't change game");
@@ -544,7 +544,7 @@ commands.setCommand("waifu", msg => {
 		msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 });
 
-commands.setCommand("dicksize", msg => {
+commands.setCommand("dicksize", async msg => {
 	let xsmall = ["Life hates you.", "Did you know that the ancient Greek considered small penises as a symbol of fertility?", "At least it won't get any smaller."];
 	let small = ["It's almost cute.", "Well... it could have been worse...", "I'm sorry about that."];
 	let smedium = ["Seems like it's normal sized to me.", "The average.", "A decent size."];
@@ -564,20 +564,19 @@ commands.setCommand("dicksize", msg => {
 		msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayName +")");
 	else
 		msg.channel.send(":straight_ruler: | " + str);
-	setTimeout(() => {
-		if (length == 1)
-			msg.channel.send(tools.randTab(xsmall));
-		else if (length <= 3)
-			msg.channel.send(tools.randTab(small));
-		else if (length <= 5)
-			msg.channel.send(tools.randTab(smedium));
-		else if (length <= 7)
-			msg.channel.send(tools.randTab(medium));
-		else if (length <= 9)
-			msg.channel.send(tools.randTab(large));
-		else if (length == 10)
-			msg.channel.send(tools.randTab(xlarge));
-	}, 1500);
+	await tools.sleep(1500);
+	if (length == 1)
+		msg.channel.send(tools.randTab(xsmall));
+	else if (length <= 3)
+		msg.channel.send(tools.randTab(small));
+	else if (length <= 5)
+		msg.channel.send(tools.randTab(smedium));
+	else if (length <= 7)
+		msg.channel.send(tools.randTab(medium));
+	else if (length <= 9)
+		msg.channel.send(tools.randTab(large));
+	else if (length == 10)
+		msg.channel.send(tools.randTab(xlarge));
 }, {bots: true});
 
 commands.setCommand("invite", msg => {
@@ -611,10 +610,11 @@ commands.setCommand("chrischansong", msg => {
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
-	client.login(process.env.DISCORDTOKEN).catch(err => {
+	client.login(process.env.DISCORDTOKEN).catch(async err => {
 		console.log("[DRABOT] Connection failed.");
 		console.error(err);
-		setTimeout(login, 60000);
+		await tools.sleep(60000);
+		login();
 	});
 }
 

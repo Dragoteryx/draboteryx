@@ -9,10 +9,10 @@
 const safeBuffer = require('safe-buffer');
 const crypto = require('crypto');
 
-const PerMessageDeflate = require('./PerMessageDeflate');
-const bufferUtil = require('./BufferUtil');
-const ErrorCodes = require('./ErrorCodes');
-const constants = require('./Constants');
+const PerMessageDeflate = require('./permessage-deflate');
+const bufferUtil = require('./buffer-util');
+const validation = require('./validation');
+const constants = require('./constants');
 
 const Buffer = safeBuffer.Buffer;
 
@@ -116,18 +116,12 @@ class Sender {
     var buf;
 
     if (code === undefined) {
-      code = 1000;
-    } else if (typeof code !== 'number' || !ErrorCodes.isValidErrorCode(code)) {
-      throw new Error('first argument must be a valid error code number');
-    }
-
-    if (data === undefined || data === '') {
-      if (code === 1000) {
-        buf = constants.EMPTY_BUFFER;
-      } else {
-        buf = Buffer.allocUnsafe(2);
-        buf.writeUInt16BE(code, 0, true);
-      }
+      buf = constants.EMPTY_BUFFER;
+    } else if (typeof code !== 'number' || !validation.isValidStatusCode(code)) {
+      throw new TypeError('First argument must be a valid error code number');
+    } else if (data === undefined || data === '') {
+      buf = Buffer.allocUnsafe(2);
+      buf.writeUInt16BE(code, 0, true);
     } else {
       buf = Buffer.allocUnsafe(2 + Buffer.byteLength(data));
       buf.writeUInt16BE(code, 0, true);
@@ -164,9 +158,10 @@ class Sender {
    *
    * @param {*} data The message to send
    * @param {Boolean} mask Specifies whether or not to mask `data`
+   * @param {Function} cb Callback
    * @public
    */
-  ping (data, mask) {
+  ping (data, mask, cb) {
     var readOnly = true;
 
     if (!Buffer.isBuffer(data)) {
@@ -181,9 +176,9 @@ class Sender {
     }
 
     if (this._deflating) {
-      this.enqueue([this.doPing, data, mask, readOnly]);
+      this.enqueue([this.doPing, data, mask, readOnly, cb]);
     } else {
-      this.doPing(data, mask, readOnly);
+      this.doPing(data, mask, readOnly, cb);
     }
   }
 
@@ -193,16 +188,17 @@ class Sender {
    * @param {*} data The message to send
    * @param {Boolean} mask Specifies whether or not to mask `data`
    * @param {Boolean} readOnly Specifies whether `data` can be modified
+   * @param {Function} cb Callback
    * @private
    */
-  doPing (data, mask, readOnly) {
+  doPing (data, mask, readOnly, cb) {
     this.sendFrame(Sender.frame(data, {
       fin: true,
       rsv1: false,
       opcode: 0x09,
       mask,
       readOnly
-    }));
+    }), cb);
   }
 
   /**
@@ -210,9 +206,10 @@ class Sender {
    *
    * @param {*} data The message to send
    * @param {Boolean} mask Specifies whether or not to mask `data`
+   * @param {Function} cb Callback
    * @public
    */
-  pong (data, mask) {
+  pong (data, mask, cb) {
     var readOnly = true;
 
     if (!Buffer.isBuffer(data)) {
@@ -227,9 +224,9 @@ class Sender {
     }
 
     if (this._deflating) {
-      this.enqueue([this.doPong, data, mask, readOnly]);
+      this.enqueue([this.doPong, data, mask, readOnly, cb]);
     } else {
-      this.doPong(data, mask, readOnly);
+      this.doPong(data, mask, readOnly, cb);
     }
   }
 
@@ -239,16 +236,17 @@ class Sender {
    * @param {*} data The message to send
    * @param {Boolean} mask Specifies whether or not to mask `data`
    * @param {Boolean} readOnly Specifies whether `data` can be modified
+   * @param {Function} cb Callback
    * @private
    */
-  doPong (data, mask, readOnly) {
+  doPong (data, mask, readOnly, cb) {
     this.sendFrame(Sender.frame(data, {
       fin: true,
       rsv1: false,
       opcode: 0x0a,
       mask,
       readOnly
-    }));
+    }), cb);
   }
 
   /**
