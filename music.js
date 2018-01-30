@@ -415,7 +415,7 @@ function Playlist(guild, client) {
 	this.looping = false;
 	this.pllooping = false;
 	this.volume = 100;
-	this.addMusic = music => {
+	this.addMusic = async music => {
 		this.list.push(music);
 		await sleep(500);
 		if (!this.playing)
