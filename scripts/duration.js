@@ -8,7 +8,7 @@ function prv(object) {
 	return weakmapPrivates.get(object);
 }
 
-class Duration {
+/*class DrgDuration {
 	constructor(timestamp) {
 		let that = prv(this);
 		that.timestamp = timestamp;
@@ -26,7 +26,7 @@ class Duration {
 		}
 		that.calc();
 	}
-}
+}*/
 function Duration(timestamp) {
 	if (timestamp === undefined)
 		timestamp = 0;

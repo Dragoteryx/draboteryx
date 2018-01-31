@@ -652,7 +652,7 @@ commands.set("nis", async msg => {
 	}
 }, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
 
-commands.setCommand("mix", msg => {
+commands.set("mix", msg => {
 	let mots = msg.content.split(" ").slice(1);
 	mots.sort(() => Math.random() - 0.5);
 	let str = "";
