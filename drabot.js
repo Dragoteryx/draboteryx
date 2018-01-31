@@ -652,6 +652,15 @@ commands.set("nis", async msg => {
 	}
 }, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
 
+commands.setCommand("mix", msg => {
+	let mots = msg.content.split(" ").slice(1);
+	mots.sort(() => Math.random() - 0.5);
+	let str = "";
+	for (let mot of mots)
+		str += mot + " ";
+	msg.channel.send("Before: ``" + msg.content.replace(config.prefix + "mix ", "") + "```\nAfter: ``" + str + "``");
+}, {props: new classes.Command("mix", "mix a sentence", funType, true)});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");

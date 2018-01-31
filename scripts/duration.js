@@ -1,6 +1,32 @@
 "use strict";
 const EventEmitter = require("events");
 
+const weakmapPrivates = new WeakMap();
+function prv(object) {
+	if (!weakmapPrivates.has(object))
+		weakmapPrivates.set(object, {});
+	return weakmapPrivates.get(object);
+}
+
+class Duration {
+	constructor(timestamp) {
+		let that = prv(this);
+		that.timestamp = timestamp;
+		that.values = {}
+		that.calc = () => {
+			that.values.secondsAbs = Math.floor(that.timestamp/1000);
+			that.values.minutesAbs = Math.floor(that.values.secondsAbs/60);
+			that.values.hoursAbs = Math.floor(that.values.minutesAbs/60);
+			that.values.daysAbs = Math.floor(that.values.hoursAbs/24);
+			that.values.weeks = Math.floor(that.values.daysAbs/7);
+			that.values.days = that.values.daysAbs%7;
+			that.values.hours = that.values.hoursAbs%24;
+			that.values.minutes = that.values.minutesAbs%60;
+			that.values.seconds = that.values.secondsAbs%60;
+		}
+		that.calc();
+	}
+}
 function Duration(timestamp) {
 	if (timestamp === undefined)
 		timestamp = 0;
@@ -16,15 +42,7 @@ function Duration(timestamp) {
 	var minutes = 0;
 	var seconds = 0;
 	function calc() {
-		secondsAbs = Math.floor(timestamp/1000);
-		minutesAbs = Math.floor(secondsAbs/60);
-		hoursAbs = Math.floor(minutesAbs/60);
-		daysAbs = Math.floor(hoursAbs/24);
-		weeks = Math.floor(daysAbs/7);
-		days = daysAbs%7;
-		hours = hoursAbs%24;
-		minutes = minutesAbs%60;
-		seconds = secondsAbs%60;
+
 	}
 	calc();
 	this.refresh = () => {
