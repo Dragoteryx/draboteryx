@@ -18,7 +18,7 @@ Use /help to know the commands.
 * generate QRCodes
 * a lot more (even NSFW ones)
 
-It can also play music with ``drg-music`` ;). (https://github.com/Dragoteryx/drg-music)
+It can also play music with ``drg-music2`` ;). (https://github.com/Dragoteryx/drg-music2)
 
 ## Invite link
 https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot

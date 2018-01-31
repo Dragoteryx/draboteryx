@@ -1,5 +1,7 @@
 "use strict";
 
+const discord = require("discord.js");
+
 const weakmapPrivates = new WeakMap();
 function prv(object) {
 	if (!weakmapPrivates.has(object))
@@ -7,16 +9,25 @@ function prv(object) {
 	return weakmapPrivates.get(object);
 }
 
-function CommandsHandler(prefix) {
-	this.prefix = prefix;
-	this.owners = [];
-	var off = [];
-	var commands = new Map();
-	this.setCommand = (name, callback, opts) => {
+class CommandsHandler extends Map {
+	constructor(prefix) {
+		super();
+		this.prefix = prefix;
+		this.owners = [];
+	}
+	set(name, callback, opts) {
 		if (name === undefined)
-			throw new Error("MissingParameter: command");
+			throw new Error("parameter 'name' is missing");
 		if (callback === undefined)
-			throw new Error("MissingParameter: callback function");
+			throw new Error("parameter 'callback' is missing");
+		if (callback instanceof Command && callback.name == name) {
+			super.set(name, callback);
+			return;
+		}
+		if (typeof name != "string")
+			throw new TypeError("parameter 'name' must be a String");
+		if (!(callback instanceof Function))
+			throw new TypeError("parameter 'callback' must be a Function");
 		let options = opts !== undefined ? opts : {};
 		if (options.override === undefined)
 			options.override = false;
@@ -65,72 +76,61 @@ function CommandsHandler(prefix) {
 			function: options.function,
 			override: options.override,
 		}), this);
-		commands.set(name, Object.seal({command: Object.seal(command), active: true}));
+		super.set(name, Object.seal(command));
 		return this;
 	}
-	this.hasCommand = name => {
+	has(name) {
 		if (name === undefined)
-			throw new Error("MissingParameter: command");
+			throw new Error("parameter 'command' is missing");
 		if (name instanceof Command)
-			name = name.getName();
-		return commands.has(name);
+			name = name.name;
+		if (typeof name != "string")
+			throw new TypeError("parameter 'command' must be a String or a Command");
+		return super.has(name);
 	}
-	this.getCommand = name => {
+	get(name) {
 		if (name === undefined)
-			throw new Error("MissingParameter: command");
+			throw new Error("parameter 'command' is missing");
 		if (name instanceof Command)
-			name = name.getName();
-		if (!this.hasCommand(name))
+			name = name.name;
+		if (typeof name != "string")
+			throw new TypeError("parameter 'command' must be a String or a Command");
+		if (!this.has(name))
 			throw new Error("unknownCommand");
-		return commands.get(name).command;
+		return super.get(name);
 	}
-	this.removeCommand = name => {
+	delete(name) {
 		if (name === undefined)
-			throw new Error("MissingParameter: command");
+			throw new Error("parameter 'command' is missing");
 		if (name instanceof Command)
-			name = name.getName();
-		if (!this.hasCommand(name))
+			name = name.name;
+		if (typeof name != "string")
+			throw new TypeError("parameter 'command' must be a String or a Command");
+		if (!this.has(name))
 			throw new Error("unknownCommand");
-		commands.delete(name);
+		super.delete(name);
 		return this;
 	}
-	this.toggleCommand = name => {
-		if (name === undefined)
-			throw new Error("MissingParameter: command");
-		if (name instanceof Command)
-			name = name.getName();
-		if (!this.hasCommand(name))
-			throw new Error("unknownCommand");
-		commands.get(name).active = !commands.get(name).active;
-		return this;
-	}
-	this.isActive = name => {
-		if (name === undefined)
-			throw new Error("MissingParameter: command");
-		if (name instanceof Command)
-			name = name.getName();
-		if (!this.hasCommand(name))
-			throw new Error("unknownCommand");
-		return commands.get(name).active;
-	}
-	this.check = (msg, exec) => {
-		if (msg === undefined)
-			throw new Error("MissingParameter: message");
-		if (exec === undefined)
-			exec = true;
+	check(msg, exec) {
 		return new Promise((resolve, reject) => {
 			try {
+				if (msg === undefined)
+					throw new Error("parameter 'message' is missing");
+				if (!(msg instanceof discord.Message))
+					throw new TypeError("parameter 'message' must be a Message");
+				if (exec === undefined)
+					exec = true;
+				if (typeof exec != "boolean")
+					throw new TypeError("parameter 'execute' must be a Boolean");
 				if (!msg.content.startsWith(this.prefix)) {
 					resolve({command: null, result: {valid: false, reasons: ["no prefix"]}});
 					return;
 				}
 				let name = msg.content.replace(this.prefix, "").split(" ")[0];
-				if (!this.hasCommand(name))
+				if (!this.has(name))
 					resolve({command: null, result: {valid: false, reasons: ["unknown command"]}});
-				else if (!this.isActive(name))
-					resolve({command: null, result: {valid: false, reasons: ["command disabled"]}});
 				else {
-					let command = this.getCommand(name);
+					let command = this.get(name);
 					command.check(msg, exec).then(result => {
 						resolve(Object.seal({command: command, result: result}));
 					}).catch(reject);
@@ -140,66 +140,13 @@ function CommandsHandler(prefix) {
 			}
 		});
 	}
-	this.setCommandName = (oldName, newName) => {
-		if (oldName === undefined)
-			throw new Error("MissingParameter: old command name");
-		if (oldName instanceof Command)
-			oldName = oldName.getName();
-		if (newName === undefined)
-			throw new Error("MissingParameter: new command name");
-		if (!this.hasCommand(oldName))
-			throw new Error("unknownCommand");
-		let command = this.getCommand(oldName);
-		let active = commands.get(oldName).active;
-		this.removeCommand(oldName);
-		this.setCommand(newName, command.callback, command.options);
-		commands.get(newName).active = active;
-		return this.getCommand(newName);
-	}
-	this.isOwner = user => {
-		return this.owners.includes(user.id);
-	}
-
-	//-----------
-	var current = 0;
-	this[Symbol.iterator] = () => {
-		return {
-			next: () => {
-				let array = Array.from(commands.values())
-				if (current < array.length) {
-					current++;
-					return {value: array[current-1].command, done: false};
-				} else {
-					current = 0;
-					return {done: true};
-				}
-			}
-		}
-	}
-	this.toObject = () => {
-		let object = {};
-		for (let command of this)
-			object[command.getName()] = command;
-		return object;
-	}
-	this.toArray = () => {
-		let array = [];
-		for (let command of this)
-			array.push(command);
-		return array;
-	}
-	this.toMap = () => {
-		let map = new Map();
-		for (let command of this)
-			map.set(command.getName(), command);
-		return map;
-	}
 }
 
 class Command {
 	constructor(name, callback, options, handler) {
 		this.callback = callback;
 		this.options = options;
+		this.active = true;
 		prv(this).name = name;
 		prv(this).handler = handler;
 	}
@@ -207,12 +154,29 @@ class Command {
 		return prv(this).name;
 	}
 	set name(newn) {
-		that.handler.setCommandName(prv(this).name, newn);
+		if (newn === undefined)
+			throw new Error("parameter 'newName' is missing");
+		if (typeof newn != "string")
+			throw new TypeError("parameter 'newName' must be a String");
+		let that = prv(this);
+		let handler = that.handler;
+		let handlerThat = prv(handler);
+		handler.delete(that.name);
+		that.name = newn;
+		handler.set(newn, this);
 	}
 	check(msg, exec) {
 		let that = prv(this);
 		return new Promise((resolve, reject) => {
 			try {
+				if (msg === undefined)
+					throw new Error("parameter 'message' is missing");
+				if (!(msg instanceof discord.Message))
+					throw new TypeError("parameter 'message' must be a Message");
+				if (exec === undefined)
+					exec = true;
+				if (typeof exec != "boolean")
+					throw new TypeError("parameter 'execute' must be a Boolean");
 				if (exec === undefined)
 					exec = false;
 				let nbargs = msg.content.split(" ").slice(1).length;
@@ -230,19 +194,25 @@ class Command {
 						check.reasons = [];
 					check.reasons.push("wrong name");
 				}
+				if (!this.active) {
+					check.valid = false;
+					if (check.reasons === undefined)
+						check.reasons = [];
+					check.reasons.push("command disabled");
+				}
 				if (msg.channel.type != "text" && !this.options.dms) {
 					check.valid = false;
 					if (check.reasons === undefined)
 						check.reasons = [];
 					check.reasons.push("DMs not allowed");
 				}
-				if (!that.handler.isOwner(msg.author) && this.options.owner) {
+				if (!that.handler.owners.includes(msg.author.id) && this.options.owner) {
 					check.valid = false;
 					if (check.reasons === undefined)
 						check.reasons = [];
 					check.reasons.push("owner only command");
 				}
-				if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
+				if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
 					if (!this.options.guilds.includes(msg.guild.id)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -250,7 +220,7 @@ class Command {
 						check.reasons.push("ignored guild");
 					}
 				}
-				if (this.options.channels.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
+				if (this.options.channels.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
 					if (!this.options.channels.includes(msg.channel.id)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -258,7 +228,7 @@ class Command {
 						check.reasons.push("ignored channel");
 					}
 				}
-				if (this.options.users.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
+				if (this.options.users.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
 					if (!this.options.users.includes(msg.author.id)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -266,7 +236,7 @@ class Command {
 						check.reasons.push("ignored user");
 					}
 				}
-				if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
+				if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
 					if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -274,7 +244,7 @@ class Command {
 						check.reasons.push("missing permissions");
 					}
 				}
-				if (msg.channel.type == "text" && this.options.rolenames.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
+				if (msg.channel.type == "text" && this.options.rolenames.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
 					if (!player.rolenames.some(role => this.options.rolenames.includes(role.name.toLowerCase()))) {
 						check.valid = false;
 						if (check.reasons === undefined)

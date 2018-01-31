@@ -14,7 +14,7 @@ const tools = require("./scripts/tools.js");		// useful functions
 const funcs = require("./scripts/funcs.js");		// commands related functions
 const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
-const DrgMusic = require("./scripts/music.js");
+const DrgMusic = require("./node_modules/drg-music2/music.js");
 const DrgCommands = require("./scripts/commands.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
@@ -53,16 +53,16 @@ const nsfwType = ":cucumber: NSFW commands";
 const commandTypes = [utilityType, funType, musicType, nsfwType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
-music.on("next", (guild, next) => {
+music.on("next", (playlist, next) => {
 	let msg = !next.file ?
-	musicChannels.get(guild.id).send("Next: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")")
-	: musicChannels.get(guild.id).send("Next: ``" + next.title + "``. (requested by " + next.member +")");
+	musicChannels.get(playlist.guild.id).send("Next: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")")
+	: musicChannels.get(playlist.guild.id).send("Next: ``" + next.title + "``. (requested by " + next.member +")");
 	msg.then(msg2 => {
-		music.once("start" + guild.id, () => msg2.edit(msg2.content.replace("Next: ", "Now playing: ")));
+		music.once("start" + playlist.guild.id, () => msg2.edit(msg2.content.replace("Next: ", "Now playing: ")));
 	});
 });
-music.on("empty", guild => {
-	musicChannels.get(guild.id).send("The playlist is empty.");
+music.on("empty", playlist => {
+	musicChannels.get(playlist.guild.id).send("The playlist is empty.");
 });
 music.on("memberJoin", (member, channel) => {
 	if (musicLeaves.has(member.guild.id)) {
@@ -76,7 +76,7 @@ music.on("memberLeave", (member, channel) => {
 		musicChannels.get(member.guild.id).send("The voice channel is empty, I will leave in ``one minute``.");
 		musicLeaves.set(member.guild.id,
 		client.setTimeout(() => {
-			music.leave(member.guild).then(() => {
+			member.guild.playlist.leave().then(() => {
 				musicChannels.get(member.guild.id).send("Goodbye o/");
 				musicChannels.delete(member.guild.id);
 				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
@@ -126,7 +126,7 @@ client.on("message", msg => {
 		console.log("[EXEC]");
 		try {
 			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
-			console.log(val);
+			console.dir(val, {showHidden: true, colors: true});
 			msg.channel.send("Executed: ```" + val + "```")
 			.catch(err => {
 				msg.channel.send("Execution sent to console.");
@@ -190,9 +190,9 @@ for (let meme of memes)
 	addMeme(meme);
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
-commands.setCommand("test", msg => {msg.channel.send("It works!")}, {owner: true, minargs: 2, maxargs: 4});
+commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
 
-commands.setCommand("help", msg => {
+commands.set("help", msg => {
 	let embed;
 	if (msg.channel.type != "dm")
 		msg.reply("help is coming in your DMs!");
@@ -210,25 +210,25 @@ commands.setCommand("help", msg => {
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
-commands.setCommand("prefix", msg => {
+commands.set("prefix", msg => {
 	msg.channel.send("Really ? My prefix is ``" + config.prefix + "``.");
 }, {maxargs: 0, props: new classes.Command("prefix", "if you don't know my prefix despite reading this", utilityType, true)});
 
-commands.setCommand("info", msg => {
+commands.set("info", msg => {
 	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
 	});
 }, {maxargs: 0, props: new classes.Command("info", "info about me", utilityType, true)});
 
-commands.setCommand("uptime", msg => {
+commands.set("uptime", msg => {
 	msg.channel.send("I have been up for " + uptime.strings().text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
 }, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
-commands.setCommand("serverinfo", async msg => {
+commands.set("serverinfo", async msg => {
 	msg.channel.send("", await msg.guild.embedInfo());
 }, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new classes.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
-commands.setCommand("channelinfo", msg => {
+commands.set("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let channel = msg.channel;
 	if (nb > 0)
@@ -239,7 +239,7 @@ commands.setCommand("channelinfo", msg => {
 		msg.channel.send("", channel.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new classes.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
-commands.setCommand("userinfo", async msg => {
+commands.set("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let member = msg.member;
 	if (nb > 0)
@@ -254,7 +254,7 @@ commands.setCommand("userinfo", async msg => {
 	}
 }, {override: true, dms: false, props: new classes.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
 
-commands.setCommand("roleinfo", msg => {
+commands.set("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let role = msg.member.highestRole;
 	if (nb > 0)
@@ -265,7 +265,7 @@ commands.setCommand("roleinfo", msg => {
 		msg.channel.send("", role.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
-commands.setCommand("join", msg => {
+commands.set("join", msg => {
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
 			music.addMusic({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
@@ -280,7 +280,7 @@ commands.setCommand("join", msg => {
 	});
 }, {dms: false, maxargs: 0, function: msg => !memeing.has(msg.guild.id), props: new classes.Command("join", "join a voice channel", musicType, true)});
 
-commands.setCommand("leave", msg => {
+commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
 		musicChannels.delete(msg.guild.id);
 		console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
@@ -290,7 +290,7 @@ commands.setCommand("leave", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("leave", "leave the voice channel", musicType, true)});
 
-commands.setCommand("request", msg => {
+commands.set("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
 	try {
 		DrgMusic.videoWebsite(link);
@@ -310,7 +310,7 @@ commands.setCommand("request", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
-commands.setCommand("query", msg => {
+commands.set("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
 	msg.channel.send("Searching for ``" + query + "`` on Youtube.").then(msg2 => {
 		music.addMusic(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
@@ -323,7 +323,7 @@ commands.setCommand("query", msg => {
 	});
 }, {dms: false, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
-commands.setCommand("plremove", msg => {
+commands.set("plremove", msg => {
 	let id = Math.floor(Number(msg.content.split(" ").last()))-1;
 	if (!tools.validStringInt(id)) {
 		msg.channel.send("This ID is invalid.");
@@ -336,7 +336,7 @@ commands.setCommand("plremove", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
 
-commands.setCommand("skip", msg => {
+commands.set("skip", msg => {
 	music.playNext(msg.guild).then(current => {
 		msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
 	}).catch(err => {
@@ -344,7 +344,7 @@ commands.setCommand("skip", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("skip", "skip the current music", musicType, true)});
 
-commands.setCommand("plclear", msg => {
+commands.set("plclear", msg => {
 	music.clearPlaylist(msg.guild).then(nb => {
 		if (nb == 1)
 			msg.channel.send("``1`` music has been removed from the playlist.");
@@ -355,7 +355,7 @@ commands.setCommand("plclear", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("plclear", "clear the playlist", musicType, true)});
 
-commands.setCommand("plshuffle", msg => {
+commands.set("plshuffle", msg => {
 	music.shufflePlaylist(msg.guild).then(() => {
 		msg.channel.send("The playlist has been shuffled.");
 	}).catch(err => {
@@ -363,7 +363,7 @@ commands.setCommand("plshuffle", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("plshuffle", "shuffle the playlist", musicType, true)});
 
-commands.setCommand("loop", msg => {
+commands.set("loop", msg => {
 	music.toggleLooping(msg.guild).then(looping => {
 		music.currentInfo(msg.guild).then(current => {
 			if (looping)
@@ -378,7 +378,7 @@ commands.setCommand("loop", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("loop", "loop the current music", musicType, true)});
 
-commands.setCommand("plloop", msg => {
+commands.set("plloop", msg => {
 	music.togglePlaylistLooping(msg.guild).then(looping => {
 		if (looping)
 			msg.channel.send("The playlist is now looping.");
@@ -389,8 +389,8 @@ commands.setCommand("plloop", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("plloop", "loop the playlist", musicType, true)});
 
-commands.setCommand("toggle", msg => {
-	music.toggle(msg.guild).then(paused => {
+commands.set("toggle", msg => {
+	music.togglePaused(msg.guild).then(paused => {
 		if (paused)
 			msg.channel.send("The music has been paused.");
 		else
@@ -400,7 +400,7 @@ commands.setCommand("toggle", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("toggle", "pause/resume the music", musicType, true)});;
 
-commands.setCommand("volume", msg => {
+commands.set("volume", msg => {
 	let volume = Number(msg.content.split(" ").last());
 	if (!tools.validStringInt(volume))
 		volume = 100;
@@ -411,48 +411,50 @@ commands.setCommand("volume", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("volume [value]", "set the volume of the music", musicType, true)});
 
-commands.setCommand("current", msg => {
-	music.currentInfo(msg.guild).then(current => {
-		let info = tools.defaultEmbed();
-		let timer = new Duration(current.time);
-		let end = new Duration(current.length);
-		if (!current.file) {
-			info.setThumbnail(current.thumbnailURL)
-			.addField("Title", current.title, true)
-			.addField("Author", current.author.name + " (" + current.author.channelURL + ")", true)
-			.addField("Link", current.link, true)
-			.addField("Requested by", current.member, true);
-		} else {
-			info.addField("File name", current.title, true)
-			.addField("Requested by", current.member, true);
-		}
-		msg.channel.send("Playing: ``" + timer.strings().timer + " / " + end.strings().timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
+commands.set("current", msg => {
+	let current = music.currentInfo(msg.guild);
+	if (current === undefined) {
+		msg.channel.send("I am not playing anything at the moment.");
+		return;
+	}
+	let info = tools.defaultEmbed();
+	let timer = new Duration(current.time);
+	let end = new Duration(current.length);
+	if (!current.file) {
+		info.setThumbnail(current.thumbnailURL)
+		.addField("Title", current.title, true)
+		.addField("Author", current.author.name + " (" + current.author.channelURL + ")", true)
+		.addField("Link", current.link, true)
+		.addField("Requested by", current.member, true);
+	} else {
+		info.addField("File name", current.title, true)
+		.addField("Requested by", current.member, true);
+	}
+	msg.channel.send("Playing: ``" + timer.strings().timer + " / " + end.strings().timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
 }, {dms: false, maxargs: 0, props: new classes.Command("current", "info about the current music", musicType, true)});
 
-commands.setCommand("playlist", msg => {
-	music.playlistInfo(msg.guild).then(playlist => {
-		let info = tools.defaultEmbed();
-		let i = 1;
-		for (let music of playlist) {
-			if (!music.file) {
-				info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
-			}	else
-				info.addField(i + " - " + music.title + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
-			i++;
-		}
-		if (playlist.length > 0) {
-			msg.channel.send("Here's the playlist:", info);
-			msg.channel.send("Use ``" + config.prefix + "current`` to have information about the current music.");
-		} else msg.channel.send("The playlist is empty. Use ``" + config.prefix + "current`` to have information about the current music.");
-	}).catch(err => {
-		funcs.musicErrors(msg, err)
-	});
+commands.set("playlist", msg => {
+	let playlist = music.playlistInfo(msg.guild);
+	if (playlist === undefined) {
+		msg.channel.send("I am not in a voice channel.");
+		return;
+	}
+	let info = tools.defaultEmbed();
+	let i = 1;
+	for (let music of playlist) {
+		if (!music.file) {
+			info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
+		}	else
+			info.addField(i + " - " + music.title + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
+		i++;
+	}
+	if (playlist.length > 0) {
+		msg.channel.send("Here's the playlist:", info);
+		msg.channel.send("Use ``" + config.prefix + "current`` to have information about the current music.");
+	} else msg.channel.send("The playlist is empty. Use ``" + config.prefix + "current`` to have information about the current music.");
 }, {dms: false, maxargs: 0, props: new classes.Command("playlist", "info about the playlist", musicType, true)});
 
-commands.setCommand("shitpost", msg => {
+commands.set("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let link = "https://shitpostgenerator.herokuapp.com";
 	if (args.length > 0) {
@@ -472,13 +474,13 @@ commands.setCommand("shitpost", msg => {
 	});
 }, {props: new classes.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
 
-commands.setCommand("say", msg => {
+commands.set("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
 	msg.channel.send(content);
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.setCommand("roll", msg => {
+commands.set("roll", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let max = 6;
 	if (args.length == 1 && tools.validStringInt(args[0]) && Number(args[0]) > 0)
@@ -487,11 +489,11 @@ commands.setCommand("roll", msg => {
 	msg.reply(res + "/" + max + " (:game_die:)")
 }, {props: new classes.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
 
-commands.setCommand("z0r", msg => {
+commands.set("z0r", msg => {
 	msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
 }, {props: new classes.Command("z0r", "get a random z0r.de link", funType, true)});
 
-commands.setCommand("stopclever", msg => {
+commands.set("stopclever", msg => {
 	clever = false;
 	console.log("[CLEVERBOT] Off");
 	msg.channel.send("Cleverbot has been disabled for ``10`` seconds.").then(async msg2 => {
@@ -507,7 +509,7 @@ commands.setCommand("stopclever", msg => {
 	});
 }, {owner: true, maxargs: 0});
 
-commands.setCommand("setName", msg => {
+commands.set("setName", msg => {
 	let name = msg.content.replace(config.prefix + "setName ", "");
 	client.user.setUsername(name).then(() => {
 		console.log("[DRABOT] New name: " + name);
@@ -516,7 +518,7 @@ commands.setCommand("setName", msg => {
 	});
 }, {owner: true, minargs: 1});
 
-commands.setCommand("setGame", msg => {
+commands.set("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
 	client.user.setActivity(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
@@ -525,7 +527,7 @@ commands.setCommand("setGame", msg => {
 	});
 }, {owner: true, minargs: 1});
 
-commands.setCommand("setAvatar", msg => {
+commands.set("setAvatar", msg => {
 	let avatar = msg.content.replace(config.prefix + "setAvatar ", "");
 	client.user.setAvatar(avatar).then(() => {
 		console.log("[DRABOT] New avatar: " + avatar);
@@ -534,7 +536,7 @@ commands.setCommand("setAvatar", msg => {
 	});
 }, {owner: true, minargs: 1, maxargs: 1});
 
-commands.setCommand("debug", msg => {
+commands.set("debug", msg => {
 	debug = !debug;
 	if (debug)
 		msg.channel.send("Debug mode ON");
@@ -542,12 +544,12 @@ commands.setCommand("debug", msg => {
 		msg.channel.send("Debug mode OFF");
 }, {owner: true, maxargs: 0});
 
-commands.setCommand("kill", msg => {
+commands.set("kill", msg => {
 	console.log("[DRABOT] Dying...");
 	process.exit();
 }, {owner: true, maxargs: 0});
 
-commands.setCommand("cahrcg", msg => {
+commands.set("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.getHTTP().then(res => {
 		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').last().split('">').first()});
@@ -556,17 +558,17 @@ commands.setCommand("cahrcg", msg => {
 	});
 }, {maxargs: 0, props: new classes.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.setCommand("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
-commands.setCommand("r34", funcs.sendR34, {minargs: 1, nsfw: true});
+commands.set("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
+commands.set("r34", funcs.sendR34, {minargs: 1, nsfw: true});
 
-commands.setCommand("waifu", msg => {
+commands.set("waifu", msg => {
 	if (msg.channel.type != "dm")
 		msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");
 	else
 		msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 });
 
-commands.setCommand("dicksize", async msg => {
+commands.set("dicksize", async msg => {
 	let xsmall = ["Life hates you.", "Did you know that the ancient Greek considered small penises as a symbol of fertility?", "At least it won't get any smaller."];
 	let small = ["It's almost cute.", "Well... it could have been worse...", "I'm sorry about that."];
 	let smedium = ["Seems like it's normal sized to me.", "The average.", "A decent size."];
@@ -601,14 +603,14 @@ commands.setCommand("dicksize", async msg => {
 		msg.channel.send(tools.randTab(xlarge));
 }, {bots: true});
 
-commands.setCommand("invite", msg => {
+commands.set("invite", msg => {
 	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
 		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
 	else
 		msg.channel.send("And... you're arrived!");
 }, {maxargs: 0, props: new classes.Command("invite", "get an invite to the test server", utilityType, true)});
 
-commands.setCommand("timer", msg => {
+commands.set("timer", msg => {
 	let duration = msg.content.split(" ").last();
 	let t = new Duration(Number(duration));
 	let o = t.getTimer();
@@ -621,7 +623,7 @@ commands.setCommand("timer", msg => {
 	o.run();
 }, {minargs: 1, maxargs: 1});
 
-commands.setCommand("chrischansong", msg => {
+commands.set("chrischansong", msg => {
 	music.addMusic("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
 	}).catch(err => {
@@ -629,7 +631,7 @@ commands.setCommand("chrischansong", msg => {
 	});
 }, {owner: true});
 
-commands.setCommand("nis", async msg => {
+commands.set("nis", async msg => {
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + name + " ", "");
@@ -650,16 +652,6 @@ commands.setCommand("nis", async msg => {
 	}
 }, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
 
-commands.setCommand("test", msg => {
-	for (let connection of client.voiceConnections) {
-		if (connection[1].dispatcher !== undefined) {
-			console.log(connection[1].dispatcher);
-			connection[1].dispatcher.pause();
-			connection[1].dispatcher.resume();
-		}
-	}
-}, {owner: true});
-
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -672,7 +664,7 @@ function login() {
 }
 
 function addMeme(name) {
-	commands.setCommand(name, async msg => {
+	commands.set(name, async msg => {
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");
