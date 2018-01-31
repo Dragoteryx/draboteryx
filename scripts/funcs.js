@@ -131,7 +131,7 @@ exports.cacheUser = function(user) {
 
 exports.showInfo = async msg => {
 	let stats = "";
-	stats += "Uptime: ``" + drabot.uptime.strings().simple + "``\n";
+	stats += "Uptime: ``" + drabot.uptime.strings.simple + "``\n";
 	stats += "``" + Array.from(drabot.client.guilds.keys()).length + "`` servers\n";
 	let channels = Array.from(drabot.client.channels.values());
 	let nbv = 0;

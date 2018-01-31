@@ -127,7 +127,7 @@ client.on("message", msg => {
 		try {
 			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
 			console.dir(val, {showHidden: true, colors: true});
-			msg.channel.send("Executed: ```" + val + "```")
+			msg.channel.send("Executed: ```js\n" + val + "\n```")
 			.catch(err => {
 				msg.channel.send("Execution sent to console.");
 			});
@@ -221,7 +221,7 @@ commands.set("info", msg => {
 }, {maxargs: 0, props: new classes.Command("info", "info about me", utilityType, true)});
 
 commands.set("uptime", msg => {
-	msg.channel.send("I have been up for " + uptime.strings().text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
+	msg.channel.send("I have been up for " + uptime.strings.text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
 }, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
 commands.set("serverinfo", async msg => {
@@ -365,14 +365,11 @@ commands.set("plshuffle", msg => {
 
 commands.set("loop", msg => {
 	music.toggleLooping(msg.guild).then(looping => {
-		music.currentInfo(msg.guild).then(current => {
+		let current = music.currentInfo(msg.guild);
 			if (looping)
 				msg.channel.send("The current music (``" + current.title + "``) is now looping.");
 			else
 				msg.channel.send("The current music is no longer looping.");
-		}).catch(err => {
-			funcs.musicErrors(msg, err);
-		});
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
@@ -430,7 +427,7 @@ commands.set("current", msg => {
 		info.addField("File name", current.title, true)
 		.addField("Requested by", current.member, true);
 	}
-	msg.channel.send("Playing: ``" + timer.strings().timer + " / " + end.strings().timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
+	msg.channel.send("Playing: ``" + timer.strings.timer + " / " + end.strings.timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
 }, {dms: false, maxargs: 0, props: new classes.Command("current", "info about the current music", musicType, true)});
 
 commands.set("playlist", msg => {
@@ -443,9 +440,9 @@ commands.set("playlist", msg => {
 	let i = 1;
 	for (let music of playlist) {
 		if (!music.file) {
-			info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
+			info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings.timer + "``)", "Requested by " + music.member);
 		}	else
-			info.addField(i + " - " + music.title + " (``" + new Duration(music.length).strings().timer + "``)", "Requested by " + music.member);
+			info.addField(i + " - " + music.title + " (``" + new Duration(music.length).strings.timer + "``)", "Requested by " + music.member);
 		i++;
 	}
 	if (playlist.length > 0) {
@@ -658,7 +655,7 @@ commands.set("mix", msg => {
 	let str = "";
 	for (let mot of mots)
 		str += mot + " ";
-	msg.channel.send("Before: ``" + msg.content.replace(config.prefix + "mix ", "") + "```\nAfter: ``" + str + "``");
+	msg.channel.send("Before:```\n" + msg.content.replace(config.prefix + "mix ", "") + "\n```After:```\n" + str + "\n```");
 }, {props: new classes.Command("mix", "mix a sentence", funType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
