@@ -1,65 +1,86 @@
 /* jshint node:true, evil:true, asi:true, esversion:6*/
 "use strict";
 
-function Player(user, name, force, dex, int) {
-  this.user = user;
-  this.name = name;
-  this.money = 100.0;
-  this.force = force;
-  this.dex = dex;
-  this.int = int;
-  this.unspent = 0;
-  this.lvl = 1;
-  this.maxHealth = () => this.force*2 + this.dex*1.5 + this.int;
-  this.health = this.maxHealth();
-  this.lvlUp = choice => {
-    if (choice == "force" && this.force != 0)
-      this.force++;
-    else if (choice == "dex" && this.dex != 0)
-      this.dex++;
-    else if (choice == "int" && this.int != 0)
-      this.int++;
-    else
-      this.unspent++;
-    this.lvl++;
-  }
-  this.inventory = [];
+// IMPORTS
+const discord = require("discord.js");
+const EventEmitter = require("events");
+
+// CONSTS
+const weakmapPrivates = new WeakMap();
+function prv(object) {
+	if (!weakmapPrivates.has(object))
+		weakmapPrivates.set(object, {});
+	return weakmapPrivates.get(object);
 }
 
-function Item(name, desc, price) {
-  this.name = name;
-  this.desc = desc;
-  this.buyPrice = price;
-  this.sellPrice = price*0.66;
-  this.giveToPlayer = player => {
-    player.inventory.push(this);
-    player.money -= this.buyPrice;
-  }
-  this.sellFromPlayer = player => {
-    player.inventory.remove(this);
-    player.money += this.sellPrice;
+// GLOBALS
+let itemId = 1;
+
+// CLASSES
+class Entity extends EventEmitter {
+  constructor(name, stats, inventory) {
+    this.name = name;
+    this.stats = Object.seal({
+
+    });
+    prv(this).health = stats.maxHealth;
+    this.inventory = Object.seal({
+
+    });
   }
 }
+class Player extends EventEmitter {
+  constructor(user, stats) {
+    this.user = user;
+    user.player = this;
+    if (stats === undefined)
+      stats = {};
+    if (stats.maxHealth === undefined)
+      stats.maxHealth = 100;
+    this.stats = Object.seal(stats);
 
-function Weapon() {
-  Item.call(this);
+    this.inventory = Object.seal({
+      weapon: null,
+      armor: null,
+      arrows: [],
+      potions: [],
+      items: []
+    });
+  }
+}
+
+class Item {
+  constructor(name, description, price, weight) {
+    this.id = itemId;
+    itemId++;
+    this.name = name;
+    this.description = description;
+    this.price = price;
+    this.weight = weight;
+  }
+  get desc() {
+    return this.description;
+  }
+  set desc(value) {
+    this.description = value;
+  }
+  test() {
+    return null;
+  }
+}
+
+class Weapon extends Item {
 
 }
 
-Weapon.prototype = Object.create(Item.prototype);
-Weapon.prototype.constructor = Weapon;
-
-function Potion() {
-  Item.call(this);
+class Arrow extends Item {
 
 }
 
-Potion.prototype = Object.create(Potion.prototype);
-Potion.prototype.constructor = Potion;
+class Armor extends Item {
 
-function Spell(name, desc, minl, effect) {
-  this.name = name;
-  this.desc = desc;
-  this.minLevel = minl;
-  this.effect = effect;
+}
+
+class Potion extends Item {
+
 }

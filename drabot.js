@@ -631,12 +631,12 @@ commands.set("chrischansong", msg => {
 commands.set("nis", async msg => {
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
-		let str = msg.content.replace(config.prefix + name + " ", "");
+		let str = msg.content.replace(config.prefix + "nis ", "");
 		member = await tools.stringToMember(str, msg.guild);
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
-		memeing.set(member.guild.id, true);
 		member.voiceChannel.join().then(connection => {
+			memeing.set(member.guild.id, true);
 			connection.playFile("./files/fart.mp3", {passes: 10}).on("end", () => {
 				setTimeout(() => {
 					connection.playFile("./files/burp.mp3", {passes: 10}).on("end", () => {
