@@ -1,6 +1,12 @@
 "use strict";
 
-// IMPORTS
+const weakmapPrivates = new WeakMap();
+function prv(object) {
+	if (!weakmapPrivates.has(object))
+		weakmapPrivates.set(object, {});
+	return weakmapPrivates.get(object);
+}
+
 function CommandsHandler(prefix) {
 	this.prefix = prefix;
 	this.owners = [];
@@ -134,14 +140,6 @@ function CommandsHandler(prefix) {
 			}
 		});
 	}
-	this.fetchProps = () => {
-		let names = Array.from(commands.keys());
-		let props = new Map();
-		for (let name of names)
-			if (this.getCommand(name).options.props)
-				props.set(name, Object.freeze(this.getCommand(name).options.props));
-		return props;
-	}
 	this.setCommandName = (oldName, newName) => {
 		if (oldName === undefined)
 			throw new Error("MissingParameter: old command name");
@@ -181,7 +179,7 @@ function CommandsHandler(prefix) {
 	this.toObject = () => {
 		let object = {};
 		for (let command of this)
-			object[name] = command.command;
+			object[command.getName()] = command;
 		return object;
 	}
 	this.toArray = () => {
@@ -198,26 +196,35 @@ function CommandsHandler(prefix) {
 	}
 }
 
-function Command(comName, callback, options, handler) {
-	this.callback = callback;
-	this.options = options;
-	this.getName = () => comName;
-	this.setName = newName => handler.setCommandName(comName, newName);
-	this.check = (msg, exec) => {
+class Command {
+	constructor(name, callback, options, handler) {
+		this.callback = callback;
+		this.options = options;
+		prv(this).name = name;
+		prv(this).handler = handler;
+	}
+	get name() {
+		return prv(this).name;
+	}
+	set name(newn) {
+		that.handler.setCommandName(prv(this).name, newn);
+	}
+	check(msg, exec) {
+		let that = prv(this);
 		return new Promise((resolve, reject) => {
 			try {
 				if (exec === undefined)
 					exec = false;
 				let nbargs = msg.content.split(" ").slice(1).length;
 				let check = {valid: true, nbargs: nbargs};
-				if (!msg.content.startsWith(handler.prefix)) {
+				if (!msg.content.startsWith(that.handler.prefix)) {
 					check.valid = false;
 					if (check.reasons === undefined)
 						check.reasons = [];
 					check.reasons.push("no prefix");
 				}
-				let name = msg.content.replace(handler.prefix, "").split(" ")[0];
-				if (comName != name) {
+				let name = msg.content.replace(that.handler.prefix, "").split(" ")[0];
+				if (that.name != name) {
 					check.valid = false;
 					if (check.reasons === undefined)
 						check.reasons = [];
@@ -229,13 +236,13 @@ function Command(comName, callback, options, handler) {
 						check.reasons = [];
 					check.reasons.push("DMs not allowed");
 				}
-				if (!handler.isOwner(msg.author) && this.options.owner) {
+				if (!that.handler.isOwner(msg.author) && this.options.owner) {
 					check.valid = false;
 					if (check.reasons === undefined)
 						check.reasons = [];
 					check.reasons.push("owner only command");
 				}
-				if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+				if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
 					if (!this.options.guilds.includes(msg.guild.id)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -243,7 +250,7 @@ function Command(comName, callback, options, handler) {
 						check.reasons.push("ignored guild");
 					}
 				}
-				if (this.options.channels.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+				if (this.options.channels.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
 					if (!this.options.channels.includes(msg.channel.id)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -251,7 +258,7 @@ function Command(comName, callback, options, handler) {
 						check.reasons.push("ignored channel");
 					}
 				}
-				if (this.options.users.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+				if (this.options.users.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
 					if (!this.options.users.includes(msg.author.id)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -259,7 +266,7 @@ function Command(comName, callback, options, handler) {
 						check.reasons.push("ignored user");
 					}
 				}
-				if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+				if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
 					if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -267,7 +274,7 @@ function Command(comName, callback, options, handler) {
 						check.reasons.push("missing permissions");
 					}
 				}
-				if (msg.channel.type == "text" && this.options.rolenames.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+				if (msg.channel.type == "text" && this.options.rolenames.length != 0 && !(that.handler.isOwner(msg.author) && this.options.override)) {
 					if (!player.rolenames.some(role => this.options.rolenames.includes(role.name.toLowerCase()))) {
 						check.valid = false;
 						if (check.reasons === undefined)

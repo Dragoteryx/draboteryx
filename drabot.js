@@ -178,8 +178,6 @@ client.on("ready", () => {
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		client.user.setActivity(config.prefix + "help");
-		for (let command of commands)
-			console.log(command)
 	}
 });
 client.on("error", err => {
@@ -195,16 +193,14 @@ for (let meme of memes)
 commands.setCommand("test", msg => {msg.channel.send("It works!")}, {owner: true, minargs: 2, maxargs: 4});
 
 commands.setCommand("help", msg => {
-	let props = Array.from(commands.fetchProps().values());
 	let embed;
 	if (msg.channel.type != "dm")
 		msg.reply("help is coming in your DMs!");
-
 	for (let type of commandTypes) {
 		embed = tools.defaultEmbed();
-		for (let prop of props) {
-			if (prop.show && prop.type == type) {
-				embed.addField(config.prefix + prop.name, prop.desc, true);
+		for (let command of commands) {
+			if (command.options.props !== undefined && command.options.props.show && command.options.props.type == type) {
+				embed.addField(config.prefix + command.options.props.name, command.options.props.desc, true);
 			}
 		}
 		if (type == utilityType)
