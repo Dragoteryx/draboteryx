@@ -5,16 +5,17 @@ require("dotenv").config();
 const discord = require("discord.js");
 const fs = require("fs");
 const snekfetch = require("snekfetch");
-const DrgMusic = require("./music.js");
-const DrgCommands = require("./commands.js");
+
 const cleverbotIO = require("cleverbot.io");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
-const tools = require("./tools.js");		// useful functions
-const funcs = require("./funcs.js");		// commands related functions
-const types = require("./types.js");		// custom types
-const Duration = require("./duration.js"); // durations
+const tools = require("./scripts/tools.js");		// useful functions
+const funcs = require("./scripts/funcs.js");		// commands related functions
+const classes = require("./scripts/classes.js");		// custom classes
+const Duration = require("./scripts/duration.js"); // durations
+const DrgMusic = require("./scripts/music.js");
+const DrgCommands = require("./scripts/commands.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -79,9 +80,7 @@ music.on("memberLeave", (member, channel) => {
 				musicChannels.get(member.guild.id).send("Goodbye o/");
 				musicChannels.delete(member.guild.id);
 				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
-			}).catch(err => {
-				funcs.musicErrors(msg, err);
-			});
+			}).catch(funcs.logError);
 		}, 60000));
 	}
 });
@@ -179,6 +178,8 @@ client.on("ready", () => {
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
 		}
 		client.user.setActivity(config.prefix + "help");
+		for (let command of commands)
+			console.log(command)
 	}
 });
 client.on("error", err => {
@@ -203,7 +204,7 @@ commands.setCommand("help", msg => {
 		embed = tools.defaultEmbed();
 		for (let prop of props) {
 			if (prop.show && prop.type == type) {
-				embed.addField(config.prefix + prop.name, prop.desc);
+				embed.addField(config.prefix + prop.name, prop.desc, true);
 			}
 		}
 		if (type == utilityType)
@@ -211,25 +212,25 @@ commands.setCommand("help", msg => {
 		else
 			msg.author.send(type + " (" + embed.fields.length + ")", embed);
 	}
-}, {maxargs: 0, props: new types.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
 commands.setCommand("prefix", msg => {
 	msg.channel.send("Really ? My prefix is ``" + config.prefix + "``.");
-}, {maxargs: 0, props: new types.Command("prefix", "if you don't know my prefix despite reading this", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("prefix", "if you don't know my prefix despite reading this", utilityType, true)});
 
 commands.setCommand("info", msg => {
 	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
 	});
-}, {maxargs: 0, props: new types.Command("info", "info about me", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("info", "info about me", utilityType, true)});
 
 commands.setCommand("uptime", msg => {
 	msg.channel.send("I have been up for " + uptime.strings().text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
-}, {maxargs: 0, props: new types.Command("uptime", "for how long the bot has been running", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
 commands.setCommand("serverinfo", async msg => {
 	msg.channel.send("", await msg.guild.embedInfo());
-}, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new types.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
+}, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new classes.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
 commands.setCommand("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -240,7 +241,7 @@ commands.setCommand("channelinfo", msg => {
 		msg.channel.send("This channel doesn't exist.");
 	else
 		msg.channel.send("", channel.embedInfo());
-}, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new types.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
+}, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new classes.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
 commands.setCommand("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -255,7 +256,7 @@ commands.setCommand("userinfo", async msg => {
 		else
 			msg.channel.send("You don't have the necessary permissions.");
 	}
-}, {override: true, dms: false, props: new types.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
+}, {override: true, dms: false, props: new classes.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
 
 commands.setCommand("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -266,7 +267,7 @@ commands.setCommand("roleinfo", msg => {
 		msg.channel.send("This role doesn't exist.");
 	else
 		msg.channel.send("", role.embedInfo());
-}, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new types.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
+}, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 commands.setCommand("join", msg => {
 	music.join(msg.member).then(() => {
@@ -281,7 +282,7 @@ commands.setCommand("join", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, function: msg => !memeing.has(msg.guild.id), props: new types.Command("join", "join a voice channel", musicType, true)});
+}, {dms: false, maxargs: 0, function: msg => !memeing.has(msg.guild.id), props: new classes.Command("join", "join a voice channel", musicType, true)});
 
 commands.setCommand("leave", msg => {
 	music.leave(msg.guild).then(() => {
@@ -291,14 +292,14 @@ commands.setCommand("leave", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("leave", "leave the voice channel", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("leave", "leave the voice channel", musicType, true)});
 
 commands.setCommand("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
 	try {
 		DrgMusic.videoWebsite(link);
 	} catch(err) {
-		msg.channel.send("This link is not valid.");
+		msg.channel.send("This link is not valid or this website is not supported.");
 		return;
 	}
 	msg.channel.send("Adding ``" + link + "`` to the playlist.").then(msg2 => {
@@ -311,7 +312,7 @@ commands.setCommand("request", msg => {
 			else funcs.musicErrors(msg, err);
 		});
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
+}, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
 commands.setCommand("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
@@ -324,10 +325,10 @@ commands.setCommand("query", msg => {
 			else funcs.musicErrors(msg, err);
 		});
 	});
-}, {dms: false, minargs: 1, props: new types.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
+}, {dms: false, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
 commands.setCommand("plremove", msg => {
-	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
+	let id = Math.floor(Number(msg.content.split(" ").last()))-1;
 	if (!tools.validStringInt(id)) {
 		msg.channel.send("This ID is invalid.");
 		return;
@@ -337,7 +338,7 @@ commands.setCommand("plremove", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
+}, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
 
 commands.setCommand("skip", msg => {
 	music.playNext(msg.guild).then(current => {
@@ -345,7 +346,7 @@ commands.setCommand("skip", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("skip", "skip the current music", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("skip", "skip the current music", musicType, true)});
 
 commands.setCommand("plclear", msg => {
 	music.clearPlaylist(msg.guild).then(nb => {
@@ -356,7 +357,7 @@ commands.setCommand("plclear", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err)
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("plclear", "clear the playlist", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("plclear", "clear the playlist", musicType, true)});
 
 commands.setCommand("plshuffle", msg => {
 	music.shufflePlaylist(msg.guild).then(() => {
@@ -364,7 +365,7 @@ commands.setCommand("plshuffle", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("plshuffle", "shuffle the playlist", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("plshuffle", "shuffle the playlist", musicType, true)});
 
 commands.setCommand("loop", msg => {
 	music.toggleLooping(msg.guild).then(looping => {
@@ -379,7 +380,7 @@ commands.setCommand("loop", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("loop", "loop the current music", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("loop", "loop the current music", musicType, true)});
 
 commands.setCommand("plloop", msg => {
 	music.togglePlaylistLooping(msg.guild).then(looping => {
@@ -390,7 +391,7 @@ commands.setCommand("plloop", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("plloop", "loop the playlist", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("plloop", "loop the playlist", musicType, true)});
 
 commands.setCommand("toggle", msg => {
 	music.toggle(msg.guild).then(paused => {
@@ -401,19 +402,18 @@ commands.setCommand("toggle", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("toggle", "pause/resume the music", musicType, true)});;
+}, {dms: false, maxargs: 0, props: new classes.Command("toggle", "pause/resume the music", musicType, true)});;
 
 commands.setCommand("volume", msg => {
-	let volume = Number(msg.content.split(" ").pop());
+	let volume = Number(msg.content.split(" ").last());
 	if (!tools.validStringInt(volume))
 		volume = 100;
 	music.setVolume(msg.guild, volume).then(old => {
 		msg.channel.send("The volume has been set to ``" + volume + "%``.")
 	}).catch(err => {
-		if (err.message == "invalidVolume") msg.channel.send("The volume must be above ``0``.");
-		else funcs.musicErrors(msg, err);
+		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new types.Command("volume [value]", "set the volume of the music", musicType, true)});
+}, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("volume [value]", "set the volume of the music", musicType, true)});
 
 commands.setCommand("current", msg => {
 	music.currentInfo(msg.guild).then(current => {
@@ -434,7 +434,7 @@ commands.setCommand("current", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("current", "info about the current music", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("current", "info about the current music", musicType, true)});
 
 commands.setCommand("playlist", msg => {
 	music.playlistInfo(msg.guild).then(playlist => {
@@ -454,7 +454,7 @@ commands.setCommand("playlist", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err)
 	});
-}, {dms: false, maxargs: 0, props: new types.Command("playlist", "info about the playlist", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("playlist", "info about the playlist", musicType, true)});
 
 commands.setCommand("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -474,7 +474,7 @@ commands.setCommand("shitpost", msg => {
 		console.error(err);
 		msg.channel.send("Sorry, but I'm not in the mood for shitposting right now.")
 	});
-}, {props: new types.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
+}, {props: new classes.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
 
 commands.setCommand("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
@@ -489,11 +489,11 @@ commands.setCommand("roll", msg => {
 		max = Number(args[0]);
 	let res = tools.random(1, max);
 	msg.reply(res + "/" + max + " (:game_die:)")
-}, {props: new types.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
+}, {props: new classes.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
 
 commands.setCommand("z0r", msg => {
 	msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
-}, {props: new types.Command("z0r", "get a random z0r.de link", funType, true)});
+}, {props: new classes.Command("z0r", "get a random z0r.de link", funType, true)});
 
 commands.setCommand("stopclever", msg => {
 	clever = false;
@@ -554,13 +554,13 @@ commands.setCommand("kill", msg => {
 commands.setCommand("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.getHTTP().then(res => {
-		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
+		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').last().split('">').first()});
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
-}, {maxargs: 0, props: new types.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
+}, {maxargs: 0, props: new classes.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.setCommand("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new types.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
+commands.setCommand("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
 commands.setCommand("r34", funcs.sendR34, {minargs: 1, nsfw: true});
 
 commands.setCommand("waifu", msg => {
@@ -610,10 +610,10 @@ commands.setCommand("invite", msg => {
 		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
 	else
 		msg.channel.send("And... you're arrived!");
-}, {maxargs: 0, props: new types.Command("invite", "get an invite to the test server", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("invite", "get an invite to the test server", utilityType, true)});
 
 commands.setCommand("timer", msg => {
-	let duration = msg.content.split(" ").pop();
+	let duration = msg.content.split(" ").last();
 	let t = new Duration(Number(duration));
 	let o = t.getTimer();
 	o.on("run", nb => {
@@ -707,6 +707,14 @@ String.prototype.getHTTP = function() {
 			reject(err);
 		});
 	});
+}
+
+Array.prototype.first = function() {
+	return this[0];
+}
+
+Array.prototype.last = function() {
+	return this[this.length-1];
 }
 
 discord.Message.prototype.dreply = function(content) {

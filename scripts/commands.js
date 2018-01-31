@@ -8,9 +8,9 @@ function CommandsHandler(prefix) {
 	var commands = new Map();
 	this.setCommand = (name, callback, opts) => {
 		if (name === undefined)
-			throw new Error("missing parameter: command name");
+			throw new Error("MissingParameter: command");
 		if (callback === undefined)
-			throw new Error("missing parameter: callback function");
+			throw new Error("MissingParameter: callback function");
 		let options = opts !== undefined ? opts : {};
 		if (options.override === undefined)
 			options.override = false;
@@ -26,8 +26,8 @@ function CommandsHandler(prefix) {
 			options.users = [];
 		if (options.permissions === undefined)
 			options.permissions = [];
-		if (options.roles === undefined)
-			options.roles = [];
+		if (options.rolenames === undefined)
+			options.rolenames = [];
 		if (options.nsfw === undefined)
 			options.nsfw = false;
 		if (options.bots === undefined)
@@ -49,12 +49,12 @@ function CommandsHandler(prefix) {
 			channels: options.channels,
 			users: options.users,
 			permissions: options.permissions,
-			roles: options.roles,
+			rolenames: options.rolenames,
 			nsfw: options.nsfw,
 			bots: options.bots,
-			minargs: Math.floor(options.minargs),
-			maxargs: Math.floor(options.maxargs),
-			uses: Math.floor(options.uses),
+			minargs: Math.round(Number(options.minargs)),
+			maxargs: Math.round(Number(options.maxargs)),
+			uses: Math.round(Number(options.uses)),
 			props: options.props,
 			function: options.function,
 			override: options.override,
@@ -63,31 +63,53 @@ function CommandsHandler(prefix) {
 		return this;
 	}
 	this.hasCommand = name => {
+		if (name === undefined)
+			throw new Error("MissingParameter: command");
+		if (name instanceof Command)
+			name = name.getName();
 		return commands.has(name);
 	}
 	this.getCommand = name => {
+		if (name === undefined)
+			throw new Error("MissingParameter: command");
+		if (name instanceof Command)
+			name = name.getName();
 		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).command;
 	}
 	this.removeCommand = name => {
+		if (name === undefined)
+			throw new Error("MissingParameter: command");
+		if (name instanceof Command)
+			name = name.getName();
 		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		commands.delete(name);
 		return this;
 	}
 	this.toggleCommand = name => {
+		if (name === undefined)
+			throw new Error("MissingParameter: command");
+		if (name instanceof Command)
+			name = name.getName();
 		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		commands.get(name).active = !commands.get(name).active;
 		return this;
 	}
 	this.isActive = name => {
+		if (name === undefined)
+			throw new Error("MissingParameter: command");
+		if (name instanceof Command)
+			name = name.getName();
 		if (!this.hasCommand(name))
 			throw new Error("unknownCommand");
 		return commands.get(name).active;
 	}
 	this.check = (msg, exec) => {
+		if (msg === undefined)
+			throw new Error("MissingParameter: message");
 		if (exec === undefined)
 			exec = true;
 		return new Promise((resolve, reject) => {
@@ -121,17 +143,58 @@ function CommandsHandler(prefix) {
 		return props;
 	}
 	this.setCommandName = (oldName, newName) => {
+		if (oldName === undefined)
+			throw new Error("MissingParameter: old command name");
+		if (oldName instanceof Command)
+			oldName = oldName.getName();
+		if (newName === undefined)
+			throw new Error("MissingParameter: new command name");
 		if (!this.hasCommand(oldName))
 			throw new Error("unknownCommand");
 		let command = this.getCommand(oldName);
 		let active = commands.get(oldName).active;
 		this.removeCommand(oldName);
-		command._name = newName;
-		commands.set(newName, Object.seal({command: Object.seal(command), active: active}));
-		return command;
+		this.setCommand(newName, command.callback, command.options);
+		commands.get(newName).active = active;
+		return this.getCommand(newName);
 	}
 	this.isOwner = user => {
 		return this.owners.includes(user.id);
+	}
+
+	//-----------
+	var current = 0;
+	this[Symbol.iterator] = () => {
+		return {
+			next: () => {
+				let array = Array.from(commands.values())
+				if (current < array.length) {
+					current++;
+					return {value: array[current-1].command, done: false};
+				} else {
+					current = 0;
+					return {done: true};
+				}
+			}
+		}
+	}
+	this.toObject = () => {
+		let object = {};
+		for (let command of this)
+			object[name] = command.command;
+		return object;
+	}
+	this.toArray = () => {
+		let array = [];
+		for (let command of this)
+			array.push(command);
+		return array;
+	}
+	this.toMap = () => {
+		let map = new Map();
+		for (let command of this)
+			map.set(command.getName(), command);
+		return map;
 	}
 }
 
@@ -139,15 +202,12 @@ function Command(comName, callback, options, handler) {
 	this.callback = callback;
 	this.options = options;
 	this.getName = () => comName;
-	this.setName = newName => {
-		handler.setCommandName(comName, newName);
-		return this;
-	}
+	this.setName = newName => handler.setCommandName(comName, newName);
 	this.check = (msg, exec) => {
 		return new Promise((resolve, reject) => {
 			try {
 				if (exec === undefined)
-					exec = true;
+					exec = false;
 				let nbargs = msg.content.split(" ").slice(1).length;
 				let check = {valid: true, nbargs: nbargs};
 				if (!msg.content.startsWith(handler.prefix)) {
@@ -207,8 +267,8 @@ function Command(comName, callback, options, handler) {
 						check.reasons.push("missing permissions");
 					}
 				}
-				if (msg.channel.type == "text" && this.options.roles.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
-					if (!player.roles.some(role => this.options.roles.includes(role.name.toLowerCase()))) {
+				if (msg.channel.type == "text" && this.options.rolenames.length != 0 && !(handler.isOwner(msg.author) && this.options.override)) {
+					if (!player.rolenames.some(role => this.options.rolenames.includes(role.name.toLowerCase()))) {
 						check.valid = false;
 						if (check.reasons === undefined)
 							check.reasons = [];

@@ -1,11 +1,11 @@
 "use strict";
 const discord = require("discord.js");
-const drabot = require("./drabot.js");
-const config = require("./config.js");
-const tools = require("./tools.js");
-const types = require("./types.js");
-const pack = require("./package.json");
 const snekfetch = require("snekfetch");
+
+const drabot = require("../drabot.js");
+const config = require("../config.js");
+const tools = require("./tools.js");
+const pack = require("../package.json");
 
 exports.showMemberInfo = function(member) {
 	let tempRoles = Array.from(member.roles.values());
@@ -172,7 +172,7 @@ exports.sendR34 = async function(msg) {
 		search = search.replace(" ", "_");
 	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
 	link.getHTTP().then(res => {
-		let nb = Number(res.text.split('">Last</a>').shift().split(' | <a href="/post/list/').pop().split("/").pop());
+		let nb = Number(res.text.split('">Last</a>').first().split(' | <a href="/post/list/').last().split("/").last());
 		let page = tools.random(1, nb);
 		link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
 		link.getHTTP().then(res => {
@@ -182,7 +182,7 @@ exports.sendR34 = async function(msg) {
 			let htmlTab = html.split("<-SPLIT->-");
 			let imgs = [];
 			for (let i = 0; i < htmlTab.length; i++)
-				if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').pop());
+				if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').last());
 			if (imgs.length != 0)
 				msg.channel.send("Search: ``" + searchOld + "``", {file: tools.randTab(imgs)});
 			else
@@ -213,5 +213,6 @@ exports.musicErrors = (msg, err) => {
 	else if (err.message == "emptyPlaylist") msg.channel.send("The playlist is empty.");
 	else if (err.message == "invalidMusicIndex") msg.channel.send("There is no music with that ID in the playlist.");
 	else if (err.message == "unknownOrNotSupportedVideoWebsite") msg.channel.send("Sorry but I don't know this website.");
+	else if (err.message == "invalidVolume") msg.channel.send("The volume must be above ``0``.");
 	else exports.logError(msg, err);
 }

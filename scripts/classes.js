@@ -1,6 +1,7 @@
 "use strict";
 
 const discord = require("discord.js")
+
 const tools = require("./tools.js");
 
 exports.Command = function(name, desc, type, show) {

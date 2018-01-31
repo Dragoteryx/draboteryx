@@ -1,15 +1,15 @@
 "use strict";
 
 // IMPORTS
+const discord = require("discord.js");
 const ytdl = require("ytdl-core");
 const fs = require("fs");
-const sc = require("node-soundcloud");
 const mm = require("musicmetadata");
 const youtubeSearch = require("youtube-search");
 const EventEmitter = require("events");
+//const sc = require("node-soundcloud");
 
 // GLOBALS
-let scInit = false;
 
 // FUNCTIONS
 function sleep(ms) {
@@ -19,9 +19,9 @@ function sleep(ms) {
 function videoWebsite(str) {
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
-	else if (str.startsWith("https://soundcloud.com/") && scInit)
+	/*else if (str.startsWith("https://soundcloud.com/") && scInit)
 		return "Soundcloud";
-	/*else if (str.startsWith("http://www.dailymotion.com/video/") || str.startsWith("http://dai.ly/"))
+	else if (str.startsWith("http://www.dailymotion.com/video/") || str.startsWith("http://dai.ly/"))
 		return "Dailymotion";
 	else if (str.startsWith("http://www.nicovideo.jp/watch/") || str.startsWith("http://nico.ms/"))
 		return "NicoNicoVideo";*/
@@ -32,8 +32,16 @@ function playYoutube(voiceConnection, link, passes) {
 	return voiceConnection.playStream(ytdl(link, {filter:"audioonly"}), {passes: passes, bitrate:"auto"});
 }
 
-function playSoundcloud(voiceConnection, link, passes) {
-	return voiceConnection.playStream(link, {passes: passes, bitrate:"auto"});
+function queryYoutube(query, apiKey) {
+	return new Promise((resolve, reject) => {
+		youtubeSearch(query, {key: apiKey, maxResults: 1, type: "video"}, (err, res) => {
+			if (err) reject(err);
+			else if (res[0] !== undefined)
+				resolve(res.shift().link);
+			else
+				reject(new Error("noResults"));
+		});
+	});
 }
 
 function youtubeInfo(link) {
@@ -73,41 +81,6 @@ function fileInfo(path) {
 	});
 }
 
-function soundcloudInfo(link){
-	return new Promise((resolve, reject) => {
-		lafonction(link).then(info => {
-			resolve(Object.freeze({
-				title: info.title,
-				link: link,
-				description: info.description,
-				author: {
-					name: info.author.name,
-					avatarURL: info.author.avatar,
-					channelURL: info.author.channel_url
-				},
-				thumbnailURL: info.thumbnail_url,
-				maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
-				length: Number(info.length_seconds)*1000,
-				keywords: info.keywords
-			}));
-		}).catch(err => {
-			reject(err);
-		});
-	});
-}
-
-function queryYoutube(query, apiKey) {
-	return new Promise((resolve, reject) => {
-		youtubeSearch(query, {key: apiKey, maxResults: 1, type: "video"}, (err, res) => {
-			if (err) reject(err);
-			else if (res[0] !== undefined)
-				resolve(res.shift().link);
-			else
-				reject(new Error("noResults"));
-		});
-	});
-}
-
 //CLASSES
 function MusicHandler(client) {
 	EventEmitter.call(this);
@@ -135,8 +108,8 @@ function MusicHandler(client) {
 	});
 	var playlists = new Map();
 	this.getClient = () => client;
-	this.joined = () => {
-		let guilds = new Map();
+	this.fetchGuilds = () => {
+		let guilds = new discord.Collection();
 		let ids = Array.from(playlists.keys());
 		for (let id of ids)
 			guilds.set(id, playlists.get(id).guild);
@@ -520,16 +493,16 @@ function Music(link, member, passes, file) {
 					title: this.title,
 					link: this.link,
 					description: this.description,
-					author: this.author,
+					author: Object.freeze(this.author),
 					thumbnailURL: this.thumbnailURL,
 					maxResThumbnailURL: this.thumbnailURL.replace("default.jpg", "maxresdefault.jpg"),
 					length: this.length,
 					time: 0,
-					keywords: this.keywords,
+					keywords: Object.freeze(this.keywords),
 					file: false,
 					website: "Youtube",
 					member: this.member,
-					props: this.props
+					props: Object.freeze(this.props)
 				});
 			}
 		} else {
@@ -551,6 +524,5 @@ MusicHandler.videoWebsite = videoWebsite;
 MusicHandler.playYoutube = playYoutube;
 MusicHandler.youtubeInfo = youtubeInfo;
 MusicHandler.queryYoutube = queryYoutube;
-MusicHandler.fileInfo = fileInfo;
 
 module.exports = MusicHandler;

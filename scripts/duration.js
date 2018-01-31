@@ -15,7 +15,7 @@ function Duration(timestamp) {
 	var hours = 0;
 	var minutes = 0;
 	var seconds = 0;
-	var calc = () => {
+	function calc() {
 		secondsAbs = Math.floor(timestamp/1000);
 		minutesAbs = Math.floor(secondsAbs/60);
 		hoursAbs = Math.floor(minutesAbs/60);
@@ -52,8 +52,8 @@ function Duration(timestamp) {
 			seconds: secondsAbs
 		});
 	}
-	this.setInterval = callback => setInterval(callback, timestamp);
-	this.setTimeout = callback => setTimeout(callback, timestamp);
+	this.getTimestamp = () => timestamp;
+	this.sleep = () => new Promise(resolve => setTimeout(resolve, timestamp));
 	this.strings = () => {
 		if (this.auto) this.refresh();
 		let object = {};
