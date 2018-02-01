@@ -65,6 +65,4 @@ exports.stringToRole = function(str, guild) {
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
 
-exports.validStringInt = str => str == Number(str);
-
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));

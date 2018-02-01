@@ -325,7 +325,7 @@ commands.set("query", msg => {
 
 commands.set("plremove", msg => {
 	let id = Math.floor(Number(msg.content.split(" ").last()))-1;
-	if (!tools.validStringInt(id)) {
+	if (isNaN(id)) {
 		msg.channel.send("This ID is invalid.");
 		return;
 	}
@@ -399,8 +399,8 @@ commands.set("toggle", msg => {
 
 commands.set("volume", msg => {
 	let volume = Number(msg.content.split(" ").last());
-	if (!tools.validStringInt(volume))
-		volume = 100;
+	if (isNaN(volume));
+		return;
 	music.setVolume(msg.guild, volume).then(old => {
 		msg.channel.send("The volume has been set to ``" + volume + "%``.")
 	}).catch(err => {
@@ -480,7 +480,7 @@ commands.set("say", msg => {
 commands.set("roll", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let max = 6;
-	if (args.length == 1 && tools.validStringInt(args[0]) && Number(args[0]) > 0)
+	if (args.length == 1 && !isNaN(Number(args[0])) && Number(args[0]) > 0)
 		max = Number(args[0]);
 	let res = tools.random(1, max);
 	msg.reply(res + "/" + max + " (:game_die:)")
@@ -657,6 +657,10 @@ commands.set("mix", msg => {
 		str += mot + " ";
 	msg.channel.send("Before:```\n" + msg.content.replace(config.prefix + "mix ", "") + "\n```After:```\n" + str + "\n```");
 }, {props: new classes.Command("mix", "mix a sentence", funType, true)});
+
+commands.set("whatisthebestyoutubechannel?", msg => {
+	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
+}, {maxargs: 0});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
