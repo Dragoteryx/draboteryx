@@ -85,6 +85,12 @@ music.on("memberLeave", (member, channel) => {
 	}
 });
 
+let obj = {
+	get test() {return 3}
+}
+
+console.log(Object.getOwnPropertyDescriptors(obj));
+
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
 
@@ -199,8 +205,8 @@ commands.set("help", msg => {
 	for (let type of commandTypes) {
 		embed = tools.defaultEmbed();
 		for (let command of commands) {
-			if (command.options.props !== undefined && command.options.props.show && command.options.props.type == type) {
-				embed.addField(config.prefix + command.options.props.name, command.options.props.desc, true);
+			if (command[1].options.props !== undefined && command[1].options.props.show && command[1].options.props.type == type) {
+				embed.addField(config.prefix + command[1].options.props.name, command[1].options.props.desc, true);
 			}
 		}
 		if (type == utilityType)
