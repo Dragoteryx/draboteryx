@@ -209,6 +209,20 @@ commands.set("help", msg => {
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
+commands.set("prefix", msg => {
+	let args = msg.content.split(" ");
+	if (args.length == 1)
+		msg.channel.send("Really? My prefix is ``" + config.prefix + "``.");
+	else {
+		if (!isOwner(msg.author))
+			msg.channel.send("Only my creators are allowed to change my prefix!");
+		else {
+			config.prefix = args.last();
+			msg.channel.send("My prefix is now ``" + config.prefix + "``.")
+		}
+	}
+}, {maxargs: 1, props: new classes.Command("prefix", "if you don't know what my prefix is despite reading this", utilityType, true)});
+
 commands.set("info", msg => {
 	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
@@ -242,7 +256,7 @@ commands.set("userinfo", async msg => {
 	if (member === undefined)
 		msg.channel.send("This user doesn't exist.");
 	else {
-		if (commands.owners.includes(msg.author.id) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
+		if (isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
 			msg.channel.send("", member.embedInfo());
 		else
 			msg.channel.send("You don't have the necessary permissions.");
@@ -505,6 +519,7 @@ commands.set("setName", msg => {
 	let name = msg.content.replace(config.prefix + "setName ", "");
 	client.user.setUsername(name).then(() => {
 		console.log("[DRABOT] New name: " + name);
+		msg.channel.send("My name is ``" + name + "``.");
 	}, () => {
 		console.log("[DRABOT] Couldn't change name");
 	});
@@ -514,6 +529,7 @@ commands.set("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
 	client.user.setActivity(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
+		msg.channel.send("Playing ``" + game + "``.");
 	}, () => {
 		console.log("[DRABOT] Couldn't change game");
 	});
@@ -523,6 +539,7 @@ commands.set("setAvatar", msg => {
 	let avatar = msg.content.replace(config.prefix + "setAvatar ", "");
 	client.user.setAvatar(avatar).then(() => {
 		console.log("[DRABOT] New avatar: " + avatar);
+		msg.channel.send("My new avatar: ``" + avatar + "``.");
 	}, () => {
 		console.log("[DRABOT] Couldn't change avatar");
 	});
@@ -635,6 +652,20 @@ commands.set("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
 }, {maxargs: 0});
 
+commands.set("hug", async msg => {
+	let member = msg.content.split(" ").length == 1 ? msg.member : await tools.stringToMember(msg.content.replace(config.prefix + "hug ", ""), msg.guild);
+	console.log(member);
+	if (member === undefined)
+		msg.channel.send("Who is that?");
+	else {
+		if (member.user.id == config.users.vlt)
+			msg.channel.send("Keep that monster away from me! 😱");
+		else {
+			msg.channel.send(member.displayName + ", want a hug?", {files: ["./files/hug.gif"]});
+		}
+	}
+}, {props: new classes.Command("hug", "ask me to hug someone", funType, true)});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -665,6 +696,10 @@ function addMeme(name) {
 			});
 		}
 	}, {dms: false, function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
+}
+
+function isOwner(user) {
+	return commands.owners.includes(user.id);
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
