@@ -4,6 +4,7 @@ const snekfetch = require("snekfetch");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
+const classes = require("./classes.js");
 const tools = require("./tools.js");
 const pack = require("../package.json");
 
@@ -161,7 +162,7 @@ exports.showInfo = async msg => {
 	return info;
 }
 
-exports.sendR34 = async function(msg) {
+exports.sendR34 = function(msg) {
 	let searchOld;
 	if (msg.content.startsWith(config.prefix + "rule34 "))
 		searchOld = msg.content.replace(config.prefix + "rule34 ","");
@@ -171,26 +172,24 @@ exports.sendR34 = async function(msg) {
 	while (search.includes(" "))
 		search = search.replace(" ", "_");
 	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
-	link.getHTTP().then(res => {
+	link.fetchHTTP().then(res => {
 		let nb = Number(res.text.split('">Last</a>').first().split(' | <a href="/post/list/').last().split("/").last());
 		let page = tools.random(1, nb);
-		link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
-		link.getHTTP().then(res => {
-			let html = res.text;
-			for (let i = 0; i <= 100; i++)
-				html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
-			let htmlTab = html.split("<-SPLIT->-");
-			let imgs = [];
-			for (let i = 0; i < htmlTab.length; i++)
-				if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').last());
-			if (imgs.length != 0)
-				msg.channel.send("Search: ``" + searchOld + "``", {file: tools.randTab(imgs)});
-			else
-				msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
-		}).catch(err => {
-			msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
-		});
-	}).catch(err => {
+		let link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
+		return link.fetchHTTP();
+	}).then(res => {
+		let html = res.text;
+		for (let i = 0; i <= 100; i++)
+			html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
+		let htmlTab = html.split("<-SPLIT->-");
+		let imgs = [];
+		for (let i = 0; i < htmlTab.length; i++)
+			if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').last());
+		if (imgs.length != 0)
+			msg.channel.send("Search: ``" + searchOld + "``", {file: tools.randTab(imgs)});
+		else
+			return Promise.reject();
+	}).catch(() => {
 		msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
 	});
 }
@@ -203,16 +202,16 @@ exports.logError = (msg, err) => {
 }
 
 exports.musicErrors = (msg, err) => {
-	if (err.message == "memberNotInAVoiceChannel") msg.channel.send("You're not in a voice channel.");
-	else if (err.message == "voiceChannelNotJoinable") msg.channel.send("I can't join this voice channel.");
-	else if (err.message == "voiceChannelNotSpeakable") msg.channel.send("I'm not allowed to speak in this voice channel.");
-	else if (err.message == "voiceChannelFull") msg.channel.send("This voice channel is full.");
-	else if (err.message == "clientAlreadyInAVoiceChannel") msg.channel.send("I'm already in a voice channel.");
-	else if (err.message == "clientNotInAVoiceChannel") msg.channel.send("I am not in a voice channel.");
-	else if (err.message == "clientNotPlaying") msg.channel.send("I am not playing music at the moment.");
-	else if (err.message == "emptyPlaylist") msg.channel.send("The playlist is empty.");
-	else if (err.message == "invalidMusicIndex") msg.channel.send("There is no music with that index in the playlist.");
-	else if (err.message == "unknownOrNotSupportedVideoWebsite") msg.channel.send("Sorry but I don't know this website.");
-	else if (err.message == "invalidVolume") msg.channel.send("The volume must be above ``0``.");
+	if (err.message == "this member is not in a voice channel") msg.channel.send("You're not in a voice channel.");
+	else if (err.message == "the client can't join this voice channel") msg.channel.send("I can't join this voice channel.");
+	else if (err.message == "the client is not authorized to speak in this channel") msg.channel.send("I'm not allowed to speak in this voice channel.");
+	else if (err.message == "this voice channel is full") msg.channel.send("This voice channel is full.");
+	else if (err.message == "the client already joined a voice channel in this guild") msg.channel.send("I'm already in a voice channel.");
+	else if (err.message == "the client is not in a voice channel") msg.channel.send("I am not in a voice channel.");
+	else if (err.message == "the client is not playing") msg.channel.send("I am not playing music at the moment.");
+	else if (err.message == "the playlist is empty") msg.channel.send("The playlist is empty.");
+	else if (err.message == "invalid music index") msg.channel.send("There is no music with that index in the playlist.");
+	else if (err.message == "this website is not supported") msg.channel.send("Sorry but I don't know this website.");
+	else if (err.message == "invalid volume") msg.channel.send("The volume must be above ``0``.");
 	else exports.logError(msg, err);
 }

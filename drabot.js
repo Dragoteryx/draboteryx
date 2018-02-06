@@ -85,17 +85,19 @@ music.on("memberLeave", (member, channel) => {
 	}
 });
 
-let obj = {
-	get test() {return 3}
-}
-
-console.log(Object.getOwnPropertyDescriptors(obj));
-
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
 
 	// COMMANDS
-	commands.check(msg).then(res => {
+	commands.check(msg, {prefix: config.prefix}).then(res => {
+		if (debug) {
+			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
+			let toLog = "";
+			if (msg.channel.type != "dm") toLog += "[DEBUG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
+			else toLog += "[DEBUG] (DM) " + msg.author.username + ": " + msg.content;
+			console.log(toLog);
+			console.log(res);
+		}
 		if (res.result.valid) {
 			let toLog = "";
 			if (msg.channel.type != "dm") toLog += "[COMMAND] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
@@ -108,14 +110,6 @@ client.on("message", msg => {
 			msg.channel.send("This is an owner only command.");
 		else if (res.result.reasons.includes("missing permissions"))
 			msg.channel.send("You don't have the necessary permissions.");
-		if (debug) {
-			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
-			let toLog = "";
-			if (msg.channel.type != "dm") toLog += "[DEBUG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-			else toLog += "[DEBUG] (DM) " + msg.author.username + ": " + msg.content;
-			console.log(toLog);
-			console.log(res)
-		}
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
@@ -168,7 +162,6 @@ client.on("message", msg => {
 			}
 		});
 	}
-
 });
 
 // CONNECT THE BOT TO DISCORD ----------------------------------------------------------------------------------------------
@@ -206,7 +199,7 @@ commands.set("help", msg => {
 		embed = tools.defaultEmbed();
 		for (let command of commands) {
 			if (command[1].options.props !== undefined && command[1].options.props.show && command[1].options.props.type == type) {
-				embed.addField(config.prefix + command[1].options.props.name, command[1].options.props.desc, true);
+				embed.addField(config.prefix + command[1].options.props.name, command[1].options.props.desc);
 			}
 		}
 		if (type == utilityType)
@@ -215,10 +208,6 @@ commands.set("help", msg => {
 			msg.author.send(type + " (" + embed.fields.length + ")", embed);
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
-
-commands.set("prefix", msg => {
-	msg.channel.send("Really ? My prefix is ``" + config.prefix + "``.");
-}, {maxargs: 0, props: new classes.Command("prefix", "if you don't know my prefix despite reading this", utilityType, true)});
 
 commands.set("info", msg => {
 	funcs.showInfo(msg).then(embed => {
@@ -253,7 +242,7 @@ commands.set("userinfo", async msg => {
 	if (member === undefined)
 		msg.channel.send("This user doesn't exist.");
 	else {
-		if (commands.isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
+		if (commands.owners.includes(msg.author.id) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
 			msg.channel.send("", member.embedInfo());
 		else
 			msg.channel.send("You don't have the necessary permissions.");
@@ -308,9 +297,9 @@ commands.set("request", msg => {
 		music.addMusic(link, msg.member, {passes: 10}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
-			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			else if (err.message == "invalidYoutubeLink") msg2.edit("Something looks odd about this Youtube link. The ID doesn't seem to be complete");
-			else if (err.message == "unavailableYoutubeVideo") msg2.edit("There doesn't seem to exist a video sporting such an ID.");
+			if (err.message == "the client is not in a voice channel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+			else if (err.message == "this video id is invalid") msg2.edit("This Youtube link is invalid.");
+			else if (err.message == "this video is unavailable") msg2.edit("This video is unavailable.");
 			else funcs.musicErrors(msg, err);
 		});
 	});
@@ -322,8 +311,8 @@ commands.set("query", msg => {
 		music.addMusic(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
-			if (err.message == "clientNotInAVoiceChannel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			else if (err.message == "noResults") msg2.edit("Sorry but I did not find anything.");
+			if (err.message == "the client is not in a voice channel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+			else if (err.message == "no query results") msg2.edit("Sorry but I did not find anything.");
 			else funcs.musicErrors(msg, err);
 		});
 	});
@@ -466,7 +455,7 @@ commands.set("shitpost", msg => {
 			link += arg + "_";
 		link = link.substring(0, link.length-1);
 	}
-	link.getHTTP().then(res => {
+	link.fetchHTTP().then(res => {
 		if (res.text == "shitpostGenerationError")
 			msg.channel.send("I did not find any shitpost relating to your query sorry.");
 		else
@@ -554,14 +543,14 @@ commands.set("kill", msg => {
 
 commands.set("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
-	lien.getHTTP().then(res => {
+	lien.fetchHTTP().then(res => {
 		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').last().split('">').first()});
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
 }, {maxargs: 0, props: new classes.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.set("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "required on any Discord bot", nsfwType, true)});
+commands.set("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "if it exists...", nsfwType, true)});
 commands.set("r34", funcs.sendR34, {minargs: 1, nsfw: true});
 
 commands.set("waifu", msg => {
@@ -613,19 +602,6 @@ commands.set("invite", msg => {
 		msg.channel.send("And... you're arrived!");
 }, {maxargs: 0, props: new classes.Command("invite", "get an invite to the test server", utilityType, true)});
 
-commands.set("timer", msg => {
-	let duration = msg.content.split(" ").last();
-	let t = new Duration(Number(duration));
-	let o = t.getTimer();
-	o.on("run", nb => {
-		msg.channel.send(nb);
-	});
-	o.on("end", () => {
-		msg.channel.send("Fini :v");
-	});
-	o.run();
-}, {minargs: 1, maxargs: 1});
-
 commands.set("chrischansong", msg => {
 	music.addMusic("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
@@ -654,15 +630,6 @@ commands.set("nis", async msg => {
 		});
 	}
 }, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
-
-commands.set("mix", msg => {
-	let mots = msg.content.split(" ").slice(1);
-	mots.sort(() => Math.random() - 0.5);
-	let str = "";
-	for (let mot of mots)
-		str += mot + " ";
-	msg.channel.send("Before:```\n" + msg.content.replace(config.prefix + "mix ", "") + "\n```After:```\n" + str + "\n```");
-}, {props: new classes.Command("mix", "mix a sentence", funType, true)});
 
 commands.set("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
@@ -701,15 +668,13 @@ function addMeme(name) {
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
-String.prototype.getHTTP = function() {
+String.prototype.fetchHTTP = function() {
 	return new Promise((resolve, reject) => {
 		if (debug)
-			console.log("[HTTP] Get " + this);
-		snekfetch.get(this).then(res => {
-			resolve(res);
-		}, err => {
-			reject(err);
-		});
+			console.log("[HTTP] Fetch " + this);
+		snekfetch.get(this)
+		.then(resolve)
+		.catch(reject);
 	});
 }
 

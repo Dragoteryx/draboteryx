@@ -10,24 +10,24 @@ function prv(object) {
 }
 
 class CommandsHandler extends Map {
-	constructor(prefix) {
+	constructor() {
 		super();
-		this.prefix = prefix;
+		this.defaultPrefix;
 		this.owners = [];
 	}
 	set(name, callback, opts) {
 		if (name === undefined)
-			throw new Error("parameter 'name' is missing");
+			throw new Error("parameter 'name' is undefined");
 		if (callback === undefined)
-			throw new Error("parameter 'callback' is missing");
+			throw new Error("parameter 'callback' is undefined");
 		if (callback instanceof Command && callback.name == name) {
 			super.set(name, callback);
 			return;
 		}
 		if (typeof name != "string")
-			throw new TypeError("parameter 'name' must be a String");
+			throw new TypeError("'name' must be a String");
 		if (!(callback instanceof Function))
-			throw new TypeError("parameter 'callback' must be a Function");
+			throw new TypeError("'callback' must be a Function");
 		let options = opts !== undefined ? opts : {};
 		if (options.override === undefined)
 			options.override = false;
@@ -57,6 +57,8 @@ class CommandsHandler extends Map {
 			options.uses = -1;
 		if (options.props === undefined)
 			options.props = {};
+		if (options.delay === undefined)
+			options.delay = 0;
 		if (options.function === undefined)
 			options.function = () => true;
 		let command = new Command(name, callback, Object.seal({
@@ -73,6 +75,7 @@ class CommandsHandler extends Map {
 			maxargs: Math.round(Number(options.maxargs)),
 			uses: Math.round(Number(options.uses)),
 			props: options.props,
+			delay: options.delay,
 			function: options.function,
 			override: options.override,
 		}), this);
@@ -81,62 +84,49 @@ class CommandsHandler extends Map {
 	}
 	has(name) {
 		if (name === undefined)
-			throw new Error("parameter 'command' is missing");
+			throw new Error("parameter 'command' is undefined");
 		if (name instanceof Command)
 			name = name.name;
 		if (typeof name != "string")
-			throw new TypeError("parameter 'command' must be a String or a Command");
+			throw new TypeError("'command' must be a String or a Command");
 		return super.has(name);
 	}
 	get(name) {
-		if (name === undefined)
-			throw new Error("parameter 'command' is missing");
 		if (name instanceof Command)
 			name = name.name;
-		if (typeof name != "string")
-			throw new TypeError("parameter 'command' must be a String or a Command");
 		if (!this.has(name))
-			throw new Error("unknownCommand");
+			throw new Error("unknown command");
 		return super.get(name);
 	}
 	delete(name) {
-		if (name === undefined)
-			throw new Error("parameter 'command' is missing");
 		if (name instanceof Command)
 			name = name.name;
-		if (typeof name != "string")
-			throw new TypeError("parameter 'command' must be a String or a Command");
 		if (!this.has(name))
-			throw new Error("unknownCommand");
+			throw new Error("unknown command");
 		super.delete(name);
 		return this;
 	}
-	check(msg, exec) {
+	check(msg, options) {
+		let that = prv(this);
 		return new Promise((resolve, reject) => {
-			try {
-				if (msg === undefined)
-					throw new Error("parameter 'message' is missing");
-				if (!(msg instanceof discord.Message))
-					throw new TypeError("parameter 'message' must be a Message");
-				if (exec === undefined)
-					exec = true;
-				if (typeof exec != "boolean")
-					throw new TypeError("parameter 'execute' must be a Boolean");
-				if (!msg.content.startsWith(this.prefix)) {
-					resolve({command: null, result: {valid: false, reasons: ["no prefix"]}});
-					return;
-				}
-				let name = msg.content.replace(this.prefix, "").split(" ")[0];
-				if (!this.has(name))
-					resolve({command: null, result: {valid: false, reasons: ["unknown command"]}});
-				else {
-					let command = this.get(name);
-					command.check(msg, exec).then(result => {
-						resolve(Object.seal({command: command, result: result}));
-					}).catch(reject);
-				}
-			} catch(err) {
-				reject(err);
+			if (msg === undefined)
+				throw new Error("parameter 'message' is missing");
+			if (!(msg instanceof discord.Message))
+				throw new TypeError("parameter 'message' must be a Discord Message");
+			if (options === undefined)
+				options = {};
+			if (options.exec === undefined)
+				options.exec = true;
+			if (options.prefix === undefined)
+				options.prefix = that.defaultPrefix;
+			let name = msg.content.split(" ").shift().replace(options.prefix, "");
+			if (!this.has(name))
+				resolve(Object.freeze({command: undefined, result: {valid: false, reasons: ["unknown command"]}}));
+			else {
+				let command = this.get(name);
+				command.check(msg, options).then(res => {
+					resolve({command: command, result: res});
+				}).catch(reject);
 			}
 		});
 	}
@@ -165,7 +155,7 @@ class Command {
 		that.name = newn;
 		handler.set(newn, this);
 	}
-	check(msg, exec) {
+	check(msg, options) {
 		let that = prv(this);
 		return new Promise((resolve, reject) => {
 			try {
@@ -173,21 +163,21 @@ class Command {
 					throw new Error("parameter 'message' is missing");
 				if (!(msg instanceof discord.Message))
 					throw new TypeError("parameter 'message' must be a Message");
-				if (exec === undefined)
-					exec = true;
-				if (typeof exec != "boolean")
-					throw new TypeError("parameter 'execute' must be a Boolean");
-				if (exec === undefined)
-					exec = false;
+				if (options === undefined)
+					options = {};
+				if (options.exec === undefined)
+					options.exec = true;
+				if (options.prefix === undefined)
+					options.prefix = that.handler.defaultPrefix;
 				let nbargs = msg.content.split(" ").slice(1).length;
 				let check = {valid: true, nbargs: nbargs};
-				if (!msg.content.startsWith(that.handler.prefix)) {
+				if (!msg.content.startsWith(options.prefix)) {
 					check.valid = false;
 					if (check.reasons === undefined)
 						check.reasons = [];
 					check.reasons.push("no prefix");
 				}
-				let name = msg.content.replace(that.handler.prefix, "").split(" ")[0];
+				let name = msg.content.replace(options.prefix, "").split(" ")[0];
 				if (that.name != name) {
 					check.valid = false;
 					if (check.reasons === undefined)
@@ -288,12 +278,10 @@ class Command {
 						check.reasons = [];
 					check.reasons.push("boolean function");
 				}
-				if (exec && check.valid) {
-					if (this.options.uses > 0)
-						this.options.uses--;
-					let called = this.callback(msg);
-					if (called instanceof Promise)
-						called.catch(reject);
+				if (options.exec && check.valid) {
+					let execute = this.callback(msg);
+					if (execute instanceof Promise)
+						execute.catch(reject);
 				}
 				resolve(Object.freeze(check));
 			} catch(err) {

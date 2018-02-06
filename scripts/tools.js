@@ -2,6 +2,7 @@
 "use strict";
 
 const discord = require("discord.js");
+const https = require("https");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
