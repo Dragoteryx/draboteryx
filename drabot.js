@@ -438,6 +438,7 @@ commands.set("current", msg => {
 		info.setThumbnail(current.thumbnailURL)
 		.addField("Title", current.title, true)
 		.addField("Author", current.author.name + " (" + current.author.channelURL + ")", true)
+		.addField("Description", current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
 		.addField("Link", current.link, true)
 		.addField("Requested by", current.member, true);
 	} else {
