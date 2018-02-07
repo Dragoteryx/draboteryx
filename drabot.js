@@ -5,7 +5,6 @@ require("dotenv").config();
 const discord = require("discord.js");
 const fs = require("fs");
 const snekfetch = require("snekfetch");
-
 const cleverbotIO = require("cleverbot.io");
 
 // FILES ----------------------------------------------------------------------------------------------
@@ -24,6 +23,7 @@ const client = new discord.Client();
 const baby = new discord.Client();
 const music = new DrgMusic(client);
 const commands = new DrgCommands(config.prefix);
+const redis = require('redis').createClient(process.env.REDIS_URL);
 const vars = {};
 
 // GLOBALS ----------------------------------------------------------------------------------------------
@@ -38,6 +38,7 @@ uptime.auto = true;
 let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"];
 let memeing = new Map();
 let musicLeaves = new Map();
+let redisOK = false;
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -187,6 +188,13 @@ client.on("error", err => {
 login();
 for (let meme of memes)
 	addMeme(meme);
+
+redis.on("ready", () => {
+	redisOK = true;
+})
+redis.on("end", () => {
+	redisOK = false;
+})
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
 commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
@@ -460,6 +468,61 @@ commands.set("playlist", msg => {
 	} else msg.channel.send("The playlist is empty. Use ``" + config.prefix + "current`` to have information about the current music.");
 }, {dms: false, maxargs: 0, props: new classes.Command("playlist", "info about the playlist", musicType, true)});
 
+commands.set("plsave", msg => {
+	if (!redisOK) {
+		msg.channel.send("This command is unavailable at the moment.");
+		return;
+	}
+	let playlist = music.playlistInfo(msg.guild);
+	if (playlist === undefined)
+		msg.channel.send("I am not in a voice channel.");
+	else if (playlist.length == 0)
+		msg.channel.send("You really want to save an empty playlist ? 😕");
+	else {
+		let current = music.currentInfo(msg.guild);
+		let str = "";
+		if (!current.file)
+			str += " " + current.link;
+		for (let mus of playlist) {
+			if (!mus.file)
+				str += " " + mus.link;
+		}
+		str = str.replace(" ", "");
+		let nb = str.split(" ").length;
+		if (nb > 6)
+			msg.channel.send("You can only save up to ``6`` musics. You have ``" + nb + "`` counting the one playing.");
+		else {
+			redis.set("guilds->" + msg.guild.id + "->plsaved", str);
+			msg.channel.send("The current playlist has been saved. Use ``" + config.prefix + "plload`` to load it.");
+		}
+	}
+}, {dms: false, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
+
+commands.set("plload", msg => {
+	if (!redisOK) {
+		msg.channel.send("This command is unavailable at the moment.");
+		return;
+	}
+	if (!music.isConnected(msg.guild))
+		msg.channel.send("I am not in a voice channel.");
+	else {
+		redis.get("guilds->" + msg.guild.id + "->plsaved", async (err, str) => {
+			if (err) funcs.logError(msg, err);
+			if (str === null)
+				msg.channel.send("You need to save a playlist first using ``" + config.prefix + "plsave``.");
+			else {
+				let array = str.split(" ");
+				for (let link of array) {
+					try {
+						await music.addMusic(link, msg.member, {passes: 10});
+					} catch(err) {}
+				}
+				msg.channel.send("The playlist was successfully loaded.");
+			}
+		});
+	}
+}, {dms: false, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
+
 commands.set("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let link = "https://shitpostgenerator.herokuapp.com";
@@ -496,23 +559,22 @@ commands.set("roll", msg => {
 }, {props: new classes.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
 
 commands.set("z0r", msg => {
-	msg.channel.send("Enjoy ! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
+	msg.channel.send("Enjoy! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
 }, {props: new classes.Command("z0r", "get a random z0r.de link", funType, true)});
 
-commands.set("stopclever", msg => {
+commands.set("stopclever", async msg => {
 	clever = false;
 	console.log("[CLEVERBOT] Off");
-	msg.channel.send("Cleverbot has been disabled for ``10`` seconds.").then(async msg2 => {
-		for (let i = 8; i > 0; i = i - 2) {
-			await tools.sleep(2000);
-			msg2.edit("Cleverbot will be back in ``" + i + "`` seconds.");
-		}
+	let msg2 = await msg.channel.send("Cleverbot has been disabled for ``10`` seconds.");
+	for (let i = 8; i > 0; i = i - 2) {
 		await tools.sleep(2000);
-		clever = true;
-		console.log("[CLEVERBOT] On");
-		msg2.edit("Cleverbot is back!");
-		msg2.delete(3000);
-	});
+		msg2.edit("Cleverbot will be back in ``" + i + "`` seconds.");
+	}
+	await tools.sleep(2000);
+	clever = true;
+	console.log("[CLEVERBOT] On");
+	msg2.edit("Cleverbot is back!");
+	msg2.delete(3000);
 }, {owner: true, maxargs: 0});
 
 commands.set("setName", msg => {
@@ -520,7 +582,7 @@ commands.set("setName", msg => {
 	client.user.setUsername(name).then(() => {
 		console.log("[DRABOT] New name: " + name);
 		msg.channel.send("My name is ``" + name + "``.");
-	}, () => {
+	}).catch(() => {
 		console.log("[DRABOT] Couldn't change name");
 	});
 }, {owner: true, minargs: 1});
@@ -530,7 +592,7 @@ commands.set("setGame", msg => {
 	client.user.setActivity(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
 		msg.channel.send("Playing ``" + game + "``.");
-	}, () => {
+	}).catch(() => {
 		console.log("[DRABOT] Couldn't change game");
 	});
 }, {owner: true, minargs: 1});
@@ -540,17 +602,15 @@ commands.set("setAvatar", msg => {
 	client.user.setAvatar(avatar).then(() => {
 		console.log("[DRABOT] New avatar: " + avatar);
 		msg.channel.send("My new avatar: ``" + avatar + "``.");
-	}, () => {
+	}).catch(() => {
 		console.log("[DRABOT] Couldn't change avatar");
 	});
 }, {owner: true, minargs: 1, maxargs: 1});
 
 commands.set("debug", msg => {
 	debug = !debug;
-	if (debug)
-		msg.channel.send("Debug mode ON");
-	else
-		msg.channel.send("Debug mode OFF");
+	let str = debug ? "ON" : "OFF";
+	msg.channel.send("Debug mode " + str);
 }, {owner: true, maxargs: 0});
 
 commands.set("kill", msg => {
