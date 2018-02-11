@@ -416,9 +416,9 @@ commands.set("toggle", msg => {
 
 commands.set("volume", msg => {
 	let volume = Number(msg.content.split(" ").last());
-	if (isNaN(volume));
+	if (isNaN(volume))
 		return;
-	music.setVolume(msg.guild, volume).then(old => {
+	music.setVolume(msg.guild, volume).then(() => {
 		msg.channel.send("The volume has been set to ``" + volume + "%``.")
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
