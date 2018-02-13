@@ -1,6 +1,6 @@
 {
   "name": "draboteryx",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short. Use /help to learn how to use it.",
   "main": "drabot.js",
   "engines": {
@@ -10,7 +10,7 @@
     "cleverbot.io": "^1.0.4",
     "discord.js": "^11.3.0",
     "dotenv": "^4.0.0",
-    "drg-music2": "^1.1.0",
+    "drg-music2": "^1.2.0",
     "musicmetadata": "^2.0.5",
     "node-soundcloud": "0.0.6",
     "opusscript": "0.0.4",
