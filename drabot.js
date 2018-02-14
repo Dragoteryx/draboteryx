@@ -127,23 +127,6 @@ client.on("message", msg => {
 		});
 	}
 
-	// EXEC (special command)
-	else if (msg.content.startsWith(config.prefix + "exec ") && config.owners.includes(msg.author.id)) {
-		console.log("[EXEC]");
-		try {
-			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
-			console.log(util.inspect(val, {colors: true}));
-			msg.channel.send("Executed: ```js\n" + val + "\n```")
-			.catch(err => {
-				msg.channel.send("Execution sent to console.");
-			});
-			msg.react("✅");
-		} catch(err) {
-			funcs.logError(msg, err);
-			msg.react("⛔");
-		}
-	}
-
 	// CLEVERBOT
 	else if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
 		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
@@ -221,6 +204,28 @@ commands.setCommand("help", msg => {
 			msg.author.send(type + " (" + embed.fields.length + ")", embed);
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
+
+commands.setCommand("exec", msg => {
+	(async () => {
+		try {
+			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
+			let str = "Executed: ```js\n";
+			if (val instanceof Promise) {
+				val = await val;
+				str = "Executed (Promise): ```js\n";
+			}
+			console.dir(val, {colors: true});
+			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 0, breakLength: 0});
+			msg.channel.send(str + tosend + "\n```").catch(err => {
+				msg.channel.send("Execution sent to console.");
+			});
+			msg.react("✅");
+		} catch(err) {
+			funcs.logError(msg, err);
+			msg.react("⛔");
+		}
+	})();
+}, {owner: true, minargs: 1});
 
 commands.setCommand("prefix", msg => {
 	let args = msg.content.split(" ");
@@ -552,6 +557,12 @@ commands.setCommand("shitpost", msg => {
 commands.setCommand("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
 	msg.channel.send(content);
+	msg.delete();
+}, {owner: true, minargs: 1});
+
+commands.setCommand("ttsay", msg => {
+	let content = msg.content.replace(config.prefix + "ttsay ", "");
+	msg.channel.send(content, {tts: true});
 	msg.delete();
 }, {owner: true, minargs: 1});
 
