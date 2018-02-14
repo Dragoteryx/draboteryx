@@ -574,7 +574,7 @@ commands.setCommand("roll", msg => {
 }, {props: new classes.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
 
 commands.setCommand("z0r", msg => {
-	msg.channel.send("Enjoy! http://z0r.de/" + tools.randomValue(7912) + " (earphone/headphone users beware)");
+	msg.channel.send("Enjoy! http://z0r.de/" + tools.random(7912) + " (earphone/headphone users beware)");
 }, {props: new classes.Command("z0r", "get a random z0r.de link", funType, true)});
 
 commands.setCommand("stopclever", async msg => {

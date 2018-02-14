@@ -83,7 +83,7 @@ class CommandsHandler {
 			override: options.override,
 		}), this);
 		that.commands.set(name, Object.seal(command));
-		return this;
+		return that.commands.get(name);
 	}
 	hasCommand(name) {
 		if (name === undefined)
