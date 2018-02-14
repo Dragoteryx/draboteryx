@@ -235,7 +235,7 @@ commands.setCommand("prefix", msg => {
 		if (!isOwner(msg.author))
 			msg.channel.send("Only my creators are allowed to change my prefix!");
 		else {
-			config.prefix = args.last();
+			config.prefix = args.pop();
 			msg.channel.send("My prefix is now ``" + config.prefix + "``.")
 		}
 	}
@@ -351,7 +351,7 @@ commands.setCommand("query", msg => {
 }, {dms: false, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
 commands.setCommand("plremove", msg => {
-	let id = Math.floor(Number(msg.content.split(" ").last()))-1;
+	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
 	if (isNaN(id)) {
 		msg.channel.send("This ID is invalid.");
 		return;
@@ -425,7 +425,7 @@ commands.setCommand("toggle", msg => {
 }, {dms: false, maxargs: 0, props: new classes.Command("toggle", "pause/resume the music", musicType, true)});;
 
 commands.setCommand("volume", msg => {
-	let volume = Number(msg.content.split(" ").last());
+	let volume = Number(msg.content.split(" ").pop());
 	if (isNaN(volume))
 		return;
 	music.setVolume(msg.guild, volume).then(() => {
@@ -638,7 +638,7 @@ commands.setCommand("kill", msg => {
 commands.setCommand("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.fetchHTTP().then(res => {
-		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').last().split('">').first()});
+		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
@@ -780,55 +780,61 @@ function isOwner(user) {
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
-String.prototype.fetchHTTP = function() {
-	return new Promise((resolve, reject) => {
-		if (debug)
-			console.log("[HTTP] Fetch " + this);
-		snekfetch.get(this)
-		.then(resolve)
-		.catch(reject);
-	});
-}
+Object.defineProperty(String.prototype, "fetchHTTP", {
+	value: function fetchHTTP() {
+		return new Promise((resolve, reject) => {
+			if (debug)
+				console.log("[HTTP] Fetch " + this);
+			snekfetch.get(this)
+			.then(resolve)
+			.catch(reject);
+		});
+	}
+});
 
-Array.prototype.first = function() {
-	return this[0];
-}
+Object.defineProperty(discord.Message.prototype, "dreply", {
+	value: function dreply(content) {
+		if (this.channel.type == "text")
+			return this.reply(content);
+		else
+			return this.channel.send(content);
+	}
+});
 
-Array.prototype.last = function() {
-	return this[this.length-1];
-}
+Object.defineProperty(discord.Guild.prototype, "nbCon", {
+	value: function nbCon() {
+		return new Promise((resolve, reject) => {
+			this.fetchMembers().then(guild => {
+				let presences = Array.from(guild.presences.values());
+				let h = 0;
+				for(let presence of presences)
+					if (presence.status != "offline") h++;
+				resolve(h);
+			}).catch(reject);
+		});
+	}
+});
 
-discord.Message.prototype.dreply = function(content) {
-	if (this.channel.type == "text")
-		return this.reply(content);
-	else
-		return this.channel.send(content);
-}
+Object.defineProperty(discord.Guild.prototype, "embedInfo", {
+	value: function embedInfo() {
+		return funcs.showGuildInfo(this);
+	}
+});
 
-discord.Guild.prototype.nbCon = function() {
-	return new Promise((resolve, reject) => {
-		this.fetchMembers().then(guild => {
-			let presences = Array.from(guild.presences.values());
-			let h = 0;
-			for(let presence of presences)
-				if (presence.status != "offline") h++;
-			resolve(h);
-		}).catch(reject);
-	});
-}
+Object.defineProperty(discord.Channel.prototype, "embedInfo", {
+	value: function embedInfo() {
+		return funcs.showChannelInfo(this);
+	}
+});
 
-discord.Guild.prototype.embedInfo = function() {
-	return funcs.showGuildInfo(this);
-}
+Object.defineProperty(discord.Role.prototype, "embedInfo", {
+	value: function embedInfo() {
+		return funcs.showRoleInfo(this);
+	}
+});
 
-discord.Channel.prototype.embedInfo = function() {
-	return funcs.showChannelInfo(this);
-}
-
-discord.Role.prototype.embedInfo = function() {
-	return funcs.showRoleInfo(this);
-}
-
-discord.GuildMember.prototype.embedInfo = function() {
-	return funcs.showMemberInfo(this);
-}
+Object.defineProperty(discord.GuildMember.prototype, "embedInfo", {
+	value: function embedInfo() {
+		return funcs.showMemberInfo(this);
+	}
+});

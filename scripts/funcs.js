@@ -173,7 +173,7 @@ exports.sendR34 = function(msg) {
 		search = search.replace(" ", "_");
 	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
 	link.fetchHTTP().then(res => {
-		let nb = Number(res.text.split('">Last</a>').first().split(' | <a href="/post/list/').last().split("/").last());
+		let nb = Number(res.text.split('">Last</a>').shift().split(' | <a href="/post/list/').pop().split("/").pop());
 		let page = tools.random(1, nb);
 		let link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
 		return link.fetchHTTP();
@@ -184,7 +184,7 @@ exports.sendR34 = function(msg) {
 		let htmlTab = html.split("<-SPLIT->-");
 		let imgs = [];
 		for (let i = 0; i < htmlTab.length; i++)
-			if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').last());
+			if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').pop());
 		if (imgs.length != 0)
 			msg.channel.send("Search: ``" + searchOld + "``", {file: tools.randTab(imgs)});
 		else
