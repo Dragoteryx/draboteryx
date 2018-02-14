@@ -67,3 +67,10 @@ exports.stringToRole = function(str, guild) {
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
 
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+exports.defineAllProperties = (obj, option) => {
+	let properties = Object.getOwnPropertyNames(obj);
+	for (let property of properties)
+		Object.defineProperty(obj, property, option);
+	return obj;
+}
