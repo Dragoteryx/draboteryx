@@ -191,9 +191,9 @@ commands.setCommand("help", msg => {
 		msg.reply("help is coming in your DMs!");
 	for (let type of commandTypes) {
 		embed = tools.defaultEmbed();
-		for (let command of commands) {
-			if (command[1].options.props !== undefined && command[1].options.props.show && command[1].options.props.type == type) {
-				embed.addField(config.prefix + command[1].options.props.name, command[1].options.props.desc);
+		for (let command of commands.array) {
+			if (command.options.props !== undefined && command.options.props.show && command.options.props.type == type) {
+				embed.addField(config.prefix + command.options.props.name, command.options.props.desc);
 			}
 		}
 		if (type == utilityType)

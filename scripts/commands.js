@@ -133,6 +133,9 @@ class CommandsHandler {
 			}
 		});
 	}
+	get array() {
+		return Array.from(prv(this).commands.values());
+	}
 }
 
 class Command {
