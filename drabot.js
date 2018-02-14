@@ -57,17 +57,15 @@ const commandTypes = [utilityType, funType, musicType, nsfwType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
 music.on("next", (playlist, next) => {
-	let msg = !next.file ?
-	musicChannels.get(playlist.guild.id).send("Next: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")")
-	: musicChannels.get(playlist.guild.id).send("Next: ``" + next.title + "``. (requested by " + next.member +")");
-	msg.then(msg2 => {
-		music.once("start" + playlist.guild.id, () => msg2.edit(msg2.content.replace("Next: ", "Now playing: ")));
-	});
+	if (!next.file)
+		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
+	else
+		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member +")");
 });
 music.on("empty", playlist => {
 	musicChannels.get(playlist.guild.id).send("The playlist is empty.");
 });
-music.on("clientMoved", (oldChannel, newChannel) => {
+music.on("clientMove", (oldChannel, newChannel) => {
 	musicChannels.get(newChannel.guild.id).send("I moved to " + newChannel + ".");
 });
 music.on("memberJoin", (member, channel) => {
@@ -295,7 +293,7 @@ commands.setCommand("roleinfo", msg => {
 commands.setCommand("join", msg => {
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
-			music.addMusic({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
+			music.add({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
 				msg.channel.send("Happy April Fools' !");
 			});
 		}
@@ -326,7 +324,7 @@ commands.setCommand("request", msg => {
 		return;
 	}
 	msg.channel.send("Adding ``" + link + "`` to the playlist.").then(msg2 => {
-		music.addMusic(link, msg.member, {passes: 10}).then(added => {
+		music.add(link, msg.member, {passes: 10}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "the client is not in a voice channel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
@@ -340,7 +338,7 @@ commands.setCommand("request", msg => {
 commands.setCommand("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
 	msg.channel.send("Searching for ``" + query + "`` on Youtube.").then(msg2 => {
-		music.addMusic(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
+		music.add(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
 			if (err.message == "the client is not in a voice channel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
@@ -356,7 +354,7 @@ commands.setCommand("plremove", msg => {
 		msg.channel.send("This ID is invalid.");
 		return;
 	}
-	music.removeMusic(msg.guild, id).then(removed => {
+	music.remove(msg.guild, id).then(removed => {
 		msg.channel.send("``" + removed.title + "`` has been removed from the playlist.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
@@ -372,7 +370,7 @@ commands.setCommand("skip", msg => {
 }, {dms: false, maxargs: 0, props: new classes.Command("skip", "skip the current music", musicType, true)});
 
 commands.setCommand("plclear", msg => {
-	music.clearPlaylist(msg.guild).then(nb => {
+	music.clear(msg.guild).then(nb => {
 		if (nb == 1)
 			msg.channel.send("``1`` music has been removed from the playlist.");
 		else
@@ -383,7 +381,7 @@ commands.setCommand("plclear", msg => {
 }, {dms: false, maxargs: 0, props: new classes.Command("plclear", "clear the playlist", musicType, true)});
 
 commands.setCommand("plshuffle", msg => {
-	music.shufflePlaylist(msg.guild).then(() => {
+	music.shuffle(msg.guild).then(() => {
 		msg.channel.send("The playlist has been shuffled.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
@@ -525,7 +523,7 @@ commands.setCommand("plload", msg => {
 				let array = str.split(" ");
 				for (let link of array) {
 					try {
-						await music.addMusic(link, msg.member, {passes: 10});
+						await music.add(link, msg.member, {passes: 10});
 					} catch(err) {}
 				}
 				msg.channel.send("The playlist was successfully loaded.");
@@ -697,7 +695,7 @@ commands.setCommand("invite", msg => {
 }, {maxargs: 0, props: new classes.Command("invite", "get an invite to the test server", utilityType, true)});
 
 commands.setCommand("chrischansong", msg => {
-	music.addMusic("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
+	music.add("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
