@@ -11,7 +11,7 @@
     "danbooru": "^2.0.3",
     "discord.js": "^11.3.0",
     "dotenv": "^4.0.0",
-    "drg-music2": "^1.4.0",
+    "drg-music2": "^1.4.1",
     "musicmetadata": "^2.0.5",
     "node-soundcloud": "0.0.6",
     "opusscript": "0.0.4",
