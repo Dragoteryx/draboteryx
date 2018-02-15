@@ -15,7 +15,7 @@ const tools = require("./scripts/tools.js");		// useful functions
 const funcs = require("./scripts/funcs.js");		// commands related functions
 const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
-const DrgMusic = require("./node_modules/drg-music2/music.js");
+const MusicHandler = require("./node_modules/drg-music2/music.js");
 const DrgCommands = require("./scripts/commands.js");
 const booru = new Danbooru();
 const safebooru = new Danbooru.Safebooru();
@@ -25,7 +25,7 @@ const safebooru = new Danbooru.Safebooru();
 // CONSTS ----------------------------------------------------------------------------------------------
 const client = new discord.Client();
 const baby = new discord.Client();
-const music = new DrgMusic(client);
+const music = new MusicHandler(client);
 const commands = new DrgCommands(config.prefix);
 const redis = require('redis').createClient(process.env.REDIS_URL);
 const vars = {};
@@ -297,7 +297,7 @@ commands.setCommand("roleinfo", msg => {
 commands.setCommand("join", msg => {
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
-			music.add({member: msg.guild.me, link: process.env.APRIL_1ST_MUSIC, passes: 3}, () => {
+			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
 				msg.channel.send("Happy April Fools' !");
 			});
 		}
@@ -321,9 +321,7 @@ commands.setCommand("leave", msg => {
 
 commands.setCommand("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
-	try {
-		DrgMusic.videoWebsite(link);
-	} catch(err) {
+	if (MusicHandler.videoWebsite(link) === undefined) {
 		msg.channel.send("This link is not valid or this website is not supported.");
 		return;
 	}
@@ -781,6 +779,20 @@ commands.setCommand("hug", async msg => {
 		}
 	}
 }, {props: new classes.Command("hug", "ask me to hug someone", funType, true)});
+
+commands.setCommand("ytbthumb", msg => {
+	let link = msg.content.replace(config.prefix + "ytbthumb ","");
+	if (MusicHandler.videoWebsite(link) != "Youtube")
+		msg.channel.send("This isn't a Youtube link.");
+	else {
+		MusicHandler.youtubeInfo(link).then(info => {
+			msg.channel.send("No need to thank me. :wink:", {files: [info.maxResThumbnailURL]});
+		}).catch(err => {
+			msg.channel.send("I was unable to download the thumbnail for some reason, sorry.");
+			console.error(err);
+		});
+	}
+}, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb", "retrieve the thumbnail from a Youtube video", otherType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
