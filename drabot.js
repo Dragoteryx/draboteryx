@@ -124,15 +124,8 @@ client.on("message", msg => {
 		funcs.logError(msg, err);
 	});
 
-	// PING
-	if (msg.content.toLowerCase() == "ping") {
-		msg.channel.send(":ping_pong: Pong!").then(msg2 => {
-			msg2.edit(":ping_pong: Pong! (``" + (msg2.createdTimestamp - msg.createdTimestamp) + "`` ms)");
-		});
-	}
-
 	// CLEVERBOT
-	else if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
+	if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
 		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
 			cleverbots.set(msg.channel.id + "/" + msg.author.id, new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY));
 		let cleverbot = cleverbots.get(msg.channel.id + "/" + msg.author.id);
@@ -208,6 +201,12 @@ commands.set("help", msg => {
 			msg.author.send(type + " (" + embed.fields.length + ")", embed);
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
+
+commands.set("ping", msg => {
+	msg.channel.send(":ping_pong: Pong!").then(msg2 => {
+		msg2.edit(":ping_pong: Pong! (``" + (msg2.createdTimestamp - msg.createdTimestamp) + "`` ms)");
+	});
+});
 
 commands.set("exec", msg => {
 	(async () => {
