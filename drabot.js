@@ -831,18 +831,26 @@ function isOwner(user) {
 }
 
 async function searchDanbooru(msg, nsfw) {
-	let query = msg.content.split(" ").slice(1);
-	let posts;
-	if (nsfw) posts = await booru.posts(query);
-	else posts = await safebooru.posts(query);
-	if (posts.length == 0)
-		msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
-	else {
-		let post = {large_file_url: undefined};
-		while (post.large_file_url === undefined)
-			post = posts.random().raw;
-		let link = post.large_file_url.includes("https://") ? post.large_file_url : "http://danbooru.donmai.us" + post.large_file_url;
-		msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
+	try {
+		let query = msg.content.split(" ").slice(1);
+		if (query.length > 2) {
+			msg.channel.send("You can't search for more than 2 tags at the same time.");
+			return;
+		}
+		let posts;
+		if (nsfw) posts = await booru.posts(query);
+		else posts = await safebooru.posts(query);
+		if (posts.length == 0)
+			msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
+		else {
+			let post = {large_file_url: undefined};
+			while (post.large_file_url === undefined)
+				post = posts.random().raw;
+			let link = post.large_file_url.includes("https://") ? post.large_file_url : "http://danbooru.donmai.us" + post.large_file_url;
+			msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
+		}
+	} catch(err) {
+		funcs.logError(msg, err);
 	}
 }
 
