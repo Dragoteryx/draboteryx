@@ -838,7 +838,9 @@ async function searchDanbooru(msg, nsfw) {
 	if (posts.length == 0)
 		msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
 	else {
-		let post = posts.random().raw;
+		let post = {large_file_url: undefined};
+		while (post.large_file_url === undefined)
+			post = posts.random().raw;
 		let link = post.large_file_url.includes("https://") ? post.large_file_url : "http://danbooru.donmai.us" + post.large_file_url;
 		msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
 	}
