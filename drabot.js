@@ -217,7 +217,7 @@ commands.setCommand("exec", msg => {
 				str = "Executed (Promise): ```js\n";
 			}
 			console.dir(val, {colors: true});
-			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 1, breakLength: 0});
+			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 0, breakLength: 0});
 			msg.channel.send(str + tosend + "\n```").catch(err => {
 				msg.channel.send("Execution sent to console.");
 			});

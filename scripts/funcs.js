@@ -49,7 +49,7 @@ exports.showMemberInfo = function(member) {
 }
 
 exports.showGuildInfo = async function(guild) {
-	let maxemojis = 50;
+	let maxemojis = 100;
 	try {
 		let tempRoles = Array.from(guild.roles.values());
 		let roles = [];
