@@ -56,7 +56,8 @@ const utilityType = ":wrench: Utility commands";
 const funType = ":bowling: Fun commands";
 const musicType = ":microphone: Music commands";
 const nsfwType = ":cucumber: NSFW commands";
-const commandTypes = [utilityType, funType, musicType, nsfwType];
+const otherType = ":satellite: Other commands"
+const commandTypes = [utilityType, funType, otherType, musicType, nsfwType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
 music.on("next", (playlist, next) => {
@@ -683,7 +684,7 @@ commands.setCommand("danbooru", msg => {
 
 commands.setCommand("safebooru", msg => {
 	searchDanbooru(msg, false);
-}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", funType, true)});
+}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", otherType, true)});
 
 commands.setCommand("waifu", msg => {
 	if (msg.channel.type != "dm")
