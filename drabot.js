@@ -824,8 +824,11 @@ async function searchDanbooru(msg, nsfw) {
 	else posts = await safebooru.posts(query);
 	if (posts.length == 0)
 		msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
-	else
-		msg.channel.send("Search: ``" + query.join(" ") + "``", {file: "http://danbooru.donmai.us" + posts.random().raw.large_file_url});
+	else {
+		let post = posts.random().raw;
+		let link = post.large_file_url.includes("https://") ? post.large_file_url : "http://danbooru.donmai.us" + post.large_file_url;
+		msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
+	}
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
