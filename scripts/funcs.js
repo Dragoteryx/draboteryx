@@ -162,38 +162,6 @@ exports.showInfo = async msg => {
 	return info;
 }
 
-exports.sendR34 = function(msg) {
-	let searchOld;
-	if (msg.content.startsWith(config.prefix + "rule34 "))
-		searchOld = msg.content.replace(config.prefix + "rule34 ","");
-	else if (msg.content.startsWith(config.prefix + "r34 "))
-		searchOld = msg.content.replace(config.prefix + "r34 ","");
-	let search = searchOld.toLowerCase();
-	while (search.includes(" "))
-		search = search.replace(" ", "_");
-	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
-	link.fetchHTTP().then(res => {
-		let nb = Number(res.text.split('">Last</a>').shift().split(' | <a href="/post/list/').pop().split("/").pop());
-		let page = tools.random(1, nb);
-		let link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
-		return link.fetchHTTP();
-	}).then(res => {
-		let html = res.text;
-		for (let i = 0; i <= 100; i++)
-			html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
-		let htmlTab = html.split("<-SPLIT->-");
-		let imgs = [];
-		for (let i = 0; i < htmlTab.length; i++)
-			if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').pop());
-		if (imgs.length != 0)
-			msg.channel.send("Search: ``" + searchOld + "``", {file: tools.randTab(imgs)});
-		else
-			return Promise.reject();
-	}).catch(() => {
-		msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
-	});
-}
-
 exports.logError = (msg, err) => {
 	drabot.client.fetchApplication().then(app => {
 		msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "invite`` to join the test server.```\n" + err.stack + "\n```");

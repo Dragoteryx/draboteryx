@@ -7,6 +7,7 @@ const fs = require("fs");
 const snekfetch = require("snekfetch");
 const cleverbotIO = require("cleverbot.io");
 const util = require("util");
+const Danbooru = require("danbooru");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -16,6 +17,8 @@ const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
 const DrgMusic = require("./node_modules/drg-music2/music.js");
 const DrgCommands = require("./scripts/commands.js");
+const booru = new Danbooru();
+const safebooru = new Danbooru.Safebooru();
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -213,7 +216,7 @@ commands.setCommand("exec", msg => {
 				str = "Executed (Promise): ```js\n";
 			}
 			console.dir(val, {colors: true});
-			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 0, breakLength: 0});
+			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 1, breakLength: 0});
 			msg.channel.send(str + tosend + "\n```").catch(err => {
 				msg.channel.send("Execution sent to console.");
 			});
@@ -642,8 +645,45 @@ commands.setCommand("cahrcg", msg => {
 	});
 }, {maxargs: 0, props: new classes.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.setCommand("rule34", funcs.sendR34, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "if it exists...", nsfwType, true)});
-commands.setCommand("r34", funcs.sendR34, {minargs: 1, nsfw: true});
+commands.setCommand("rule34", msg => {
+	let searchOld;
+	if (msg.content.startsWith(config.prefix + "rule34 "))
+		searchOld = msg.content.replace(config.prefix + "rule34 ","");
+	else if (msg.content.startsWith(config.prefix + "r34 "))
+		searchOld = msg.content.replace(config.prefix + "r34 ","");
+	let search = searchOld.toLowerCase();
+	while (search.includes(" "))
+		search = search.replace(" ", "_");
+	let link = "https://rule34.paheal.net/post/list/" + search + "/1";
+	link.fetchHTTP().then(res => {
+		let nb = Number(res.text.split('">Last</a>').shift().split(' | <a href="/post/list/').pop().split("/").pop());
+		let page = tools.random(1, nb);
+		let link = "https://rule34.paheal.net/post/list/" + search + "/" + page;
+		return link.fetchHTTP();
+	}).then(res => {
+		let html = res.text;
+		for (let i = 0; i <= 100; i++)
+			html = html.replace('<a href="http://rule34-data-',"<-SPLIT->-").replace('">Image Only</a>',"<-SPLIT->-");
+		let htmlTab = html.split("<-SPLIT->-");
+		let imgs = [];
+		for (let i = 0; i < htmlTab.length; i++)
+			if (htmlTab[i].includes("_images")) imgs.push(htmlTab[i].split('</a><br><a href="').pop());
+		if (imgs.length != 0)
+			msg.channel.send("Search: ``" + searchOld + "``", {file: imgs.random()});
+		else
+			return Promise.reject();
+	}).catch(() => {
+		msg.channel.send("Sorry, I didn't find anything about ``" + searchOld + "``.");
+	});
+}, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "if it exists...", nsfwType, true)});
+
+commands.setCommand("danbooru", msg => {
+	searchDanbooru(msg, true);
+}, {minargs: 1, nsfw: true, props: new classes.Command("danbooru [tags]", "search something on danbooru", nsfwType, true)});
+
+commands.setCommand("safebooru", msg => {
+	searchDanbooru(msg, false);
+}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on danbooru", funType, true)});
 
 commands.setCommand("waifu", msg => {
 	if (msg.channel.type != "dm")
@@ -674,17 +714,17 @@ commands.setCommand("dicksize", async msg => {
 		msg.channel.send(":straight_ruler: | " + str);
 	await tools.sleep(1500);
 	if (length == 1)
-		msg.channel.send(tools.randTab(xsmall));
+		msg.channel.send(xsmall.random());
 	else if (length <= 3)
-		msg.channel.send(tools.randTab(small));
+		msg.channel.send(small.random());
 	else if (length <= 5)
-		msg.channel.send(tools.randTab(smedium));
+		msg.channel.send(smedium.random());
 	else if (length <= 7)
-		msg.channel.send(tools.randTab(medium));
+		msg.channel.send(medium.random());
 	else if (length <= 9)
-		msg.channel.send(tools.randTab(large));
+		msg.channel.send(large.random());
 	else if (length == 10)
-		msg.channel.send(tools.randTab(xlarge));
+		msg.channel.send(xlarge.random());
 }, {bots: true});
 
 commands.setCommand("invite", msg => {
@@ -777,6 +817,17 @@ function isOwner(user) {
 	return commands.owners.includes(user.id);
 }
 
+async function searchDanbooru(msg, nsfw) {
+	let query = msg.content.split(" ").slice(1);
+	let posts;
+	if (nsfw) posts = await booru.posts(query);
+	else posts = await safebooru.posts(query);
+	if (posts.length == 0)
+		msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
+	else
+		msg.channel.send("Search: ``" + query.join(" ") + "``", {file: "http://danbooru.donmai.us" + posts.random().raw.large_file_url});
+}
+
 // PROTOTYPES ----------------------------------------------------------------------------------------------
 Object.defineProperty(String.prototype, "fetchHTTP", {
 	value: function fetchHTTP() {
@@ -787,6 +838,14 @@ Object.defineProperty(String.prototype, "fetchHTTP", {
 			.then(resolve)
 			.catch(reject);
 		});
+	}
+});
+
+Object.defineProperty(Array.prototype, "random", {
+	value: function() {
+		if (this.length == 0)
+			return undefined;
+		return this[tools.random(this.length-1)];
 	}
 });
 

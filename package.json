@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "cleverbot.io": "^1.0.4",
+    "danbooru": "^2.0.3",
     "discord.js": "^11.3.0",
     "dotenv": "^4.0.0",
     "drg-music2": "^1.4.0",

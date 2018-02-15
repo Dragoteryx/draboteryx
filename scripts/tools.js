@@ -20,11 +20,6 @@ exports.random = function(min, max) {
 		return Math.floor(Math.random()*(max-min+1))+min;
 }
 
-//donner une valeur aléatoire d'un tableau
-exports.randTab = function(tab) {
-	return tab[exports.random(tab.length-1)];
-}
-
 // écrire dans un fichier
 exports.write = function(file) {
 	fs.writeFile("./" + file + ".json", JSON.stringify(eval(file)), (err) => {if(err) console.error(err)});

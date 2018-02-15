@@ -161,7 +161,7 @@ class Command {
 	}
 	check(msg, options) {
 		let that = prv(this);
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			try {
 				if (msg === undefined)
 					reject(Error("parameter 'message' is missing"));
@@ -286,7 +286,7 @@ class Command {
 					if (options.exec && check.valid) {
 						let execute = this.callback(msg, check.reasons);
 						if (execute instanceof Promise)
-							execute.catch(reject);
+							await execute;
 					}
 					resolve(Object.freeze(check));
 				}
