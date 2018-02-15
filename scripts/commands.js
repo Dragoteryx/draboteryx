@@ -17,7 +17,7 @@ class CommandsHandler {
 		this.defaultPrefix;
 		this.owners = [];
 	}
-	setCommand(name, callback, opts, key) {
+	set(name, callback, opts, key) {
 		let that = prv(this);
 		if (name === undefined)
 			throw new Error("parameter 'name' is undefined");
@@ -85,7 +85,7 @@ class CommandsHandler {
 		that.commands.set(name, Object.seal(command));
 		return that.commands.get(name);
 	}
-	hasCommand(name) {
+	has(name) {
 		if (name === undefined)
 			throw new Error("parameter 'command' is undefined");
 		if (name instanceof Command)
@@ -94,17 +94,17 @@ class CommandsHandler {
 			throw new TypeError("'command' must be a String or a Command");
 		return prv(this).commands.has(name);
 	}
-	getCommand(name) {
+	get(name) {
 		if (name instanceof Command)
 			name = name.name;
-		if (!this.hasCommand(name))
+		if (!this.has(name))
 			throw new Error("unknown command");
 		return prv(this).commands.get(name);
 	}
-	deleteCommand(name) {
+	remove(name) {
 		if (name instanceof Command)
 			name = name.name;
-		if (!this.hasCommand(name))
+		if (!this.has(name))
 			throw new Error("unknown command");
 		prv(this).commands.delete(name);
 		return this;
@@ -123,10 +123,10 @@ class CommandsHandler {
 			if (options.prefix === undefined)
 				options.prefix = this.defaultPrefix;
 			let name = msg.content.split(" ").shift().replace(options.prefix, "");
-			if (!this.hasCommand(name))
+			if (!this.has(name))
 				resolve(Object.freeze({command: undefined, result: {valid: false, reasons: ["unknown command"]}}));
 			else {
-				let command = this.getCommand(name);
+				let command = this.get(name);
 				command.check(msg, options).then(res => {
 					resolve({command: command, result: res});
 				}).catch(reject);

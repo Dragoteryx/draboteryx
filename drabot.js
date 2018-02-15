@@ -8,6 +8,7 @@ const snekfetch = require("snekfetch");
 const cleverbotIO = require("cleverbot.io");
 const util = require("util");
 const Danbooru = require("danbooru");
+const jishoApi = new require('unofficial-jisho-api');
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -17,8 +18,6 @@ const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
 const MusicHandler = require("./node_modules/drg-music2/music.js");
 const DrgCommands = require("./scripts/commands.js");
-const booru = new Danbooru();
-const safebooru = new Danbooru.Safebooru();
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -29,6 +28,9 @@ const music = new MusicHandler(client);
 const commands = new DrgCommands(config.prefix);
 const redis = require('redis').createClient(process.env.REDIS_URL);
 const vars = {};
+const booru = new Danbooru();
+const safebooru = new Danbooru.Safebooru();
+const jisho = new jishoApi();
 
 // GLOBALS ----------------------------------------------------------------------------------------------
 let connected = false;
@@ -187,9 +189,9 @@ redis.on("end", () => {
 })
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
-commands.setCommand("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
+commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
 
-commands.setCommand("help", msg => {
+commands.set("help", msg => {
 	let embed;
 	if (msg.channel.type != "dm")
 		msg.reply("help is coming in your DMs!");
@@ -207,7 +209,7 @@ commands.setCommand("help", msg => {
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
-commands.setCommand("exec", msg => {
+commands.set("exec", msg => {
 	(async () => {
 		try {
 			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
@@ -229,7 +231,7 @@ commands.setCommand("exec", msg => {
 	})();
 }, {owner: true, minargs: 1});
 
-commands.setCommand("prefix", msg => {
+commands.set("prefix", msg => {
 	let args = msg.content.split(" ");
 	if (args.length == 1)
 		msg.channel.send("Really? My prefix is ``" + config.prefix + "``.");
@@ -243,21 +245,21 @@ commands.setCommand("prefix", msg => {
 	}
 }, {maxargs: 1, props: new classes.Command("prefix", "if you don't know what my prefix is despite reading this", utilityType, true)});
 
-commands.setCommand("info", msg => {
+commands.set("info", msg => {
 	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
 	});
 }, {maxargs: 0, props: new classes.Command("info", "info about me", utilityType, true)});
 
-commands.setCommand("uptime", msg => {
+commands.set("uptime", msg => {
 	msg.channel.send("I have been up for " + uptime.strings.text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
 }, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
-commands.setCommand("serverinfo", async msg => {
+commands.set("serverinfo", async msg => {
 	msg.channel.send("", await msg.guild.embedInfo());
 }, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new classes.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
-commands.setCommand("channelinfo", msg => {
+commands.set("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let channel = msg.channel;
 	if (nb > 0)
@@ -268,7 +270,7 @@ commands.setCommand("channelinfo", msg => {
 		msg.channel.send("", channel.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new classes.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
-commands.setCommand("userinfo", async msg => {
+commands.set("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let member = msg.member;
 	if (nb > 0)
@@ -283,7 +285,7 @@ commands.setCommand("userinfo", async msg => {
 	}
 }, {override: true, dms: false, props: new classes.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
 
-commands.setCommand("roleinfo", msg => {
+commands.set("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let role = msg.member.highestRole;
 	if (nb > 0)
@@ -294,7 +296,7 @@ commands.setCommand("roleinfo", msg => {
 		msg.channel.send("", role.embedInfo());
 }, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
-commands.setCommand("join", msg => {
+commands.set("join", msg => {
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
 			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
@@ -309,7 +311,7 @@ commands.setCommand("join", msg => {
 	});
 }, {dms: false, maxargs: 0, function: msg => !memeing.has(msg.guild.id), props: new classes.Command("join", "join a voice channel", musicType, true)});
 
-commands.setCommand("leave", msg => {
+commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
 		musicChannels.delete(msg.guild.id);
 		console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
@@ -319,7 +321,7 @@ commands.setCommand("leave", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("leave", "leave the voice channel", musicType, true)});
 
-commands.setCommand("request", msg => {
+commands.set("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
 	if (MusicHandler.videoWebsite(link) === undefined) {
 		msg.channel.send("This link is not valid or this website is not supported.");
@@ -337,7 +339,7 @@ commands.setCommand("request", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
-commands.setCommand("query", msg => {
+commands.set("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
 	msg.channel.send("Searching for ``" + query + "`` on Youtube.").then(msg2 => {
 		music.add(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
@@ -350,7 +352,7 @@ commands.setCommand("query", msg => {
 	});
 }, {dms: false, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
-commands.setCommand("plremove", msg => {
+commands.set("plremove", msg => {
 	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
 	if (isNaN(id)) {
 		msg.channel.send("This ID is invalid.");
@@ -363,7 +365,7 @@ commands.setCommand("plremove", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
 
-commands.setCommand("skip", msg => {
+commands.set("skip", msg => {
 	music.playNext(msg.guild).then(current => {
 		msg.channel.send("The current music (``" + current.title + "``) has been skipped.");
 	}).catch(err => {
@@ -371,7 +373,7 @@ commands.setCommand("skip", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("skip", "skip the current music", musicType, true)});
 
-commands.setCommand("plclear", msg => {
+commands.set("plclear", msg => {
 	music.clear(msg.guild).then(nb => {
 		if (nb == 1)
 			msg.channel.send("``1`` music has been removed from the playlist.");
@@ -382,7 +384,7 @@ commands.setCommand("plclear", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("plclear", "clear the playlist", musicType, true)});
 
-commands.setCommand("plshuffle", msg => {
+commands.set("plshuffle", msg => {
 	music.shuffle(msg.guild).then(() => {
 		msg.channel.send("The playlist has been shuffled.");
 	}).catch(err => {
@@ -390,7 +392,7 @@ commands.setCommand("plshuffle", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("plshuffle", "shuffle the playlist", musicType, true)});
 
-commands.setCommand("loop", msg => {
+commands.set("loop", msg => {
 	music.toggleLooping(msg.guild).then(looping => {
 		let current = music.currentInfo(msg.guild);
 			if (looping)
@@ -402,7 +404,7 @@ commands.setCommand("loop", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("loop", "loop the current music", musicType, true)});
 
-commands.setCommand("plloop", msg => {
+commands.set("plloop", msg => {
 	music.togglePlaylistLooping(msg.guild).then(looping => {
 		if (looping)
 			msg.channel.send("The playlist is now looping.");
@@ -413,7 +415,7 @@ commands.setCommand("plloop", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("plloop", "loop the playlist", musicType, true)});
 
-commands.setCommand("toggle", msg => {
+commands.set("toggle", msg => {
 	music.togglePaused(msg.guild).then(paused => {
 		if (paused)
 			msg.channel.send("The music has been paused.");
@@ -424,7 +426,7 @@ commands.setCommand("toggle", msg => {
 	});
 }, {dms: false, maxargs: 0, props: new classes.Command("toggle", "pause/resume the music", musicType, true)});;
 
-commands.setCommand("volume", msg => {
+commands.set("volume", msg => {
 	let volume = Number(msg.content.split(" ").pop());
 	if (isNaN(volume))
 		return;
@@ -435,7 +437,7 @@ commands.setCommand("volume", msg => {
 	});
 }, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("volume [value]", "set the volume of the music", musicType, true)});
 
-commands.setCommand("current", msg => {
+commands.set("current", msg => {
 	let current = music.currentInfo(msg.guild);
 	if (current === undefined) {
 		msg.channel.send("I am not playing anything at the moment.");
@@ -458,7 +460,7 @@ commands.setCommand("current", msg => {
 	msg.channel.send("Playing: ``" + timer.strings.timer + " / " + end.strings.timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
 }, {dms: false, maxargs: 0, props: new classes.Command("current", "info about the current music", musicType, true)});
 
-commands.setCommand("playlist", msg => {
+commands.set("playlist", msg => {
 	let playlist = music.playlistInfo(msg.guild);
 	if (playlist === undefined) {
 		msg.channel.send("I am not in a voice channel.");
@@ -479,7 +481,7 @@ commands.setCommand("playlist", msg => {
 	} else msg.channel.send("The playlist is empty. Use ``" + config.prefix + "current`` to have information about the current music.");
 }, {dms: false, maxargs: 0, props: new classes.Command("playlist", "info about the playlist", musicType, true)});
 
-commands.setCommand("plsave", msg => {
+commands.set("plsave", msg => {
 	if (!redisOK) {
 		msg.channel.send("This command is unavailable at the moment.");
 		return;
@@ -509,7 +511,7 @@ commands.setCommand("plsave", msg => {
 	}
 }, {dms: false, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
 
-commands.setCommand("plload", msg => {
+commands.set("plload", msg => {
 	if (!redisOK) {
 		msg.channel.send("This command is unavailable at the moment.");
 		return;
@@ -534,7 +536,7 @@ commands.setCommand("plload", msg => {
 	}
 }, {dms: false, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
 
-commands.setCommand("shitpost", msg => {
+commands.set("shitpost", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let link = "https://shitpostgenerator.herokuapp.com";
 	if (args.length > 0) {
@@ -554,19 +556,19 @@ commands.setCommand("shitpost", msg => {
 	});
 }, {props: new classes.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
 
-commands.setCommand("say", msg => {
+commands.set("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
 	msg.channel.send(content);
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.setCommand("ttsay", msg => {
+commands.set("ttsay", msg => {
 	let content = msg.content.replace(config.prefix + "ttsay ", "");
 	msg.channel.send(content, {tts: true});
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.setCommand("roll", msg => {
+commands.set("roll", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let max = 6;
 	if (args.length == 1 && !isNaN(Number(args[0])) && Number(args[0]) > 0)
@@ -575,11 +577,11 @@ commands.setCommand("roll", msg => {
 	msg.reply(res + "/" + max + " (:game_die:)")
 }, {props: new classes.Command("roll (size)", "roll a dice, invalid dice sizes will roll a 6", funType, true)});
 
-commands.setCommand("z0r", msg => {
+commands.set("z0r", msg => {
 	msg.channel.send("Enjoy! http://z0r.de/" + tools.random(7912) + " (earphone/headphone users beware)");
 }, {props: new classes.Command("z0r", "get a random z0r.de link", funType, true)});
 
-commands.setCommand("stopclever", async msg => {
+commands.set("stopclever", async msg => {
 	clever = false;
 	console.log("[CLEVERBOT] Off");
 	let msg2 = await msg.channel.send("Cleverbot has been disabled for ``10`` seconds.");
@@ -594,7 +596,7 @@ commands.setCommand("stopclever", async msg => {
 	msg2.delete(3000);
 }, {owner: true, maxargs: 0});
 
-commands.setCommand("setName", msg => {
+commands.set("setName", msg => {
 	let name = msg.content.replace(config.prefix + "setName ", "");
 	client.user.setUsername(name).then(() => {
 		console.log("[DRABOT] New name: " + name);
@@ -604,7 +606,7 @@ commands.setCommand("setName", msg => {
 	});
 }, {owner: true, minargs: 1});
 
-commands.setCommand("setGame", msg => {
+commands.set("setGame", msg => {
 	let game = msg.content.replace(config.prefix + "setGame ", "");
 	client.user.setActivity(game).then(() => {
 		console.log("[DRABOT] New game: " + game);
@@ -614,7 +616,7 @@ commands.setCommand("setGame", msg => {
 	});
 }, {owner: true, minargs: 1});
 
-commands.setCommand("setAvatar", msg => {
+commands.set("setAvatar", msg => {
 	let avatar = msg.content.replace(config.prefix + "setAvatar ", "");
 	client.user.setAvatar(avatar).then(() => {
 		console.log("[DRABOT] New avatar: " + avatar);
@@ -624,18 +626,18 @@ commands.setCommand("setAvatar", msg => {
 	});
 }, {owner: true, minargs: 1, maxargs: 1});
 
-commands.setCommand("debug", msg => {
+commands.set("debug", msg => {
 	debug = !debug;
 	let str = debug ? "ON" : "OFF";
 	msg.channel.send("Debug mode " + str);
 }, {owner: true, maxargs: 0});
 
-commands.setCommand("kill", msg => {
+commands.set("kill", msg => {
 	console.log("[DRABOT] Dying...");
 	process.exit();
 }, {owner: true, maxargs: 0});
 
-commands.setCommand("cahrcg", msg => {
+commands.set("cahrcg", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.fetchHTTP().then(res => {
 		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
@@ -644,7 +646,7 @@ commands.setCommand("cahrcg", msg => {
 	});
 }, {maxargs: 0, props: new classes.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
 
-commands.setCommand("rule34", msg => {
+commands.set("rule34", msg => {
 	let searchOld;
 	if (msg.content.startsWith(config.prefix + "rule34 "))
 		searchOld = msg.content.replace(config.prefix + "rule34 ","");
@@ -676,22 +678,22 @@ commands.setCommand("rule34", msg => {
 	});
 }, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "if it exists...", nsfwType, true)});
 
-commands.setCommand("danbooru", msg => {
+commands.set("danbooru", msg => {
 	searchDanbooru(msg, true);
 }, {minargs: 1, nsfw: true, props: new classes.Command("danbooru [tags]", "search something on danbooru", nsfwType, true)});
 
-commands.setCommand("safebooru", msg => {
+commands.set("safebooru", msg => {
 	searchDanbooru(msg, false);
 }, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", otherType, true)});
 
-commands.setCommand("waifu", msg => {
+commands.set("waifu", msg => {
 	if (msg.channel.type != "dm")
 		msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");
 	else
 		msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 });
 
-commands.setCommand("dicksize", async msg => {
+commands.set("dicksize", async msg => {
 	let xsmall = ["Life hates you.", "Did you know that the ancient Greek considered small penises as a symbol of fertility?", "At least it won't get any smaller."];
 	let small = ["It's almost cute.", "Well... it could have been worse...", "I'm sorry about that."];
 	let smedium = ["Seems like it's normal sized to me.", "The average.", "A decent size."];
@@ -726,14 +728,14 @@ commands.setCommand("dicksize", async msg => {
 		msg.channel.send(xlarge.random());
 }, {bots: true});
 
-commands.setCommand("invite", msg => {
+commands.set("invite", msg => {
 	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
 		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
 	else
 		msg.channel.send("And... you're arrived!");
 }, {maxargs: 0, props: new classes.Command("invite", "get an invite to the test server", utilityType, true)});
 
-commands.setCommand("chrischansong", msg => {
+commands.set("chrischansong", msg => {
 	music.add("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
 		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
 	}).catch(err => {
@@ -741,7 +743,7 @@ commands.setCommand("chrischansong", msg => {
 	});
 }, {owner: true});
 
-commands.setCommand("nis", async msg => {
+commands.set("nis", async msg => {
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + "nis ", "");
@@ -762,11 +764,11 @@ commands.setCommand("nis", async msg => {
 	}
 }, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
 
-commands.setCommand("whatisthebestyoutubechannel?", msg => {
+commands.set("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
 }, {maxargs: 0});
 
-commands.setCommand("hug", async msg => {
+commands.set("hug", async msg => {
 	let member = msg.content.split(" ").length == 1 ? msg.member : await tools.stringToMember(msg.content.replace(config.prefix + "hug ", ""), msg.guild);
 	console.log(member);
 	if (member === undefined)
@@ -780,7 +782,7 @@ commands.setCommand("hug", async msg => {
 	}
 }, {props: new classes.Command("hug", "ask me to hug someone", funType, true)});
 
-commands.setCommand("ytbthumb", msg => {
+commands.set("ytbthumb", msg => {
 	let link = msg.content.replace(config.prefix + "ytbthumb ","");
 	if (MusicHandler.videoWebsite(link) != "Youtube")
 		msg.channel.send("This isn't a Youtube link.");
@@ -794,6 +796,20 @@ commands.setCommand("ytbthumb", msg => {
 	}
 }, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb", "retrieve the thumbnail from a Youtube video", otherType, true)});
 
+commands.set("jisho", async msg => {
+	let kanjis = msg.content.replace(config.prefix + "jisho ", "").split("");
+	let atlone = false;
+	for (let kanji of kanjis) {
+		let res = await jisho.searchForKanji(kanji);
+		if (res.found) {
+			atlone = true;
+			msg.channel.send("Kanji: ``" + kanji + "``", funcs.kanjiInfo(res));
+		}
+	}
+	if (!atlone)
+		msg.channel.send("I did not find any kanji in your message.");
+}, {minargs: 1, props: new classes.Command("jisho [text]", "returns information about every kanji in the text", otherType, true)});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -806,7 +822,7 @@ function login() {
 }
 
 function addMeme(name) {
-	commands.setCommand(name, async msg => {
+	commands.set(name, async msg => {
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");

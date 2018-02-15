@@ -162,6 +162,24 @@ exports.showInfo = async msg => {
 	return info;
 }
 
+exports.kanjiInfo = res => {
+	return tools.defaultEmbed()
+	.addField("Taught in", res.taughtIn, true)
+	.addField("JLPT level", res.jlptLevel, true)
+	.addField("Stroke count", res.strokeCount, true)
+	.addField("Frequency rank", res.newspaperFrequencyRank, true)
+	.addField("Meaning", res.meaning)
+	.addField("Kunyomi", "``" + res.kunyomi.join("     ") + "``")
+	.addField("Kunyomi example", "``" + res.kunyomiExamples[0].example + "`` (read as ``" + res.kunyomiExamples[0].reading + "``): " + res.kunyomiExamples[0].meaning)
+	.addField("Onyomi", "``" + res.onyomi.join("     ") + "``")
+	.addField("Onyomi example", "``" + res.onyomiExamples[0].example + "`` (read as ``" + res.onyomiExamples[0].reading + "``): " + res.onyomiExamples[0].meaning)
+	.addField("Radical", "``" + res.radical.symbol + "``: " + res.radical.meaning, true)
+	.addField("Parts", "``" + res.parts.join("     ") + "``", true)
+	.addField("Jisho link", res.uri)
+	.setImage(res.strokeOrderDiagramUri);
+
+}
+
 exports.logError = (msg, err) => {
 	drabot.client.fetchApplication().then(app => {
 		msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "invite`` to join the test server.```\n" + err.stack + "\n```");

@@ -17,6 +17,7 @@
     "opusscript": "0.0.4",
     "prism-media": "^0.1.0",
     "redis": "^2.8.0",
+    "unofficial-jisho-api": "^1.0.5",
     "ws": "^3.1.0",
     "youtube-search": "^1.0.10",
     "ytdl-core": "^0.20.1"
