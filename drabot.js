@@ -683,7 +683,7 @@ commands.setCommand("danbooru", msg => {
 
 commands.setCommand("safebooru", msg => {
 	searchDanbooru(msg, false);
-}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on danbooru", funType, true)});
+}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", funType, true)});
 
 commands.setCommand("waifu", msg => {
 	if (msg.channel.type != "dm")
