@@ -163,20 +163,31 @@ exports.showInfo = async msg => {
 }
 
 exports.kanjiInfo = res => {
-	return tools.defaultEmbed()
+	let embed = tools.defaultEmbed()
 	.addField("Taught in", res.taughtIn, true)
 	.addField("JLPT level", res.jlptLevel, true)
 	.addField("Stroke count", res.strokeCount, true)
 	.addField("Frequency rank", res.newspaperFrequencyRank, true)
-	.addField("Meaning", res.meaning)
-	.addField("Kunyomi", "``" + res.kunyomi.join("   ") + "``")
-	.addField("Kunyomi example", "``" + res.kunyomiExamples[0].example + "`` (read as ``" + res.kunyomiExamples[0].reading + "``): " + res.kunyomiExamples[0].meaning)
-	.addField("Onyomi", "``" + res.onyomi.join("   ") + "``")
-	.addField("Onyomi example", "``" + res.onyomiExamples[0].example + "`` (read as ``" + res.onyomiExamples[0].reading + "``): " + res.onyomiExamples[0].meaning)
-	.addField("Radical", "``" + res.radical.symbol + "``: " + res.radical.meaning, true)
+	.addField("Meaning", res.meaning);
+	if (res.kunyomi.length != 0) {
+		embed.addField("Kunyomi", "``" + res.kunyomi.join("   ") + "``");
+		if (res.kunyomiExamples.length != 0)
+			embed.addField("Kunyomi example", "``" + res.kunyomiExamples[0].example + "`` (read as ``" + res.kunyomiExamples[0].reading + "``): " + res.kunyomiExamples[0].meaning);
+		else
+			embed.addField("Kunyomi example", "no example to show");
+	}
+	if (res.onyomi.length != 0) {
+		embed.addField("Onyomi", "``" + res.onyomi.join("   ") + "``");
+		if (res.onyomiExamples.length != 0)
+			embed.addField("Onyomi example", "``" + res.onyomiExamples[0].example + "`` (read as ``" + res.onyomiExamples[0].reading + "``): " + res.onyomiExamples[0].meaning);
+		else
+			embed.addField("Onyomi example", "no example to show");
+	}
+	embed.addField("Radical", "``" + res.radical.symbol + "``: " + res.radical.meaning, true)
 	.addField("Parts", "``" + res.parts.join("   ") + "``", true)
 	.addField("Jisho link", res.uri)
 	.setImage(res.strokeOrderDiagramUri);
+	return embed;
 
 }
 
