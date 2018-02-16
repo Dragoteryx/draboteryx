@@ -548,11 +548,11 @@ commands.set("shitpost", msg => {
 	link.fetchHTTP().then(res => {
 		let parsed = JSON.parse(res.text);
 		if (!parsed.found)
-			msg.channel.send("I did not find any shitpost relating to your query sorry. Try using less parameters");
+			msg.channel.send("I did not find any shitpost sorry.");
 		else
-			msg.channel.send(parsed.duration == 0 ? parsed.shitpost : parsed.shitpost + "\n(took me ``" + (parsed.duration/1000).toFixed(2) + "`` seconds)");
+			msg.channel.send(parsed.tries == 1 ? parsed.shitpost : parsed.shitpost + "\n(took me ``" + (parsed.duration/1000).toFixed(2) + "`` seconds)");
 	}).catch(err => {
-		msg.channel.send("I'm not in the mood to shitpost right now. Try again later. :grimacing:")
+		msg.channel.send("I'm not in the mood for shitposting right now. Try again later. :grimacing:")
 	});
 }, {props: new classes.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
 
