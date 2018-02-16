@@ -220,12 +220,12 @@ commands.set("invite", msg => {
 	msg.channel.send("What? You want me to join you? Daisuki! :heart:\nThen click here: https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
 }, {maxargs: 0, props: new classes.Command("invite", "get a link to invite the bot to your server", botType, true)});
 
-commands.set("joinserver", msg => {
+commands.set("server", msg => {
 	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
 		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
 	else
 		msg.channel.send("And... you're arrived!");
-}, {maxargs: 0, props: new classes.Command("joinserver", "get an invite to the test server", botType, true)});
+}, {maxargs: 0, props: new classes.Command("server", "get an invite to the test server", botType, true)});
 
 commands.set("ping", msg => {
 	msg.channel.send(":ping_pong: Pong!").then(msg2 => {
