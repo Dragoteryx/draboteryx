@@ -9,8 +9,7 @@ const cleverbotIO = require("cleverbot.io");
 const util = require("util");
 const Danbooru = require("danbooru");
 const jishoApi = new require('unofficial-jisho-api');
-const {stringify} = require('querystring');
-const {request} = require('https');
+const DBL = require("dblapi.js");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -20,6 +19,7 @@ const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
 const MusicHandler = require("./node_modules/drg-music2/music.js");
 const DrgCommands = require("./scripts/commands.js");
+const dbl = new DBL(process.env.DBLAPITOKEN);
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -52,6 +52,7 @@ let redisOK = false;
 exports.client = client;
 exports.vars = vars;
 exports.uptime = uptime;
+exports.dbl = dbl;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.defaultPrefix = config.prefix;
@@ -60,8 +61,9 @@ const utilityType = ":wrench: Utility commands";
 const funType = ":bowling: Fun commands";
 const musicType = ":microphone: Music commands";
 const nsfwType = ":cucumber: NSFW commands";
-const otherType = ":satellite: Other commands"
-const commandTypes = [utilityType, funType, otherType, musicType, nsfwType];
+const otherType = ":satellite: Other commands";
+const botType = ":toilet: Bot related commands";
+const commandTypes = [utilityType, funType, otherType, musicType, nsfwType, botType];
 
 // MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
 music.on("next", (playlist, next) => {
@@ -161,7 +163,9 @@ client.on("ready", () => {
 		if (process.env.HEROKU !== undefined) {
 			console.log("(Heroku launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Heroku launch complete.");
-			updateDSBots();
+			setTimeout(() => {
+				dbl.postStats(client.guilds.size);
+			}, 1800000)
 		} else {
 			console.log("(local launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
@@ -176,11 +180,11 @@ client.on("error", err => {
 });
 client.on("guildCreate", guild => {
 	if (process.env.HEROKU !== undefined)
-		updateDSBots();
+		dbl.postStats(client.guilds.size);
 });
-client.on("guildRemove", guild => {
+client.on("guildDelete", guild => {
 	if (process.env.HEROKU !== undefined)
-		updateDSBots();
+		dbl.postStats(client.guilds.size);
 });
 login();
 for (let meme of memes)
@@ -214,11 +218,22 @@ commands.set("help", msg => {
 	}
 }, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
+commands.set("invite", msg => {
+	msg.channel.send("What? You want me to join you? Daisuki! :heart:\nThen click here: https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
+}, {maxargs: 0, props: new classes.Command("invite", "get a link to invite the bot to your server", botType, true)});
+
+commands.set("joinserver", msg => {
+	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
+		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
+	else
+		msg.channel.send("And... you're arrived!");
+}, {maxargs: 0, props: new classes.Command("joinserver", "get an invite to the test server", botType, true)});
+
 commands.set("ping", msg => {
 	msg.channel.send(":ping_pong: Pong!").then(msg2 => {
 		msg2.edit(":ping_pong: Pong! (``" + (msg2.createdTimestamp - msg.createdTimestamp) + "`` ms)");
 	});
-});
+}, {props: new classes.Command("ping", "pong!", botType, true)});
 
 commands.set("exec", msg => {
 	(async () => {
@@ -254,17 +269,17 @@ commands.set("prefix", msg => {
 			msg.channel.send("My prefix is now ``" + config.prefix + "``.")
 		}
 	}
-}, {maxargs: 1, props: new classes.Command("prefix", "if you don't know what my prefix is despite reading this", utilityType, true)});
+}, {maxargs: 1, props: new classes.Command("prefix", "if you don't know what my prefix is despite reading this", botType, true)});
 
 commands.set("info", msg => {
 	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
 	});
-}, {maxargs: 0, props: new classes.Command("info", "info about me", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("info", "info about me", botType, true)});
 
 commands.set("uptime", msg => {
 	msg.channel.send("I have been up for ``" + uptime.strings.text + "``. My last reboot was ``" + client.readyAt.toUTCString() + "``.");
-}, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", utilityType, true)});
+}, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", botType, true)});
 
 commands.set("serverinfo", async msg => {
 	msg.channel.send("", await msg.guild.embedInfo());
@@ -702,7 +717,15 @@ commands.set("waifu", msg => {
 		msg.reply("your waifu doesn't exist and if she did she wouldn't like you.");
 	else
 		msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
-});
+}, {maxargs: 0, props: new classes.Command("waifu", "get to know who your waifu is", funType, true)});
+
+commands.set("daisuki?", msg => {
+	if (dbl.hasVoted(msg.author.id))
+		msg.dreply("yes! :heart:");
+	else
+		msg.dreply("no, but I would if you voted for me here: https://discordbots.org/bot/273576577512767488");
+
+}, {props: new classes.Command("daisuki?", "do I like you?", funType, true)});
 
 commands.set("dicksize", async msg => {
 	let xsmall = ["Life hates you.", "Did you know that the ancient Greek considered small penises as a symbol of fertility?", "At least it won't get any smaller."];
@@ -738,13 +761,6 @@ commands.set("dicksize", async msg => {
 	else if (length == 10)
 		msg.channel.send(xlarge.random());
 }, {bots: true});
-
-commands.set("invite", msg => {
-	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
-		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
-	else
-		msg.channel.send("And... you're arrived!");
-}, {maxargs: 0, props: new classes.Command("invite", "get an invite to the test server", utilityType, true)});
 
 commands.set("chrischansong", msg => {
 	music.add("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
@@ -881,22 +897,6 @@ async function searchDanbooru(msg, nsfw) {
 	}
 }
 
-function updateDSBots() {
-  let data = stringify({server_count: client.guilds.size});
-  let req = request({
-    host: 'discordbots.org',
-    path: `/api/bots/${client.user.id}/stats`,
-    method: 'POST',
-    headers: {
-      'Authorization': 'API TOKEN',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': Buffer.byteLength(data)
-    }
-  });
-  req.write(data);
-  req.end();
-}
-
 // PROTOTYPES ----------------------------------------------------------------------------------------------
 Object.defineProperty(String.prototype, "fetchHTTP", {
 	value: function fetchHTTP() {
@@ -910,6 +910,12 @@ Object.defineProperty(String.prototype, "fetchHTTP", {
 	}
 });
 
+Object.defineProperty(String.prototype, "firstUpper", {
+	value: function() {
+		return this[0].toUpperCase() + this.slice(1);
+	}
+});
+
 Object.defineProperty(Array.prototype, "random", {
 	value: function() {
 		if (this.length == 0)
@@ -919,11 +925,11 @@ Object.defineProperty(Array.prototype, "random", {
 });
 
 Object.defineProperty(discord.Message.prototype, "dreply", {
-	value: function dreply(content) {
+	value: function(content) {
 		if (this.channel.type == "text")
 			return this.reply(content);
 		else
-			return this.channel.send(content);
+			return this.channel.send(content.firstUpper());
 	}
 });
 

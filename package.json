@@ -1,6 +1,6 @@
 {
   "name": "draboteryx",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short. Use /help to learn how to use it.",
   "main": "drabot.js",
   "engines": {
@@ -9,6 +9,7 @@
   "dependencies": {
     "cleverbot.io": "^1.0.4",
     "danbooru": "^2.0.3",
+    "dblapi.js": "^1.1.0",
     "discord.js": "^11.3.0",
     "dotenv": "^4.0.0",
     "drg-music2": "^1.4.1",

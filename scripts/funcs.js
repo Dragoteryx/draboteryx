@@ -131,35 +131,40 @@ exports.cacheUser = function(user) {
 }
 
 exports.showInfo = async msg => {
-	let stats = "";
-	stats += "Uptime: ``" + drabot.uptime.strings.simple + "``\n";
-	stats += "``" + Array.from(drabot.client.guilds.keys()).length + "`` servers\n";
-	let channels = Array.from(drabot.client.channels.values());
-	let nbv = 0;
-	for (let channel of channels)
-		if (channel.type == "voice")
-			nbv++;
-	stats += "``" + channels.length + "`` channels (``" + (channels.length - nbv) + "`` text, ``" + nbv + "`` voice)\n";
-	stats += "``" + Array.from(drabot.client.users.keys()).length + "`` users";
-	let info = tools.defaultEmbed()
-	.setThumbnail(drabot.client.user.avatarURL)
-	.addField("Discord tag", drabot.client.user.tag, true);
-	let app = await drabot.client.fetchApplication();
-	if (msg.channel.type == "text")
-		await msg.guild.fetchMember(app.owner.id).then(owner => {
-			info.addField("Author", app.owner.tag + " (" + owner + ")", true);
-		}).catch(() => {
+	try {
+		let stats = "";
+		stats += "Uptime: ``" + drabot.uptime.strings.simple + "``\n";
+		stats += "``" + Array.from(drabot.client.guilds.keys()).length + "`` servers\n";
+		let channels = Array.from(drabot.client.channels.values());
+		let nbv = 0;
+		for (let channel of channels)
+			if (channel.type == "voice")
+				nbv++;
+		stats += "``" + channels.length + "`` channels (``" + (channels.length - nbv) + "`` text, ``" + nbv + "`` voice)\n";
+		stats += "``" + Array.from(drabot.client.users.keys()).length + "`` users";
+		let info = tools.defaultEmbed()
+		.setThumbnail(drabot.client.user.avatarURL)
+		.addField("Discord tag", drabot.client.user.tag, true);
+		let app = await drabot.client.fetchApplication();
+		if (msg.channel.type == "text")
+			await msg.guild.fetchMember(app.owner.id).then(owner => {
+				info.addField("Author", app.owner.tag + " (" + owner + ")", true);
+			}).catch(() => {
+				info.addField("Author", app.owner.tag, true);
+			});
+		else
 			info.addField("Author", app.owner.tag, true);
-		});
-	else
-		info.addField("Author", app.owner.tag, true);
-	info.addField("Version", pack.version, true)
-	.addField("Library", "Discord.js", true)
-	.addField("Description", pack.description)
-	.addField("Stats", stats)
-	.addField("Homepage", pack.homepage)
-	.addField("Invite link", "http://bit.ly/2DhiN6n");
-	return info;
+		info.addField("Version", pack.version, true)
+		.addField("Library", "Discord.js", true)
+		.addField("Description", pack.description)
+		.addField("Stats", stats)
+		.addField("Homepage", pack.homepage, true)
+		.addField("Invite link", "https://goo.gl/DTG2x2", true)
+		.addField("Discordbots.org page", "https://discordbots.org/bot/273576577512767488", true);
+		return info;
+	} catch(err) {
+		exports.logError(msg, err);
+	}
 }
 
 exports.kanjiInfo = res => {
