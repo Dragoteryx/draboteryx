@@ -9,6 +9,8 @@ const cleverbotIO = require("cleverbot.io");
 const util = require("util");
 const Danbooru = require("danbooru");
 const jishoApi = new require('unofficial-jisho-api');
+const {stringify} = require('querystring');
+const {request} = require('https');
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -159,6 +161,7 @@ client.on("ready", () => {
 		if (process.env.HEROKU !== undefined) {
 			console.log("(Heroku launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Heroku launch complete.");
+			updateDSBots();
 		} else {
 			console.log("(local launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
@@ -170,7 +173,15 @@ client.on("error", err => {
 	console.error(err);
 	connected = false;
 	login();
-})
+});
+client.on("guildCreate", guild => {
+	if (process.env.HEROKU !== undefined)
+		updateDSBots();
+});
+client.on("guildRemove", guild => {
+	if (process.env.HEROKU !== undefined)
+		updateDSBots();
+});
 login();
 for (let meme of memes)
 	addMeme(meme);
@@ -252,7 +263,7 @@ commands.set("info", msg => {
 }, {maxargs: 0, props: new classes.Command("info", "info about me", utilityType, true)});
 
 commands.set("uptime", msg => {
-	msg.channel.send("I have been up for " + uptime.strings.text + ". My last reboot was " + client.readyAt.toUTCString() + ".")
+	msg.channel.send("I have been up for ``" + uptime.strings.text + "``. My last reboot was ``" + client.readyAt.toUTCString() + "``.");
 }, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", utilityType, true)});
 
 commands.set("serverinfo", async msg => {
@@ -868,6 +879,22 @@ async function searchDanbooru(msg, nsfw) {
 	} catch(err) {
 		funcs.logError(msg, err);
 	}
+}
+
+function updateDSBots() {
+  let data = stringify({server_count: client.guilds.size});
+  let req = request({
+    host: 'discordbots.org',
+    path: `/api/bots/${client.user.id}/stats`,
+    method: 'POST',
+    headers: {
+      'Authorization': 'API TOKEN',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': Buffer.byteLength(data)
+    }
+  });
+  req.write(data);
+  req.end();
 }
 
 // PROTOTYPES ----------------------------------------------------------------------------------------------
