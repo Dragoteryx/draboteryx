@@ -163,6 +163,7 @@ client.on("ready", () => {
 		if (process.env.HEROKU !== undefined) {
 			console.log("(Heroku launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Heroku launch complete.");
+			dbl.postStats(client.guilds.size);
 			setTimeout(() => {
 				dbl.postStats(client.guilds.size);
 			}, 1800000)
@@ -720,11 +721,14 @@ commands.set("waifu", msg => {
 }, {maxargs: 0, props: new classes.Command("waifu", "get to know who your waifu is", funType, true)});
 
 commands.set("daisuki?", msg => {
-	if (dbl.hasVoted(msg.author.id))
-		msg.dreply("yes! :heart:");
-	else
-		msg.dreply("no, but I would if you voted for me here: https://discordbots.org/bot/273576577512767488");
-
+	dbl.hasVoted(msg.author.id).then(voted => {
+		if (voted)
+			msg.dreply("yes! :heart:");
+		else
+			msg.dreply("no, but I would if you voted for me here: https://discordbots.org/bot/273576577512767488");
+	}).catch(err => {
+		funcs.logError(msg, err);
+	});
 }, {props: new classes.Command("daisuki?", "do I like you?", funType, true)});
 
 commands.set("dicksize", async msg => {
