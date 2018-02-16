@@ -164,9 +164,9 @@ client.on("ready", () => {
 			console.log("(Heroku launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Heroku launch complete.");
 			dbl.postStats(client.guilds.size);
-			setTimeout(() => {
+			setInterval(() => {
 				dbl.postStats(client.guilds.size);
-			}, 1800000)
+			}, 1800000);
 		} else {
 			console.log("(local launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Local launch complete.");
