@@ -212,7 +212,7 @@ commands.set("help", msg => {
 			embed.addField(type + " commands", str.replace(" ", ""));
 		}
 		msg.author.send("", embed);
-		if (msg.channel.type != "text")
+		if (msg.channel.type != "dm")
 			msg.dreply(checkDM);
 	} else {
 		if (commands.has(args[0])) {
@@ -226,7 +226,7 @@ commands.set("help", msg => {
 				.addField("Description", command.options.props.desc.firstUpper())
 				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
 				msg.author.send("", embed);
-				if (msg.channel.type != "text")
+				if (msg.channel.type != "dm")
 					msg.dreply(checkDM);
 			}
 		} else {
