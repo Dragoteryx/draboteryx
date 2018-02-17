@@ -196,6 +196,7 @@ music.on("memberLeave", (member, channel) => {
 commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
 
 commands.set("help", msg => {
+	let checkDM = "I just sent a private message.";
 	let unknown = "This command doesn't seem to exist. Use ``" + config.prefix + "help`` to get a list of all commands.";
 	let args = msg.content.split(" ").slice(1);
 	if (args.length == 0) {
@@ -211,6 +212,8 @@ commands.set("help", msg => {
 			embed.addField(type + " commands", str.replace(" ", ""));
 		}
 		msg.author.send("", embed);
+		if (msg.channel.type != "text")
+			msg.channel.send(checkDM);
 	} else {
 		if (commands.has(args[0])) {
 			let command = commands.get(args[0]);
@@ -223,6 +226,8 @@ commands.set("help", msg => {
 				.addField("Description", command.options.props.desc.firstUpper())
 				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
 				msg.author.send("", embed);
+				if (msg.channel.type != "text")
+					msg.channel.send(checkDM);
 			}
 		} else {
 			msg.channel.send(unknown);
@@ -706,7 +711,7 @@ commands.set("httpdog", msg => {
 }, {maxargs: 0, props: new classes.Command("httpdog", "HTTP, and dogs", funType, true)});
 
 commands.set("8ball", msg => {
-	let answers = ["yes.", "no.", "maybe.", "well... that's a tricky one. $8", "42.", "you're not worthy.", "chigau yo!", "only time will tell.", "yes, obviously.", "you don't want to know.", "I am 99.9% sure it's yes.", "I am 99.9% sure it's no.", "tabun..."];
+	let answers = ["yes.", "no.", "maybe.", "well... that's a tricky one... $8", "42.", "you're not worthy.", "chigau yo!", "only time will tell.", "yes, obviously.", "you don't want to know.", "I am 99.9% sure it's yes.", "I am 99.9% sure it's no.", "tabun..."];
 	let answer = "$8";
 	while (answer.includes("$8"))
 		answer = answer.replace("$8", answers.random());
