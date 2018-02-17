@@ -213,7 +213,7 @@ commands.set("help", msg => {
 		}
 		msg.author.send("", embed);
 		if (msg.channel.type != "text")
-			msg.channel.send(checkDM);
+			msg.dreply(checkDM);
 	} else {
 		if (commands.has(args[0])) {
 			let command = commands.get(args[0]);
@@ -227,7 +227,7 @@ commands.set("help", msg => {
 				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
 				msg.author.send("", embed);
 				if (msg.channel.type != "text")
-					msg.channel.send(checkDM);
+					msg.dreply(checkDM);
 			}
 		} else {
 			msg.channel.send(unknown);
