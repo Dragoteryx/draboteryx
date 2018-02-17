@@ -220,7 +220,7 @@ commands.set("help", msg => {
 				let embed = tools.defaultEmbed()
 				.addField("Command", command.name, true)
 				.addField("Type", command.options.props.type, true)
-				.addField("Description", command.options.props.desc.firstUpper(), true)
+				.addField("Description", command.options.props.desc.firstUpper())
 				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
 				msg.author.send("", embed);
 			}
@@ -335,6 +335,7 @@ commands.set("roleinfo", msg => {
 }, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 commands.set("join", msg => {
+	if (memeing.has(msg.guild.id)) return;
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
 			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
@@ -347,7 +348,7 @@ commands.set("join", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, function: msg => !memeing.has(msg.guild.id), props: new classes.Command("join", "join a voice channel", musicType, true)});
+}, {dms: false, maxargs: 0, props: new classes.Command("join", "join a voice channel", musicType, true)});
 
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
@@ -814,6 +815,7 @@ commands.set("chrischansong", msg => {
 }, {owner: true});
 
 commands.set("nis", async msg => {
+	if (memeing.has(msg.guild.id) || music.isConnected(msg.guild)) return;
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + "nis ", "");
@@ -832,7 +834,7 @@ commands.set("nis", async msg => {
 			}).setVolume(2);
 		});
 	}
-}, {dms: false, users: [config.users.drago, config.users.nis], function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
+}, {dms: false, users: [config.users.drago, config.users.nis]});
 
 commands.set("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
@@ -957,6 +959,7 @@ function login() {
 
 function addMeme(name) {
 	commands.set(name, async msg => {
+		if (memeing.has(msg.guild.id) || music.isConnected(msg.guild)) return;
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");
@@ -973,7 +976,7 @@ function addMeme(name) {
 				}).setVolume(2);
 			});
 		}
-	}, {dms: false, function: msg => !music.isConnected(msg.guild) && !memeing.has(msg.guild.id)});
+	}, {dms: false});
 }
 
 function isOwner(user) {
