@@ -27,36 +27,51 @@ exports.write = function(file) {
 
 exports.defaultEmbed = () => new discord.RichEmbed().setColor("#7289DA");
 
-exports.stringToMember = function(str, guild) {
+exports.stringToMembers = (str, guild) => {
 	return new Promise(async (resolve, reject) => {
-		let member;
-		let guildFetched = await guild.fetchMembers();
-		if (str.startsWith("<@") && str.endsWith(">"))
-			member = await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""));
-		else
-			member = guildFetched.members.find("displayName",str);
-		if (member !== null || member === undefined)
+		try {
+			let member;
+			let guildFetched = await guild.fetchMembers();
+			if (str.startsWith("<@") && str.endsWith(">")) {
+				member = await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""));
+				if (member === undefined)
+					member = [];
+				else
+					member = [member];
+			} else
+				member = guildFetched.members.findAll("displayName",str);
+			console.log(member);
 			resolve(member);
-		resolve(undefined);
+		} catch(err) {
+			reject(err);
+		}
 	});
 }
 
-exports.stringToChannel = function(str, guild) {
-	let channel = guild.channels.find("name", str);
-	if (channel !== null || channel === undefined)
-		return channel;
-	return undefined;
+exports.stringToChannels = (str, guild) => {
+	let channel;
+	if (str.startsWith("<#") && str.endsWith(">")) {
+		channel = guild.channels.get(str.replace("<#","").replace(">",""));
+		if (channel === undefined)
+			channel = [];
+		else
+			channel = [channel];
+	} else
+		channel = guild.channels.findAll("name", str);
+	return channel;
 }
 
-exports.stringToRole = function(str, guild) {
+exports.stringToRoles = (str, guild) => {
 	let role;
-	if (str.startsWith("<@") && str.endsWith(">"))
+	if (str.startsWith("<@") && str.endsWith(">")) {
 		role = guild.roles.get(str.replace("<@","").replace(">","").replace("&",""));
-	else
-		role = guild.roles.find("name",str);
-	if (role !== null || role === undefined)
-		return role;
-	return undefined;
+		if (role === undefined)
+			role = [];
+		else
+			role = [role];
+	} else
+		role = guild.roles.findAll("name",str);
+	return role;
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);

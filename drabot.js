@@ -287,7 +287,7 @@ commands.set("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let channel = msg.channel;
 	if (nb > 0)
-		channel = tools.stringToChannel(msg.content.replace(config.prefix + "channelinfo ", ""), msg.guild);
+		channel = tools.stringToChannels(msg.content.replace(config.prefix + "channelinfo ", ""), msg.guild).shift();
 	if (channel === undefined)
 		msg.channel.send("This channel doesn't exist.");
 	else
@@ -298,7 +298,7 @@ commands.set("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let member = msg.member;
 	if (nb > 0)
-		member = await tools.stringToMember(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild);
+		member = (await tools.stringToMembers(msg.content.replace(config.prefix + "userinfo ", ""), msg.guild)).shift();
 	if (member === undefined)
 		msg.channel.send("This user doesn't exist.");
 	else {
@@ -313,7 +313,7 @@ commands.set("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
 	let role = msg.member.highestRole;
 	if (nb > 0)
-		role = tools.stringToRole(msg.content.replace(config.prefix + "roleinfo ", ""), msg.guild);
+		role = tools.stringToRoles(msg.content.replace(config.prefix + "roleinfo ", ""), msg.guild).shift();
 	if (role === undefined)
 		msg.channel.send("This role doesn't exist.");
 	else
@@ -775,7 +775,7 @@ commands.set("nis", async msg => {
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + "nis ", "");
-		member = await tools.stringToMember(str, msg.guild);
+		member = await tools.stringToMembers(str, msg.guild).shift();
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
 		member.voiceChannel.join().then(connection => {
@@ -797,7 +797,7 @@ commands.set("whatisthebestyoutubechannel?", msg => {
 }, {maxargs: 0});
 
 commands.set("hug", async msg => {
-	let member = msg.content.split(" ").length == 1 ? msg.member : await tools.stringToMember(msg.content.replace(config.prefix + "hug ", ""), msg.guild);
+	let member = msg.content.split(" ").length == 1 ? msg.member : await tools.stringToMembers(msg.content.replace(config.prefix + "hug ", ""), msg.guild).shift();
 	console.log(member);
 	if (member === undefined)
 		msg.channel.send("Who is that?");
@@ -854,7 +854,7 @@ function addMeme(name) {
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");
-			member = await tools.stringToMember(str, msg.guild);
+			member = await tools.stringToMembers(str, msg.guild).shift();
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
