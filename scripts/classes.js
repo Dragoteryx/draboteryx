@@ -13,8 +13,8 @@ function prv(object) {
 }
 
 class Command {
-	constructor(name, desc, type, show) {
-		this.name = name;
+	constructor(usage, desc, type, show) {
+		this.usage = usage;
 		this.desc = desc;
 		this.type = type;
 		this.show = show;

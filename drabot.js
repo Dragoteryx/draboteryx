@@ -59,13 +59,13 @@ exports.dbl = dbl;
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.defaultPrefix = config.prefix;
 commands.owners = config.owners;
-const utilityType = {name: "utility", desc: ":wrench: Utility commands"};
-const funType = {name: "fun", desc: ":bowling: Fun commands"};
-const musicType = {name: "music", desc: ":microphone: Music commands"};
-const nsfwType = {name: "nsfw", desc: ":cucumber: NSFW commands"};
-const miscType = {name: "misc", desc: ":satellite: Misc commands"};
-const botType = {name: "bot", desc: ":toilet: Bot related commands"};
-const warframeType = {name: "warframe", desc: ":video_game: Warframe related commands (WIP)"};
+const utilityType = "Utility";
+const funType = "Fun";
+const musicType = "Music";
+const nsfwType = "NSFW";
+const miscType = "Misc";
+const botType = "Bot related";
+const warframeType = "Warframe related";
 const commandTypes = [utilityType, funType, miscType, musicType, nsfwType, botType];
 
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
@@ -196,36 +196,42 @@ music.on("memberLeave", (member, channel) => {
 commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
 
 commands.set("help", msg => {
+	let unknown = "This command doesn't seem to exist. Use ``" + config.prefix + "help`` to get a list of all commands.";
 	let args = msg.content.split(" ").slice(1);
 	if (args.length == 0) {
-		let str = "Available command types are ";
-		for (let type of commandTypes)
-			str += " and ``" + type.name + "``";
-		str = str.replace(" and ", "");
-		for (let i = 0; i < commandTypes.length-2; i++)
-			str = str.replace(" and ", ", ");
-		msg.channel.send("You need to specify which type of command you want using ``" + config.prefix + "help [type]``.\n\n" + str + ".");
-	} else {
+		let coms = [];
+		for (let command of commands.array)
+			if (command.options.props.show) coms.push({name: command.name, type: command.options.props.type});
+		let embed = tools.defaultEmbed();
+		embed.addField("Drabot " + config.prefix + "help", "Options between brackets are ``required``. Those between parenthesis are ``optional``.\nIf you need some help, use ``" + config.prefix + "server`` to join the test server.\nYou can also use ``" + config.prefix + "help [command]`` to obtain help about one particular command.");
 		for (let type of commandTypes) {
-			if (type.name == args[0]) {
-				let embed = tools.defaultEmbed();
-				for (let command of commands.array) {
-					if (command.options.props !== undefined && command.options.props.show && command.options.props.type == type) {
-						embed.addField(config.prefix + command.options.props.name, command.options.props.desc);
-					}
-				}
-				if (msg.channel.type != "dm")
-					msg.dreply("take a look at your private messages!");
-				msg.author.send("Options between brackets are ``required``. Those between parenthesis are ``optional``.\n\n" + type.desc + " (" + embed.fields.length + ")", embed);
-				return;
-			}
+			let str = "";
+			for (let com of coms)
+				if (com.type == type) str += " ``" + com.name + "``";
+			embed.addField(type + " commands", str.replace(" ", ""));
 		}
-		msg.channel.send("This command type doesn't seem to exist. Use ``" + config.prefix + "help`` to get a list of all command types.");
+		msg.author.send("", embed);
+	} else {
+		if (commands.has(args[0])) {
+			let command = commands.get(args[0]);
+			if (!command.options.props.show)
+				msg.channel.send(unknown);
+			else {
+				let embed = tools.defaultEmbed()
+				.addField("Command", command.name, true)
+				.addField("Type", command.options.props.type, true)
+				.addField("Description", command.options.props.desc.firstUpper(), true)
+				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
+				msg.author.send("", embed);
+			}
+		} else {
+			msg.channel.send(unknown);
+		}
 	}
 }, {maxargs: 1, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
 commands.set("invite", msg => {
-	msg.channel.send("What? You want me to join you? Daisuki! :heart:\nThen click here: https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
+	msg.channel.send("What? You want me to join you? :heart:\nThen click here: https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
 }, {maxargs: 0, props: new classes.Command("invite", "get a link to invite the bot to your server", botType, true)});
 
 commands.set("server", msg => {
@@ -277,11 +283,11 @@ commands.set("prefix", msg => {
 	}
 }, {maxargs: 1, props: new classes.Command("prefix", "if you don't know what my prefix is despite reading this", botType, true)});
 
-commands.set("info", msg => {
+commands.set("about", msg => {
 	funcs.showInfo(msg).then(embed => {
 		msg.channel.send("", embed);
 	});
-}, {maxargs: 0, props: new classes.Command("info", "info about me", botType, true)});
+}, {maxargs: 0, props: new classes.Command("about", "information about me", botType, true)});
 
 commands.set("uptime", msg => {
 	msg.channel.send("I have been up for ``" + uptime.strings.text + "``. My last reboot was ``" + client.readyAt.toUTCString() + "``.");
@@ -669,14 +675,42 @@ commands.set("kill", msg => {
 	process.exit();
 }, {owner: true, maxargs: 0});
 
-commands.set("cahrcg", msg => {
+commands.set("cyanidehappiness", msg => {
 	let lien = "http://explosm.net/rcg";
 	lien.fetchHTTP().then(res => {
 		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
-}, {maxargs: 0, props: new classes.Command("cahrcg", "random Cyanide and Happiness comic", funType, true)});
+}, {maxargs: 0, props: new classes.Command("cyanidehappiness", "random Cyanide and Happiness comic", funType, true)});
+
+commands.set("csshumor", msg => {
+	let lien = "https://csshumor.com";
+	lien.fetchHTTP().then(res => {
+		msg.channel.send("(from " + lien + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
+	}).catch(err => {
+		funcs.logError(msg, err);
+	});
+}, {maxargs: 0, props: new classes.Command("csshumor", "random CSS joke", funType, true)});
+
+commands.set("httpdog", msg => {
+	let lien = "https://httpstatusdogs.com";
+	lien.fetchHTTP().then(res => {
+		let img = res.text.split('src="img/').random().split('" alt="')[0];
+		let link = "https://httpstatusdogs.com/img/" + img;
+		msg.channel.send("", {files: [link]});
+	}).catch(err => {
+		funcs.logError(msg, err);
+	});
+}, {maxargs: 0, props: new classes.Command("httpdog", "HTTP, and dogs", funType, true)});
+
+commands.set("8ball", msg => {
+	let answers = ["yes.", "no.", "maybe.", "well... that's a tricky one. $8", "42.", "you're not worthy.", "chigau yo!", "only time will tell.", "yes, obviously.", "you don't want to know.", "I am 99.9% sure it's yes.", "I am 99.9% sure it's no.", "tabun..."];
+	let answer = "$8";
+	while (answer.includes("$8"))
+		answer = answer.replace("$8", answers.random());
+	msg.channel.send(answer.firstUpper());
+}, {minargs: 1, props: new classes.Command("8ball [question]", "ask me something, and I shall answer the truth", funType, true)});
 
 commands.set("rule34", msg => {
 	let searchOld;
@@ -725,7 +759,7 @@ commands.set("waifu", msg => {
 		msg.channel.send("Your waifu doesn't exist and if she did she wouldn't like you.")
 }, {maxargs: 0, props: new classes.Command("waifu", "get to know who your waifu is", funType, true)});
 
-commands.set("daisuki?", msg => {
+commands.set("daisuki", msg => {
 	dbl.hasVoted(msg.author.id).then(voted => {
 		if (voted)
 			msg.dreply("yes! :heart:");
@@ -734,7 +768,7 @@ commands.set("daisuki?", msg => {
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
-}, {props: new classes.Command("daisuki?", "do I like you?", funType, true)});
+}, {props: new classes.Command("daisuki", "do I like you?", funType, true)});
 
 commands.set("dicksize", async msg => {
 	let xsmall = ["Life hates you.", "Did you know that the ancient Greek considered small penises as a symbol of fertility?", "At least it won't get any smaller."];
@@ -830,7 +864,7 @@ commands.set("ytbthumb", msg => {
 			console.error(err);
 		});
 	}
-}, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb", "retrieve the thumbnail from a Youtube video", miscType, true)});
+}, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb [youtube link]", "retrieve the thumbnail from a Youtube video", miscType, true)});
 
 commands.set("jisho", async msg => {
 	let kanjis = msg.content.replace(config.prefix + "jisho ", "").split("");
