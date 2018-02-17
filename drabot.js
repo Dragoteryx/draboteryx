@@ -20,7 +20,7 @@ const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
 const MusicHandler = require("./node_modules/drg-music2/music.js");
 const DrgCommands = require("./scripts/commands.js");
-const dbl = new DBL(process.env.DBLAPITOKEN);
+const gamefetch = require("./scripts/gamefetch.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +34,7 @@ const vars = {};
 const booru = new Danbooru();
 const safebooru = new Danbooru.Safebooru();
 const jisho = new jishoApi();
+const dbl = new DBL(process.env.DBLAPITOKEN);
 
 // GLOBALS ----------------------------------------------------------------------------------------------
 let connected = false;
@@ -58,47 +59,14 @@ exports.dbl = dbl;
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.defaultPrefix = config.prefix;
 commands.owners = config.owners;
-const utilityType = ":wrench: Utility commands";
-const funType = ":bowling: Fun commands";
-const musicType = ":microphone: Music commands";
-const nsfwType = ":cucumber: NSFW commands";
-const otherType = ":satellite: Other commands";
-const botType = ":toilet: Bot related commands";
-const commandTypes = [utilityType, funType, otherType, musicType, nsfwType, botType];
-
-// MUSIC RELATED EVENTS ----------------------------------------------------------------------------------------------
-music.on("next", (playlist, next) => {
-	if (!next.file)
-		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
-	else
-		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member +")");
-});
-music.on("empty", playlist => {
-	musicChannels.get(playlist.guild.id).send("The playlist is empty.");
-});
-music.on("clientMove", (oldChannel, newChannel) => {
-	musicChannels.get(newChannel.guild.id).send("I moved to " + newChannel + ".");
-});
-music.on("memberJoin", (member, channel) => {
-	if (musicLeaves.has(member.guild.id)) {
-		client.clearTimeout(musicLeaves.get(member.guild.id));
-		musicLeaves.delete(member.guild.id);
-		musicChannels.get(member.guild.id).send("Someone joined, staying for a little longer.");
-	}
-});
-music.on("memberLeave", (member, channel) => {
-	if (channel.members.size == 1) {
-		musicChannels.get(member.guild.id).send("The voice channel is empty, I will leave in ``one minute``.");
-		musicLeaves.set(member.guild.id,
-		client.setTimeout(() => {
-			member.guild.playlist.leave().then(() => {
-				musicChannels.get(member.guild.id).send("Goodbye o/");
-				musicChannels.delete(member.guild.id);
-				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
-			}).catch(funcs.logError);
-		}, 60000));
-	}
-});
+const utilityType = {name: "utility", desc: ":wrench: Utility commands"};
+const funType = {name: "fun", desc: ":bowling: Fun commands"};
+const musicType = {name: "music", desc: ":microphone: Music commands"};
+const nsfwType = {name: "nsfw", desc: ":cucumber: NSFW commands"};
+const miscType = {name: "misc", desc: ":satellite: Misc commands"};
+const botType = {name: "bot", desc: ":toilet: Bot related commands"};
+const warframeType = {name: "warframe", desc: ":video_game: Warframe related commands (WIP)"};
+const commandTypes = [utilityType, funType, miscType, musicType, nsfwType, botType];
 
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
@@ -156,7 +124,7 @@ client.on("message", msg => {
 
 });
 
-// CONNECT THE BOT TO DISCORD ----------------------------------------------------------------------------------------------
+// EVENTS ----------------------------------------------------------------------------------------------
 client.on("ready", () => {
 	if (!connected) {
 		connected = true;
@@ -185,37 +153,76 @@ client.on("guildDelete", guild => {
 	if (process.env.HEROKU !== undefined)
 		dbl.postStats(client.guilds.size);
 });
-login();
-for (let meme of memes)
-	addMeme(meme);
-
 redis.on("ready", () => {
 	redisOK = true;
 })
 redis.on("end", () => {
 	redisOK = false;
 })
+music.on("next", (playlist, next) => {
+	if (!next.file)
+		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
+	else
+		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member +")");
+});
+music.on("empty", playlist => {
+	musicChannels.get(playlist.guild.id).send("The playlist is empty.");
+});
+music.on("clientMove", (oldChannel, newChannel) => {
+	musicChannels.get(newChannel.guild.id).send("I moved to " + newChannel + ".");
+});
+music.on("memberJoin", (member, channel) => {
+	if (musicLeaves.has(member.guild.id)) {
+		client.clearTimeout(musicLeaves.get(member.guild.id));
+		musicLeaves.delete(member.guild.id);
+		musicChannels.get(member.guild.id).send("Someone joined, staying for a little longer.");
+	}
+});
+music.on("memberLeave", (member, channel) => {
+	if (channel.members.size == 1) {
+		musicChannels.get(member.guild.id).send("The voice channel is empty, I will leave in ``one minute``.");
+		musicLeaves.set(member.guild.id,
+		client.setTimeout(() => {
+			member.guild.playlist.leave().then(() => {
+				musicChannels.get(member.guild.id).send("Goodbye o/");
+				musicChannels.delete(member.guild.id);
+				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
+			}).catch(funcs.logError);
+		}, 60000));
+	}
+});
 
 // SETUP COMMANDS ----------------------------------------------------------------------------------------------
 commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
 
 commands.set("help", msg => {
-	let embed;
-	if (msg.channel.type != "dm")
-		msg.reply("help is coming in your DMs!");
-	for (let type of commandTypes) {
-		embed = tools.defaultEmbed();
-		for (let command of commands.array) {
-			if (command.options.props !== undefined && command.options.props.show && command.options.props.type == type) {
-				embed.addField(config.prefix + command.options.props.name, command.options.props.desc);
+	let args = msg.content.split(" ").slice(1);
+	if (args.length == 0) {
+		let str = "Available command types are ";
+		for (let type of commandTypes)
+			str += " and ``" + type.name + "``";
+		str = str.replace(" and ", "");
+		for (let i = 0; i < commandTypes.length-2; i++)
+			str = str.replace(" and ", ", ");
+		msg.channel.send("You need to specify which type of command you want using ``" + config.prefix + "help [type]``.\n\n" + str + ".");
+	} else {
+		for (let type of commandTypes) {
+			if (type.name == args[0]) {
+				let embed = tools.defaultEmbed();
+				for (let command of commands.array) {
+					if (command.options.props !== undefined && command.options.props.show && command.options.props.type == type) {
+						embed.addField(config.prefix + command.options.props.name, command.options.props.desc);
+					}
+				}
+				if (msg.channel.type != "dm")
+					msg.dreply("take a look at your private messages!");
+				msg.author.send("Options between brackets are ``required``. Those between parenthesis are ``optional``.\n\n" + type.desc + " (" + embed.fields.length + ")", embed);
+				return;
 			}
 		}
-		if (type == utilityType)
-			msg.author.send("Options between brackets are ``required``. Those between parenthesis are ``optional``.\n\n" + type + " (" + embed.fields.length + ")", embed);
-		else
-			msg.author.send(type + " (" + embed.fields.length + ")", embed);
+		msg.channel.send("This command type doesn't seem to exist. Use ``" + config.prefix + "help`` to get a list of all command types.");
 	}
-}, {maxargs: 0, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
+}, {maxargs: 1, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
 
 commands.set("invite", msg => {
 	msg.channel.send("What? You want me to join you? Daisuki! :heart:\nThen click here: https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
@@ -709,7 +716,7 @@ commands.set("danbooru", msg => {
 
 commands.set("safebooru", msg => {
 	searchDanbooru(msg, false);
-}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", otherType, true)});
+}, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", miscType, true)});
 
 commands.set("waifu", msg => {
 	if (msg.channel.type != "dm")
@@ -776,7 +783,7 @@ commands.set("nis", async msg => {
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + "nis ", "");
-		member = await tools.stringToMembers(str, msg.guild).shift();
+		member = (await tools.stringToMembers(str, msg.guild)).shift();
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
 		member.voiceChannel.join().then(connection => {
@@ -823,7 +830,7 @@ commands.set("ytbthumb", msg => {
 			console.error(err);
 		});
 	}
-}, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb", "retrieve the thumbnail from a Youtube video", otherType, true)});
+}, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb", "retrieve the thumbnail from a Youtube video", miscType, true)});
 
 commands.set("jisho", async msg => {
 	let kanjis = msg.content.replace(config.prefix + "jisho ", "").split("");
@@ -837,7 +844,7 @@ commands.set("jisho", async msg => {
 	}
 	if (!atlone)
 		msg.channel.send("I did not find any kanji in your message.");
-}, {minargs: 1, props: new classes.Command("jisho [text]", "returns information about every kanji in the text", otherType, true)});
+}, {minargs: 1, props: new classes.Command("jisho [text]", "returns information about every kanji in the text", miscType, true)});
 
 commands.set("qrcode", msg => {
 	let text = msg.content.replace(config.prefix + "qrcode ", "");
@@ -849,7 +856,59 @@ commands.set("qrcode", msg => {
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
-}, {minargs: 1, props: new classes.Command("qrcode [text]", "generates a QRCode", otherType, true)});
+}, {minargs: 1, props: new classes.Command("qrcode [text]", "generates a QRCode", miscType, true)});
+
+commands.set("wfalerts", msg => {
+	let args = msg.content.split(" ").slice(1);
+	let platform = args.length == 0 ? "pc" : args[0].toLowerCase();
+	gamefetch.fetchWF(platform).then(data => {
+		console.dir(data.Alerts, {colors: true});
+	}).catch(err => {
+		if (err.message.startsWith("404 Not Found")) msg.channel.send("The Warframe API servers seem to be down.");
+		else if (err.message == "invalid platform") msg.channel.send("Available platforms: ``pc``, ``ps4``, ``xb1``.");
+		else funcs.logError(msg, err);
+	});
+}, {maxargs: 1, props: new classes.Command("wfalerts (platform)", "get the current state of alerts", warframeType, true)});
+
+commands.set("owstats", msg => {
+	let args = msg.content.split(" ").slice(1);
+	if (!args[0].includes("#")) {
+		msg.channel.send("This username does not follow the right format => ``username``#``discriminator``.");
+		return;
+	}
+	let idents = args[0].split("#");
+	gamefetch.fetchOW(idents[0], idents[1]).then(profile => {
+		let stats = profile.stats;
+		let heroes = gamefetch.fetchOWPlaytimes(profile);
+		let overall = {quickplay: stats.quickplay.overall_stats, competitive: stats.competitive.overall_stats};
+		let game = {quickplay: stats.quickplay.game_stats, competitive: stats.competitive.game_stats};
+		let embed = tools.defaultEmbed()
+		.setThumbnail(overall.quickplay.avatar)
+		.addField("Level", overall.quickplay.level + 100 * overall.quickplay.prestige, true);
+		overall.competitive.comprank !== null ?
+		embed.addField("Rank", overall.competitive.comprank + " (" + overall.competitive.tier + ")", true)
+		: embed.addField("Rank", "not ranked", true);
+		embed.addField("Time played", game.quickplay.time_played + " hours", true)
+		.addField("Competitive winrate", overall.competitive.win_rate + "%", true)
+		.addField("Games won", game.quickplay.games_won, true)
+		.addField("Medals", game.quickplay.medals, true)
+		.addField("Eliminations", game.quickplay.eliminations, true)
+		.addField("Deaths", game.quickplay.deaths, true)
+		.addField("K/D ratio", (game.quickplay.eliminations/game.quickplay.deaths).toFixed(2), true)
+		.addField("Solo kills", game.quickplay.solo_kills, true)
+		.addField("Hero damage done", game.quickplay.hero_damage_done, true)
+		.addField("Healing done", game.quickplay.healing_done, true)
+		.addField("Most played hero", heroes[0].name.firstUpper() + " (``" + Math.round(heroes[0].playtime) +  "`` hours)", true)
+		.addField("2nd most played hero", heroes[1].name.firstUpper() + " (``" + Math.round(heroes[1].playtime) +  "`` hours)", true)
+		.addField("3rd most played hero", heroes[2].name.firstUpper() + " (``" + Math.round(heroes[2].playtime) +  "`` hours)", true)
+		.addField("Least played hero", heroes[heroes.length-1].name.firstUpper() + " (``" + Math.round(heroes[heroes.length-1].playtime) +  "`` hours)", true)
+		msg.channel.send("User: ``" + idents.join("#") + "``", embed);
+	}).catch(err => {
+		if (err.message.startsWith("404")) msg.channel.send("This user doesn't exist, isn't tracked or the API servers are down.");
+		else if (err.message.startsWith("429")) msg.channel.send("Too many requests, please try again later.");
+		else funcs.logError(msg, err);
+	});
+}, {minargs: 1, maxargs: 1, props: new classes.Command("owstats [blizzard username#discriminator]", "get your Overwatch stats", miscType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
@@ -867,7 +926,7 @@ function addMeme(name) {
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");
-			member = await tools.stringToMembers(str, msg.guild).shift();
+			member = (await tools.stringToMembers(str, msg.guild)).shift();
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
@@ -984,3 +1043,8 @@ Object.defineProperty(discord.GuildMember.prototype, "embedInfo", {
 		return funcs.showMemberInfo(this);
 	}
 });
+
+// CONNECT THE BOT
+login();
+for (let meme of memes)
+	addMeme(meme);
