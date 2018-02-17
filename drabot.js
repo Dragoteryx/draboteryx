@@ -844,11 +844,7 @@ commands.set("qrcode", msg => {
 	qr.toDataURL(text, {margin: 2, scale: 8, color: {light: "#00000000", dark: "#202225"}}).then(url => {
 		fs.writeFile("./temp/qrcode.png", new Buffer(url.split(",")[1], "base64"), (err) => {
 			if (err) funcs.logError(msg, err);
-			else {
-				msg.channel.send("Input: ``" + text + "``", {files: ["./temp/qrcode.png"]}).then(() => {
-					fs.unlink("./temp/qrcode.png");
-				});
-			}
+			else msg.channel.send("Input: ``" + text + "``", {files: ["./temp/qrcode.png"]});
 		});
 	}).catch(err => {
 		funcs.logError(msg, err);
