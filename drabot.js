@@ -10,6 +10,7 @@ const util = require("util");
 const Danbooru = require("danbooru");
 const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
+const qr = require("qrcode");
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
@@ -837,6 +838,22 @@ commands.set("jisho", async msg => {
 	if (!atlone)
 		msg.channel.send("I did not find any kanji in your message.");
 }, {minargs: 1, props: new classes.Command("jisho [text]", "returns information about every kanji in the text", otherType, true)});
+
+commands.set("qrcode", msg => {
+	let text = msg.content.replace(config.prefix + "qrcode ", "");
+	qr.toDataURL(text, {margin: 2, scale: 8, color: {light: "#00000000", dark: "#202225"}}).then(url => {
+		fs.writeFile("./temp/qrcode.png", new Buffer(url.split(",")[1], "base64"), (err) => {
+			if (err) funcs.logError(msg, err);
+			else {
+				msg.channel.send("Input: ``" + text + "``", {files: ["./temp/qrcode.png"]}).then(() => {
+					fs.unlink("./temp/qrcode.png");
+				});
+			}
+		});
+	}).catch(err => {
+		funcs.logError(msg, err);
+	});
+}, {minargs: 1, props: new classes.Command("qrcode [text]", "generates a QRCode", otherType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

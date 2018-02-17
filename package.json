@@ -17,6 +17,7 @@
     "node-soundcloud": "0.0.6",
     "opusscript": "0.0.4",
     "prism-media": "^0.1.0",
+    "qrcode": "^1.2.0",
     "redis": "^2.8.0",
     "unofficial-jisho-api": "^1.0.5",
     "ws": "^3.1.0",
