@@ -196,7 +196,7 @@ music.on("memberLeave", (member, channel) => {
 commands.set("test", msg => {msg.channel.send("It works!")}, {owner: true, maxargs: 0});
 
 commands.set("help", msg => {
-	let checkDM = "I just sent a private message.";
+	let checkDM = "take a look at your private messages!";
 	let unknown = "This command doesn't seem to exist. Use ``" + config.prefix + "help`` to get a list of all commands.";
 	let args = msg.content.split(" ").slice(1);
 	if (args.length == 0) {
