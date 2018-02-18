@@ -600,6 +600,10 @@ commands.set("fact", msg => {
 	});
 }, {props: new classes.Command("fact (query)", "procedurally generates a random stupid fact", funType, true)});
 
+commands.set("shitpost", msg => {
+	msg.dreply("this command is now called ``" + config.prefix + "fact``. It works exactly the same though. :wink:");
+});
+
 commands.set("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
 	msg.channel.send(content);
