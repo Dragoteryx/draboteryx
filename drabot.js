@@ -29,7 +29,7 @@ const client = new discord.Client();
 const baby = new discord.Client();
 const music = new MusicHandler(client);
 const commands = new DrgCommands(config.prefix);
-const redis = require('redis').createClient(process.env.REDIS_URL);
+const redis = require("redis").createClient(process.env.REDIS_URL);
 const vars = {};
 const booru = new Danbooru();
 const safebooru = new Danbooru.Safebooru();
@@ -55,6 +55,7 @@ exports.client = client;
 exports.vars = vars;
 exports.uptime = uptime;
 exports.dbl = dbl;
+exports.redis = redis;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.defaultPrefix = config.prefix;
@@ -537,20 +538,25 @@ commands.set("plsave", msg => {
 		msg.channel.send("You really want to save an empty playlist ? 😕");
 	else {
 		let current = music.currentInfo(msg.guild);
-		let str = "";
+		let tab = [];
 		if (!current.file)
-			str += " " + current.link;
+			tab.push(current.link);
 		for (let mus of playlist) {
 			if (!mus.file)
-				str += " " + mus.link;
+				tab.push(mus.link);
 		}
-		str = str.replace(" ", "");
-		let nb = str.split(" ").length;
-		if (nb > 6)
-			msg.channel.send("You can only save up to ``6`` musics. You have ``" + nb + "`` counting the one playing.");
+		if (tab.length > 6)
+			msg.channel.send("You can only save up to ``6`` musics. You have ``" + tab.length + "`` counting the one playing.");
 		else {
-			redis.set("guilds->" + msg.guild.id + "->plsaved", str);
-			msg.channel.send("The current playlist has been saved. Use ``" + config.prefix + "plload`` to load it.");
+			msg.guild.rdfetch().then(data => {
+				data.savedpl = tab;
+				if (msg.guild.rdsend(data))
+					msg.channel.send("The current playlist has been saved. Use ``" + config.prefix + "plload`` to load it.");
+				else
+					msg.channel.send("For some reason I was unable to save your playlist, sorry.");
+			}).catch(err => {
+				funcs.logError(msg, err);
+			});
 		}
 	}
 }, {dms: false, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
@@ -563,19 +569,19 @@ commands.set("plload", msg => {
 	if (!music.isConnected(msg.guild))
 		msg.channel.send("I am not in a voice channel.");
 	else {
-		redis.get("guilds->" + msg.guild.id + "->plsaved", async (err, str) => {
-			if (err) funcs.logError(msg, err);
-			if (str === null)
+		msg.guild.rdfetch().then(async data => {
+			if (data.savedpl === undefined)
 				msg.channel.send("You need to save a playlist first using ``" + config.prefix + "plsave``.");
 			else {
-				let array = str.split(" ");
-				for (let link of array) {
+				for (let link of data.savedpl) {
 					try {
 						await music.add(link, msg.member, {passes: 10});
 					} catch(err) {}
 				}
 				msg.channel.send("The playlist was successfully loaded.");
 			}
+		}).catch(err => {
+			funcs.logError(msg, err);
 		});
 	}
 }, {dms: false, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
@@ -1087,6 +1093,30 @@ Object.defineProperty(discord.Role.prototype, "embedInfo", {
 Object.defineProperty(discord.GuildMember.prototype, "embedInfo", {
 	value: function embedInfo() {
 		return funcs.showMemberInfo(this);
+	}
+});
+
+Object.defineProperty(discord.Guild.prototype, "rdfetch", {
+	value: function() {
+		return funcs.fetchRedis("guilds", this);
+	}
+});
+
+Object.defineProperty(discord.Guild.prototype, "rdsend", {
+	value: function(data) {
+		return funcs.sendRedis("guilds", this, data);
+	}
+});
+
+Object.defineProperty(discord.User.prototype, "rdfetch", {
+	value: function() {
+		return funcs.fetchRedis("users", this);
+	}
+});
+
+Object.defineProperty(discord.User.prototype, "rdsend", {
+	value: function(data) {
+		return funcs.sendRedis("users", this, data);
 	}
 });
 

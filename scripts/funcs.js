@@ -217,3 +217,17 @@ exports.musicErrors = (msg, err) => {
 	else if (err.message == "volume < 0") msg.channel.send("The volume must be above ``0``.");
 	else exports.logError(msg, err);
 }
+
+exports.fetchRedis = (directory, object) => {
+	return new Promise((resolve, reject) => {
+		drabot.redis.get(directory + "/" + object.id, (err, data) => {
+			if (err) reject(err);
+			else if (data === null) resolve({});
+			else resolve(JSON.parse(data));
+		});
+	});
+}
+
+exports.sendRedis = (directory, object, data) => {
+	return drabot.redis.set(directory + "/" + object.id, JSON.stringify(data));
+}
