@@ -580,9 +580,9 @@ commands.set("plload", msg => {
 	}
 }, {dms: false, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
 
-commands.set("shitpost", msg => {
+commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
-	let link = "https://shitpostgenerator.herokuapp.com";
+	let link = "https://factgenerator.herokuapp.com";
 	if (args.length > 0) {
 		link += "/?query=";
 		for (let arg of args)
@@ -592,13 +592,13 @@ commands.set("shitpost", msg => {
 	link.fetchHTTP().then(res => {
 		let parsed = JSON.parse(res.text);
 		if (!parsed.found)
-			msg.channel.send("I did not find any shitpost sorry.");
+			msg.channel.send("I did not find any interesting fact sorry.");
 		else
-			msg.channel.send(parsed.tries == 1 ? parsed.shitpost : parsed.shitpost + "\n(took me ``" + (parsed.duration/1000).toFixed(2) + "`` seconds)");
+			msg.channel.send(parsed.fact);
 	}).catch(err => {
-		msg.channel.send("I'm not in the mood for shitposting right now. Try again later. :grimacing:");
+		msg.channel.send("I'm not in the mood for this right now. Try again later. :grimacing:");
 	});
-}, {props: new classes.Command("shitpost (query)", "request a random shitpost (as the bot asks the shitpost to a distant server there can be a delay)", funType, true)});
+}, {props: new classes.Command("fact (query)", "procedurally generates a random stupid fact", funType, true)});
 
 commands.set("say", msg => {
 	let content = msg.content.replace(config.prefix + "say ", "");
