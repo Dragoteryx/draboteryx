@@ -233,7 +233,7 @@ commands.set("help", msg => {
 			msg.channel.send(unknown);
 		}
 	}
-}, {maxargs: 1, props: new classes.Command("help", "you probably know what this command does or else you wouldn't be reading this", utilityType, true)});
+}, {maxargs: 1, props: new classes.Command("help (command)", "you probably know what this command does or else you wouldn't be reading this", botType, true)});
 
 commands.set("invite", msg => {
 	msg.channel.send("What? You want me to join you? :heart:\nThen click here: https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
