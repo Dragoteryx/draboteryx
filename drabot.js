@@ -12,14 +12,16 @@ const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
 const qr = require("qrcode");
 
+// CUSTOM NPM -----------------------------------------------------------------------------------
+const MusicHandler = require("drg-music2");
+const CommandsHandler = require("drg-commands");
+
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js"); 	// configs
 const tools = require("./scripts/tools.js");		// useful functions
 const funcs = require("./scripts/funcs.js");		// commands related functions
 const classes = require("./scripts/classes.js");		// custom classes
 const Duration = require("./scripts/duration.js"); // durations
-const MusicHandler = require("./node_modules/drg-music2/music.js");
-const DrgCommands = require("./scripts/commands.js");
 const gamefetch = require("./scripts/gamefetch.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
@@ -28,7 +30,7 @@ const gamefetch = require("./scripts/gamefetch.js");
 const client = new discord.Client();
 const baby = new discord.Client();
 const music = new MusicHandler(client);
-const commands = new DrgCommands(config.prefix);
+const commands = new CommandsHandler();
 const redis = require("redis").createClient(process.env.REDIS_URL);
 const vars = {};
 const booru = new Danbooru();
