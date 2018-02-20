@@ -1059,7 +1059,7 @@ Object.defineProperty(discord.Message.prototype, "waitResponse", {
 					tocall.delete(this.channel.id + "/" + random);
 					resolve(null);
 				}, options.delay);
-			})
+			}
 			tocall.set(this.channel.id + "/" + random, msg => {
 				if (msg.channel.id != this.channel.id) return;
 				if (!options.function(msg)) return;
