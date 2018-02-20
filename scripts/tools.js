@@ -22,11 +22,17 @@ exports.random = function(min, max) {
 
 // écrire dans un fichier
 exports.write = function(file) {
-	fs.writeFile("./" + file + ".json", JSON.stringify(eval(file)), (err) => {if(err) console.error(err)});
+	return new Promise((resolve, reject) => {
+		fs.writeFile("./" + file + ".json", JSON.stringify(eval(file)), (err) => {
+			if (err) reject(err);
+			else resolve();
+		});
+	});
 }
 
-//exports.defaultEmbed = () => new discord.RichEmbed().setColor("#7289DA");
-exports.defaultEmbed = () => new discord.RichEmbed().setColor("#808000");
+exports.coloredEmbed = color => new discord.RichEmbed().setColor(color);
+exports.defaultEmbed = () => exports.coloredEmbed("#808000");
+exports.discordEmbed = () => exports.coloredEmbed("#7289DA");
 
 exports.stringToMembers = (str, guild) => {
 	return new Promise(async (resolve, reject) => {
@@ -76,7 +82,6 @@ exports.stringToRoles = (str, guild) => {
 }
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
-
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 exports.defineAllProperties = (obj, option) => {

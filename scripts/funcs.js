@@ -21,7 +21,7 @@ exports.showMemberInfo = function(member) {
 	if (member.colorRole !== null)
 		info.setColor(member.colorRole.color);
 	info.setThumbnail(member.user.displayAvatarURL)
-	.addField("Member",member, true)
+	.addField("Member", member, true)
 	.addField("Display name", member.displayName, true)
 	.addField("Username#discriminator", member.user.tag, true)
 	.addField("Unique ID", member.user.id, true)
@@ -230,4 +230,28 @@ exports.fetchRedis = (directory, object) => {
 
 exports.sendRedis = (directory, object, data) => {
 	return drabot.redis.set(directory + "/" + object.id, JSON.stringify(data));
+}
+
+exports.searchDanbooru = async (msg, nsfw) => {
+	try {
+		let query = msg.content.split(" ").slice(1);
+		if (query.length > 2) {
+			msg.channel.send("You can't search for more than 2 tags at the same time.");
+			return;
+		}
+		let posts;
+		if (nsfw) posts = await booru.posts(query);
+		else posts = await safebooru.posts(query);
+		if (posts.length == 0)
+			msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
+		else {
+			let post = {large_file_url: undefined};
+			while (post.large_file_url === undefined)
+				post = posts.random().raw;
+			let link = post.large_file_url.includes("https://") ? post.large_file_url : "http://danbooru.donmai.us" + post.large_file_url;
+			msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
+		}
+	} catch(err) {
+		funcs.logError(msg, err);
+	}
 }

@@ -1,5 +1,6 @@
 "use strict";
 require("dotenv").config();
+require("./scripts/prototypes.js");
 
 // REQUIREMENTS ----------------------------------------------------------------------------------------------
 const discord = require("discord.js");
@@ -14,15 +15,15 @@ const qr = require("qrcode");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
 const MusicHandler = require("drg-music2");
-const CommandsHandler = require("drg-commands");
 
 // FILES ----------------------------------------------------------------------------------------------
-const config = require("./config.js"); 	// configs
-const tools = require("./scripts/tools.js");		// useful functions
-const funcs = require("./scripts/funcs.js");		// commands related functions
-const classes = require("./scripts/classes.js");		// custom classes
-const Duration = require("./scripts/duration.js"); // durations
+const config = require("./config.js");
+const tools = require("./scripts/tools.js")
+const funcs = require("./scripts/funcs.js");
+const classes = require("./scripts/classes.js");
+const Duration = require("./scripts/duration.js");
 const gamefetch = require("./scripts/gamefetch.js");
+const CommandsHandler = require("./scripts/commands.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -51,6 +52,7 @@ let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"]
 let memeing = new Map();
 let musicLeaves = new Map();
 let redisOK = false;
+let tocall = new Map();
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -78,10 +80,6 @@ client.on("message", msg => {
 	commands.check(msg, {prefix: config.prefix}).then(res => {
 		if (debug) {
 			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
-			let toLog = "";
-			if (msg.channel.type != "dm") toLog += "[DEBUG] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-			else toLog += "[DEBUG] (DM) " + msg.author.username + ": " + msg.content;
-			console.log(toLog);
 			console.log(res);
 		}
 		if (res.result.valid) {
@@ -125,6 +123,17 @@ client.on("message", msg => {
 		});
 	}
 
+	// CORRIGER VLTBOT
+	if (msg.content === "/id") {
+		msg.waitResponse({function: msg2 => msg2.author.id == config.users.vltbot}).then(msg2 => {
+			if (msg2 === undefined) return;
+			msg.channel.send("What a silly bot, here is your true true ID: ``" + msg.author.id + "``.");
+		});
+	}
+
+	// CALL ONMESSAGE FUNCTIONS
+	tocall.forEach(func => func(msg));
+	
 });
 
 // EVENTS ----------------------------------------------------------------------------------------------
@@ -157,11 +166,16 @@ client.on("guildDelete", guild => {
 		dbl.postStats(client.guilds.size);
 });
 redis.on("ready", () => {
+	console.log("[REDIS] Ready.");
 	redisOK = true;
-})
+});
 redis.on("end", () => {
+	console.log("[REDIS] End.");
 	redisOK = false;
-})
+});
+redis.on("error", () => {
+	redisOK = false;
+});
 music.on("next", (playlist, next) => {
 	if (!next.file)
 		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
@@ -297,12 +311,18 @@ commands.set("about", msg => {
 	});
 }, {maxargs: 0, props: new classes.Command("about", "information about me", botType, true)});
 
+commands.set("info", msg => {
+	funcs.showInfo(msg).then(embed => {
+		msg.channel.send("", embed);
+	});
+}, {maxargs: 0});
+
 commands.set("uptime", msg => {
 	msg.channel.send("I have been up for ``" + uptime.strings.text + "``. My last reboot was ``" + client.readyAt.toUTCString() + "``.");
 }, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", botType, true)});
 
 commands.set("serverinfo", async msg => {
-	msg.channel.send("", await msg.guild.embedInfo());
+	msg.channel.send("", await funcs.showGuildInfo(msg.guild));
 }, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new classes.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
 commands.set("channelinfo", msg => {
@@ -313,7 +333,7 @@ commands.set("channelinfo", msg => {
 	if (channel === undefined)
 		msg.channel.send("This channel doesn't exist.");
 	else
-		msg.channel.send("", channel.embedInfo());
+		msg.channel.send("", funcs.showChannelInfo(channel));
 }, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new classes.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
 commands.set("userinfo", async msg => {
@@ -325,7 +345,7 @@ commands.set("userinfo", async msg => {
 		msg.channel.send("This user doesn't exist.");
 	else {
 		if (isOwner(msg.author) || msg.member.hasPermission("ADMINISTRATOR") || msg.member.highestRole.comparePositionTo(member.highestRole) > 0 || msg.member.user.id == member.user.id)
-			msg.channel.send("", member.embedInfo());
+			msg.channel.send("", funcs.showMemberInfo(member));
 		else
 			msg.channel.send("You don't have the necessary permissions.");
 	}
@@ -339,7 +359,7 @@ commands.set("roleinfo", msg => {
 	if (role === undefined)
 		msg.channel.send("This role doesn't exist.");
 	else
-		msg.channel.send("", role.embedInfo());
+		msg.channel.send("", funcs.showRoleInfo(role));
 }, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 commands.set("join", msg => {
@@ -763,11 +783,11 @@ commands.set("rule34", msg => {
 }, {minargs: 1, nsfw: true, props: new classes.Command("rule34 [query]", "if it exists...", nsfwType, true)});
 
 commands.set("danbooru", msg => {
-	searchDanbooru(msg, true);
+	funcs.searchDanbooru(msg, true);
 }, {minargs: 1, nsfw: true, props: new classes.Command("danbooru [tags]", "search something on danbooru", nsfwType, true)});
 
 commands.set("safebooru", msg => {
-	searchDanbooru(msg, false);
+	funcs.searchDanbooru(msg, false);
 }, {minargs: 1, props: new classes.Command("safebooru [tags]", "search for a SFW image on safebooru", miscType, true)});
 
 commands.set("waifu", msg => {
@@ -963,6 +983,15 @@ commands.set("owstats", msg => {
 	});
 }, {minargs: 1, maxargs: 1, props: new classes.Command("owstats [blizzard username#discriminator]", "get your Overwatch stats", miscType, true)});
 
+commands.set("res", msg => {
+	msg.channel.send("J'attend une réponse.").then(msg2 => {
+		msg2.waitResponse({delay: 5000, function: msg3 => msg3.author.id == msg.author.id}).then(msg3 => {
+			if (msg3 === undefined) msg.channel.send("Aucune réponse dans le délai requis.");
+			else msg.channel.send("Tu as répondu: ``" + msg3.content + "``.");
+		});
+	});
+});
+
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
@@ -1000,31 +1029,7 @@ function isOwner(user) {
 	return commands.owners.includes(user.id);
 }
 
-async function searchDanbooru(msg, nsfw) {
-	try {
-		let query = msg.content.split(" ").slice(1);
-		if (query.length > 2) {
-			msg.channel.send("You can't search for more than 2 tags at the same time.");
-			return;
-		}
-		let posts;
-		if (nsfw) posts = await booru.posts(query);
-		else posts = await safebooru.posts(query);
-		if (posts.length == 0)
-			msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
-		else {
-			let post = {large_file_url: undefined};
-			while (post.large_file_url === undefined)
-				post = posts.random().raw;
-			let link = post.large_file_url.includes("https://") ? post.large_file_url : "http://danbooru.donmai.us" + post.large_file_url;
-			msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
-		}
-	} catch(err) {
-		funcs.logError(msg, err);
-	}
-}
-
-// PROTOTYPES ----------------------------------------------------------------------------------------------
+// PROTOTYPES
 Object.defineProperty(String.prototype, "fetchHTTP", {
 	value: function fetchHTTP() {
 		return new Promise((resolve, reject) => {
@@ -1037,88 +1042,34 @@ Object.defineProperty(String.prototype, "fetchHTTP", {
 	}
 });
 
-Object.defineProperty(String.prototype, "firstUpper", {
-	value: function() {
-		return this[0].toUpperCase() + this.slice(1);
-	}
-});
-
-Object.defineProperty(Array.prototype, "random", {
-	value: function() {
-		if (this.length == 0)
-			return undefined;
-		return this[tools.random(this.length-1)];
-	}
-});
-
-Object.defineProperty(discord.Message.prototype, "dreply", {
-	value: function(content) {
-		if (this.channel.type == "text")
-			return this.reply(content);
-		else
-			return this.channel.send(content.firstUpper());
-	}
-});
-
-Object.defineProperty(discord.Guild.prototype, "nbCon", {
-	value: function nbCon() {
-		return new Promise((resolve, reject) => {
-			this.fetchMembers().then(guild => {
-				let presences = Array.from(guild.presences.values());
-				let h = 0;
-				for(let presence of presences)
-					if (presence.status != "offline") h++;
-				resolve(h);
-			}).catch(reject);
+Object.defineProperty(discord.Message.prototype, "waitResponse", {
+	value: function(options) {
+		if (options === undefined)
+			options = {};
+		if (options.delay === undefined)
+			options.delay = 10000;
+		if (options.function === undefined)
+			options.function = () => true;
+		let random = tools.random(0, 8191);
+		return new Promise(resolve => {
+			let delay = setTimeout(() => {
+				tocall.delete(this.channel.id + "/" + random);
+				resolve();
+			}, options.delay);
+			tocall.set(this.channel.id + "/" + random, msg => {
+				if (msg.channel.id != this.channel.id) return;
+				if (!options.function(msg)) return;
+				tocall.delete(this.channel.id + "/" + random);
+				clearTimeout(delay);
+				resolve(msg);
+			});
 		});
 	}
 });
 
-Object.defineProperty(discord.Guild.prototype, "embedInfo", {
-	value: function embedInfo() {
-		return funcs.showGuildInfo(this);
-	}
-});
+Object.defineProperty(discord.Message.prototype, "reactsResponse", {
+	value: function(reacts) {
 
-Object.defineProperty(discord.Channel.prototype, "embedInfo", {
-	value: function embedInfo() {
-		return funcs.showChannelInfo(this);
-	}
-});
-
-Object.defineProperty(discord.Role.prototype, "embedInfo", {
-	value: function embedInfo() {
-		return funcs.showRoleInfo(this);
-	}
-});
-
-Object.defineProperty(discord.GuildMember.prototype, "embedInfo", {
-	value: function embedInfo() {
-		return funcs.showMemberInfo(this);
-	}
-});
-
-Object.defineProperty(discord.Guild.prototype, "rdfetch", {
-	value: function() {
-		return funcs.fetchRedis("guilds", this);
-	}
-});
-
-Object.defineProperty(discord.Guild.prototype, "rdsend", {
-	value: function(data) {
-		return funcs.sendRedis("guilds", this, data);
-	}
-});
-
-Object.defineProperty(discord.User.prototype, "rdfetch", {
-	value: function() {
-		return funcs.fetchRedis("users", this);
-	}
-});
-
-Object.defineProperty(discord.User.prototype, "rdsend", {
-	value: function(data) {
-		return funcs.sendRedis("users", this, data);
 	}
 });
 
