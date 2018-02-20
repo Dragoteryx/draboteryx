@@ -24,6 +24,7 @@ const Duration = require("./scripts/duration.js");
 const gamefetch = require("./scripts/gamefetch.js");
 const CommandsHandler = require("./scripts/commands.js");
 const crypt = require("./scripts/crypt.js");
+const TicTacToe = require("./scripts/tictactoe.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -64,14 +65,15 @@ exports.redis = redis;
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.defaultPrefix = config.prefix;
 commands.owners = config.owners;
-const utilityType = "Utility";
-const funType = "Fun";
-const musicType = "Music";
-const nsfwType = "NSFW";
-const miscType = "Misc";
-const botType = "Bot related";
-const warframeType = "Warframe related";
-const commandTypes = [utilityType, funType, miscType, musicType, nsfwType, botType];
+const utilityType = "Utility commands";
+const funType = "Fun commands";
+const musicType = "Music commands";
+const nsfwType = "NSFW commands";
+const miscType = "Misc commands";
+const botType = "Bot related commands";
+const warframeType = "Warframe related commands";
+const gameType = "Games"
+const commandTypes = [utilityType, gameType, funType, miscType, musicType, nsfwType, botType];
 
 // LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
@@ -201,7 +203,7 @@ commands.set("help", msg => {
 			let str = "";
 			for (let com of coms)
 				if (com.type == type) str += " ``" + com.name + "``";
-			embed.addField(type + " commands", str.replace(" ", ""));
+			embed.addField(type, str.replace(" ", ""));
 		}
 		msg.author.send("", embed);
 		if (msg.channel.type != "dm")
@@ -248,14 +250,14 @@ commands.set("exec", msg => {
 	(async () => {
 		try {
 			let val = eval(msg.content.replace(config.prefix + "exec ", ""));
-			let str = "Executed: ```js\n";
+			let str = "Executed:\n";
 			if (val instanceof Promise) {
 				val = await val;
-				str = "Executed (Promise): ```js\n";
+				str = "Executed (Promise):\n";
 			}
 			console.dir(val);
-			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 0, breakLength: 0});
-			msg.channel.send(str + tosend + "\n```").catch(err => {
+			let tosend = val instanceof Function ? val : tools.stringifyObject(val);
+			msg.channel.send(str + tosend).catch(err => {
 				msg.channel.send("Execution sent to console.");
 			});
 			msg.react("✅");
@@ -964,42 +966,101 @@ commands.set("owstats", msg => {
 }, {minargs: 1, maxargs: 1, props: new classes.Command("owstats [blizzard username#discriminator]", "get your Overwatch stats", miscType, true)});
 
 commands.set("reflex", async msg => {
+	if (msg.channel.reflex) return;
+	msg.channel.reflex = true;
 	msg.channel.send("I will post a message, the first to respond with the correct number wins!");
 	await tools.sleep(tools.random(5000, 15000));
 	let random = tools.random(100, 999);
-	let msg2 = await msg.channel.send("The fastest one wins! ``" + random + "``");
-	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => {
-		if (msg3.content == random && msg3.author.bot) {
-			msg3.reply("bots are not authorized to play this game. That's cheating!");
+	await msg.channel.send("The fastest one wins! ``" + random + "``");
+	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => {
+		if (msg2.content == random && msg2.author.bot) {
+			msg2.reply("bots are not authorized to play this game. That's cheating!");
 			return false;
 		}
-		return msg3.content == random;
+		return msg2.content == random;
 	}});
-	if (!msg3) msg.channel.send("You guys are slow.");
-	else msg.channel.send("Well played " + msg3.member + ".");
-}, {dms: false, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", funType, true)});
+	if (!msg2) msg.channel.send("You guys are slow.");
+	else msg.channel.send("Well played " + msg2.member + ".");
+	delete msg.channel.reflex;
+}, {dms: false, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", gameType, true)});
 
 commands.set("encrypt", async msg => {
 	let message = msg.content.replace(config.prefix + "encrypt ", "");
 	let key;
-	let msg2 = await msg.channel.send("Do you want me to use a specific key ? If you do reply with the key within ``10`` seconds.");
-	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => msg3.author.id == msg.author.id});
-	if (!msg3) key = crypt.genNoise(8);
-	else key = msg3.content;
+	await msg.channel.send("Do you want me to use a specific key ? If you do reply with the key within ``10`` seconds.");
+	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => msg2.author.id == msg.author.id});
+	if (!msg2) key = crypt.genNoise(8);
+	else key = msg2.content;
 	msg.channel.send("Your encrypted message: ``" + crypt.encrypt(message, key) + "``. Key: ``" + key + "``.")
-}, {minargs: 1, props: new classes.Command("encrypt [text]", "encrypt a message (AES)", miscType, true)});
+}, {minargs: 1, props: new classes.Command("encrypt [message]", "encrypt a message (AES)", miscType, true)});
 
 commands.set("decrypt", async msg => {
 	let crypted = msg.content.replace(config.prefix + "decrypt ", "");
-	let msg2 = await msg.channel.send("Do you happen to know the key ? Reply with the key to decrypt this message within ``10`` seconds.");
-	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => msg3.author.id == msg.author.id});
+	await msg.channel.send("Do you happen to know the key ? Reply with the key to decrypt this message within ``10`` seconds.");
+	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg3 => msg3.author.id == msg.author.id});
 	if (!msg3) msg.channel.send("If you don't know the key I can't decrypt this message.");
 	else {
 		let message = crypt.decrypt(crypted, msg3.content);
 		if (!message) msg.channel.send("This doesn't seem to be the right key to decrypt this message.");
 		else msg.channel.send("I successfully decrypted this message: ``" + message + "``.");
 	}
-}, {minargs: 1, props: new classes.Command("decrypt [text]", "decrypt a message with its key", miscType, true)});
+}, {minargs: 1, props: new classes.Command("decrypt [message]", "decrypt a message", miscType, true)});
+
+commands.set("tictactoe", async msg => {
+	if (msg.channel.tictactoe) {
+		msg.reply("please wait until the current game of Tic-Tac-Toe is finished.");
+		return;
+	}
+	msg.channel.tictactoe = true;
+	await msg.channel.send(msg.member + " wants to play Tic-Tac-Toe. Does anyone want to play with him? Reply ``" + config.prefix + "playttt`` within ``10`` seconds.");
+	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => {
+		return (msg2.author.id != msg.author.id && msg2.content == config.prefix + "playttt");
+	}});
+	if (!msg2)
+		msg.channel.send("Sorry " + msg.member + ", but it seems like no one wants to play Tic-Tac-Toe right now.");
+	else {
+		let players = [msg.member, msg2.member];
+		players.sort(() => Math.random() - 0.5);
+		let ttt = new TicTacToe(msg.channel.send, players[0], players[1]);
+		msg.channel.send("You probably already know the rules but I'll repeat then anyway: you need to align your three of you marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, simply reply with the number that corresponds to the postion where you want to place your mark.", ttt.grid);
+		msg.channel.send("The first player is... ").then(async msg3 => {
+			await tools.sleep(1000);
+			msg3.edit(msg3.content + players[0] + "!");
+		})
+		await tools.sleep(2000);
+		let afk = false;
+		while (!ttt.finished) {
+			await msg.channel.send("It is now " + ttt.current.member + "'s turn.", ttt.embed);
+			let msg3 = await msg.channel.waitResponse({delay: 10000, function: msg3 => {
+				if (msg3.author.id != ttt.current.member.user.id) return false;
+				let choix = Math.floor(Number(msg3.content));
+				if (isNaN(choix)) return false;
+				if (choix < 1 || choix > 9) {
+					msg.reply("you do know there are only 9 positions right?");
+					return false;
+				} else if (ttt.cases[choix-1] != " ") {
+					msg.reply("this position is not empty.");
+					return false;
+				}
+				return true;
+			}});
+			if (!msg3) {
+				if (!afk) {
+					msg.channel.send(ttt.current.member + " waited for too long.");
+					afk = true;
+					ttt.pass();
+				} else
+					break;
+			} else
+				ttt.fill(Math.floor(Number(msg3.content))-1);
+		}
+		if (ttt.finished)
+			msg.channel.send(ttt.current.member + " won the game. Well played!", ttt.embed);
+		else
+			msg.channel.send("Both players stopped playing, the game is finished.");
+	}
+	delete msg.channel.tictactoe;
+}, {dms: false, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
@@ -1039,27 +1100,27 @@ function isOwner(user) {
 }
 
 // PROTOTYPES
-Object.defineProperty(discord.Message.prototype, "waitResponse", {
+Object.defineProperty(discord.TextChannel.prototype, "waitResponse", {
 	value: function(options) {
-		if (options === undefined)
-			options = {};
-		if (options.delay === undefined)
-			options.delay = -1;
-		if (options.function === undefined)
-			options.function = () => true;
-		let random = tools.random(0, 249999);
 		return new Promise(resolve => {
+			if (options === undefined)
+				options = {};
+			if (options.delay === undefined)
+				options.delay = -1;
+			if (options.function === undefined)
+				options.function = () => true;
+			let random = tools.random(0, 249999);
 			let delay;
 			if (options.delay >= 0) {
 				delay = setTimeout(() => {
-					tocall.delete(this.channel.id + "/" + random);
+					tocall.delete(this.id + "/" + random);
 					resolve(null);
 				}, options.delay);
 			}
-			tocall.set(this.channel.id + "/" + random, msg => {
-				if (msg.channel.id != this.channel.id) return;
+			tocall.set(this.id + "/" + random, msg => {
+				if (msg.channel.id != this.id) return;
 				if (!options.function(msg)) return;
-				tocall.delete(this.channel.id + "/" + random);
+				tocall.delete(this.id + "/" + random);
 				if (options.delay >= 0)
 					clearTimeout(delay);
 				resolve(msg);

@@ -2,6 +2,7 @@
 "use strict";
 
 const discord = require("discord.js");
+const util = require("util");
 const https = require("https");
 const http = require("http");
 
@@ -87,32 +88,47 @@ exports.defineAllProperties = (obj, option) => {
 	return obj;
 }
 
-exports.request = (host, headers) => {
+exports.request = (host, options, data) => {
 	return new Promise((resolve, reject) => {
-		let protocol;
-		if (host.startsWith("https://"))
-			protocol = https;
-		else if (host.startsWith("http://"))
-			protocol = http;
+		if (host === undefined) reject(new Error("'host' is undefined"));
 		else {
-			reject(new Error("Invalid protocol: https or http"));
-			return;
+			let protocol;
+			if (host.startsWith("https://"))
+				protocol = https;
+			else if (host.startsWith("http://"))
+				protocol = http;
+			else {
+				reject(new Error("Invalid protocol: https or http"));
+				return;
+			}
+			host = host.replace("https://", "").replace("http://", "");
+			host = host.split("/");
+			if (options === undefined)
+				options = {};
+			options.hostname = host.shift();
+			options.path = "/" + host.join("/");
+	    let req = protocol.request(options, res => {
+				res.setEncoding("utf8");
+				let html = "";
+				res.on("data", data => {
+					html += data.toString();
+				});
+				res.on("end", () => {
+					if (("" + res.statusCode).startsWith("2"))
+						resolve({statusCode: res.statusCode, headers: res.headers, text: html});
+					else
+						reject(new Error("" + res.statusCode + " " + res.statusMessage));
+				});
+			}).on("error", reject);
+			if (options.method == "POST") {
+				if (data === undefined) reject(new Error("'data' is undefined"));
+				else req.write(data);
+			}
+			req.end();
 		}
-		host = host.replace("https://", "").replace("http://", "");
-		host = host.split("/");
-		if (headers === undefined)
-			headers = {};
-    protocol.request({host: host.shift(), path: "/" + host.join("/"), headers: headers}, res => {
-			let html = "";
-			res.on("data", data => {
-				html += data.toString();
-			});
-			res.on("end", () => {
-				if (("" + res.statusCode).startsWith("2"))
-					resolve({statusCode: res.statusCode, headers: res.headers, text: html});
-				else
-					reject(new Error("" + res.statusCode + " " + res.statusMessage));
-			});
-		}).on("error", reject).end();
   });
+}
+
+exports.stringifyObject = object => {
+	return "```js\n" + util.inspect(object, {depth: 0, breakLength: 0}) + "\n```";
 }

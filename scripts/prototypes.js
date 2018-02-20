@@ -66,8 +66,6 @@ Object.defineProperty(discord.User.prototype, "rdsend", {
 
 Object.defineProperty(String.prototype, "fetchHTTP", {
 	value: function fetchHTTP() {
-		return new Promise((resolve, reject) => {
-			tools.request(this).then(resolve, reject);
-		});
+		return tools.request(this);
 	}
 });
