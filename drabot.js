@@ -125,15 +125,15 @@ client.on("message", msg => {
 
 	// CORRIGER VLTBOT
 	if (msg.content === "/id") {
-		msg.waitResponse({function: msg2 => msg2.author.id == config.users.vltbot}).then(msg2 => {
-			if (msg2 === undefined) return;
+		msg.waitResponse({delay: 5000, function: msg2 => msg2.author.id == config.users.vltbot}).then(msg2 => {
+			if (!msg2) return;
 			msg.channel.send("What a silly bot, here is your true true ID: ``" + msg.author.id + "``.");
 		});
 	}
 
 	// CALL ONMESSAGE FUNCTIONS
 	tocall.forEach(func => func(msg));
-	
+
 });
 
 // EVENTS ----------------------------------------------------------------------------------------------
@@ -983,14 +983,15 @@ commands.set("owstats", msg => {
 	});
 }, {minargs: 1, maxargs: 1, props: new classes.Command("owstats [blizzard username#discriminator]", "get your Overwatch stats", miscType, true)});
 
-commands.set("res", msg => {
-	msg.channel.send("J'attend une réponse.").then(msg2 => {
-		msg2.waitResponse({delay: 5000, function: msg3 => msg3.author.id == msg.author.id}).then(msg3 => {
-			if (msg3 === undefined) msg.channel.send("Aucune réponse dans le délai requis.");
-			else msg.channel.send("Tu as répondu: ``" + msg3.content + "``.");
-		});
-	});
-});
+commands.set("reflex", async msg => {
+	msg.channel.send("I will post a message, the first to respond with the correct number wins!");
+	await tools.sleep(tools.random(5000, 15000));
+	let random = tools.random(100, 999);
+	let msg2 = await msg.channel.send("The fastest one wins! ``" + random + "``");
+	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => msg3.content == random});
+	if (!msg3) msg.channel.send("You guys are slow.");
+	else msg.channel.send("Well played " + msg3.member + ".");
+}, {dms: false, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", funType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
@@ -1047,29 +1048,27 @@ Object.defineProperty(discord.Message.prototype, "waitResponse", {
 		if (options === undefined)
 			options = {};
 		if (options.delay === undefined)
-			options.delay = 10000;
+			options.delay = -1;
 		if (options.function === undefined)
 			options.function = () => true;
-		let random = tools.random(0, 8191);
+		let random = tools.random(0, 249999);
 		return new Promise(resolve => {
-			let delay = setTimeout(() => {
-				tocall.delete(this.channel.id + "/" + random);
-				resolve();
-			}, options.delay);
+			let delay;
+			if (options.delay > 0) {
+				delay = setTimeout(() => {
+					tocall.delete(this.channel.id + "/" + random);
+					resolve(null);
+				}, options.delay);
+			})
 			tocall.set(this.channel.id + "/" + random, msg => {
 				if (msg.channel.id != this.channel.id) return;
 				if (!options.function(msg)) return;
 				tocall.delete(this.channel.id + "/" + random);
-				clearTimeout(delay);
+				if (options.delay > 0)
+					clearTimeout(delay);
 				resolve(msg);
 			});
 		});
-	}
-});
-
-Object.defineProperty(discord.Message.prototype, "reactsResponse", {
-	value: function(reacts) {
-
 	}
 });
 
