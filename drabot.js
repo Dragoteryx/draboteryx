@@ -988,7 +988,13 @@ commands.set("reflex", async msg => {
 	await tools.sleep(tools.random(5000, 15000));
 	let random = tools.random(100, 999);
 	let msg2 = await msg.channel.send("The fastest one wins! ``" + random + "``");
-	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => msg3.content == random});
+	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => {
+		if (msg3.content == random && msg3.author.bot) {
+			msg3.reply("bots are not authorized to play this game. That's cheating!");
+			return false;
+		}
+		return msg3.content == random;
+	}});
 	if (!msg3) msg.channel.send("You guys are slow.");
 	else msg.channel.send("Well played " + msg3.member + ".");
 }, {dms: false, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", funType, true)});
