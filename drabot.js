@@ -24,6 +24,7 @@ const classes = require("./scripts/classes.js");
 const Duration = require("./scripts/duration.js");
 const gamefetch = require("./scripts/gamefetch.js");
 const CommandsHandler = require("./scripts/commands.js");
+const crypt = require("./scripts/crypt.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -998,6 +999,28 @@ commands.set("reflex", async msg => {
 	if (!msg3) msg.channel.send("You guys are slow.");
 	else msg.channel.send("Well played " + msg3.member + ".");
 }, {dms: false, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", funType, true)});
+
+commands.set("crypt", async msg => {
+	let message = msg.content.replace(config.prefix + "crypt ", "");
+	let key;
+	let msg2 = await msg.channel.send("Do you want me to use a specific key ? If you do reply with the key within ``5`` seconds.");
+	let msg3 = await msg2.waitResponse({delay: 5000, function: msg3 => msg3.author.id == msg.author.id});
+	if (!msg3) key = crypt.genNoise(8);
+	else key = msg3.content;
+	msg.channel.send("Your crypted message: ``" + crypt.crypt(message, key) + "``. Key: ``" + key + "``.")
+}, {minargs: 1, props: new classes.Command("crypt [text]", "crypt a message (not real)", miscType, true)});
+
+commands.set("decrypt", async msg => {
+	let crypted = msg.content.replace(config.prefix + "decrypt ", "");
+	let msg2 = await msg.channel.send("Do you happen to know the key ? Reply with the key to decrypt this message within ``5`` seconds.");
+	let msg3 = await msg2.waitResponse({delay: 5000, function: msg3 => msg3.author.id == msg.author.id});
+	if (!msg3) msg.channel.send("If you don't know the key I can't decrypt this message.");
+	else {
+		let message = crypt.decrypt(crypted, msg3.content);
+		if (!message) msg.channel.send("This doesn't seem to be the right key to decrypt this message.");
+		else msg.channel.send("I successfully decrypted this message: ``" + message + "``.");
+	}
+}, {minargs: 1, props: new classes.Command("decrypt [text]", "decrypt a message with its key", miscType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
