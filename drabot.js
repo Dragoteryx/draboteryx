@@ -1022,7 +1022,7 @@ commands.set("tictactoe", async msg => {
 		let players = [msg.member, msg2.member];
 		players.sort(() => Math.random() - 0.5);
 		let ttt = new TicTacToe(msg.channel.send, players[0], players[1]);
-		msg.channel.send("You probably already know the rules but I'll repeat then anyway: you need to align three of your marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, simply reply with the number that corresponds to the position where you want to place your mark.", ttt.grid);
+		msg.channel.send("You probably already know the rules but I'll repeat then anyway: you need to align three of your marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, you have ``20`` seconds to reply with the number that corresponds to the position where you want to place your mark.", ttt.grid);
 		msg.channel.send("The first player is... ").then(async msg3 => {
 			await tools.sleep(1000);
 			msg3.edit(msg3.content + players[0] + "!");
@@ -1031,7 +1031,7 @@ commands.set("tictactoe", async msg => {
 		let afk = false;
 		while (!ttt.finished) {
 			await msg.channel.send("It is now " + ttt.current.member + "'s turn.", ttt.embed);
-			let msg3 = await msg.channel.waitResponse({delay: 10000, function: msg3 => {
+			let msg3 = await msg.channel.waitResponse({delay: 20000, function: msg3 => {
 				if (msg3.author.id != ttt.current.member.user.id) return false;
 				let choix = Math.floor(Number(msg3.content));
 				if (isNaN(choix)) return false;
@@ -1051,10 +1051,16 @@ commands.set("tictactoe", async msg => {
 					ttt.pass();
 				} else
 					break;
-			} else
+			} else {
 				ttt.fill(Math.floor(Number(msg3.content))-1);
+				afk = false;
+				if (ttt.empty == 0)
+					break;
+				}
 		}
-		if (ttt.finished)
+		if (ttt.empty == 0)
+			msg.channel.send("Well that's a draw!");
+		else if (ttt.finished)
 			msg.channel.send(ttt.current.member + " won the game. Well played!", ttt.embed);
 		else
 			msg.channel.send("Both players stopped playing, the game is finished.");

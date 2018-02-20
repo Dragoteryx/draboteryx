@@ -50,6 +50,12 @@ class TicTacToe {
   	str += " 7   8   9\n```";
   	return tools.defaultEmbed().addField("Tic-Tac-Toe", str);
   }
+  get empty() {
+    let nb = 0;
+    for (let case of this.cases)
+      if (case == " ") nb++
+    return nb;
+  }
 }
 
 module.exports = TicTacToe;
