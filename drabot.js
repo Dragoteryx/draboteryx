@@ -1003,11 +1003,11 @@ commands.set("reflex", async msg => {
 commands.set("encrypt", async msg => {
 	let message = msg.content.replace(config.prefix + "encrypt ", "");
 	let key;
-	let msg2 = await msg.channel.send("Do you want me to use a specific key ? If you do reply with the key within ``5`` seconds.");
-	let msg3 = await msg2.waitResponse({delay: 5000, function: msg3 => msg3.author.id == msg.author.id});
+	let msg2 = await msg.channel.send("Do you want me to use a specific key ? If you do reply with the key within ``10`` seconds.");
+	let msg3 = await msg2.waitResponse({delay: 10000, function: msg3 => msg3.author.id == msg.author.id});
 	if (!msg3) key = crypt.genNoise(8);
 	else key = msg3.content;
-	msg.channel.send("Your crypted message: ``" + crypt.encrypt(message, key) + "``. Key: ``" + key + "``.")
+	msg.channel.send("Your encrypted message: ``" + crypt.encrypt(message, key) + "``. Key: ``" + key + "``.")
 }, {minargs: 1, props: new classes.Command("encrypt [text]", "encrypt a message (AES)", miscType, true)});
 
 commands.set("decrypt", async msg => {
