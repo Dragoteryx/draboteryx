@@ -52,8 +52,8 @@ class TicTacToe {
   }
   get empty() {
     let nb = 0;
-    for (let case of this.cases)
-      if (case == " ") nb++
+    for (let tcase of this.cases)
+      if (tcase == " ") nb++
     return nb;
   }
 }
