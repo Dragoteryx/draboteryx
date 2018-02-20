@@ -1,4 +1,5 @@
 const discord = require("discord.js");
+
 const tools = require("./tools.js");
 const funcs = require("./funcs.js");
 
@@ -60,5 +61,13 @@ Object.defineProperty(discord.User.prototype, "rdfetch", {
 Object.defineProperty(discord.User.prototype, "rdsend", {
 	value: function(data) {
 		return funcs.sendRedis("users", this, data);
+	}
+});
+
+Object.defineProperty(String.prototype, "fetchHTTP", {
+	value: function fetchHTTP() {
+		return new Promise((resolve, reject) => {
+			tools.request(this).then(resolve, reject);
+		});
 	}
 });

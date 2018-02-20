@@ -5,7 +5,6 @@ require("./scripts/prototypes.js");
 // REQUIREMENTS ----------------------------------------------------------------------------------------------
 const discord = require("discord.js");
 const fs = require("fs");
-const snekfetch = require("snekfetch");
 const cleverbotIO = require("cleverbot.io");
 const util = require("util");
 const Danbooru = require("danbooru");
@@ -98,31 +97,6 @@ client.on("message", msg => {
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
-
-	// CLEVERBOT
-	/*if (!msg.content.startsWith(config.prefix) && (msg.channel.type != "text" || msg.channel.name.toLowerCase() == "cleverbot") && msg.author.id != client.user.id && clever) {
-		if (!cleverbots.has(msg.channel.id + "/" + msg.author.id))
-			cleverbots.set(msg.channel.id + "/" + msg.author.id, new cleverbotIO(process.env.CLEVER_USER, process.env.CLEVER_KEY));
-		let cleverbot = cleverbots.get(msg.channel.id + "/" + msg.author.id);
-		cleverbot.create((err, session) => {
-			if (err) console.error(err);
-			else {
-				let toLog = "";
-				if (msg.channel.type != "dm") toLog += "[CLEVERBOT] Instance: " + msg.channel.id + "/" + msg.author.id + " (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-				else toLog += "[CLEVERBOT] Instance: " + msg.channel.id + "/" + msg.author.id + " (DM) " + msg.author.username + ": " + msg.content;
-				if (debug)
-					console.log(toLog);
-				cleverbot.ask(msg.content, (err, res) => {
-					if (err) console.error(err)
-					else {
-						if (debug)
-							console.log("[CLEVERBOT] Response: " + res);
-						msg.channel.send(res);
-					}
-				});
-			}
-		});
-	}*/
 
 	// CORRIGER VLTBOT
 	if (msg.content === "/id") {
@@ -279,7 +253,7 @@ commands.set("exec", msg => {
 				val = await val;
 				str = "Executed (Promise): ```js\n";
 			}
-			console.dir(val, {colors: true});
+			console.dir(val);
 			let tosend = val instanceof Function ? val : util.inspect(val, {depth: 0, breakLength: 0});
 			msg.channel.send(str + tosend + "\n```").catch(err => {
 				msg.channel.send("Execution sent to console.");
@@ -362,6 +336,7 @@ commands.set("roleinfo", msg => {
 	else
 		msg.channel.send("", funcs.showRoleInfo(role));
 }, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
+
 
 commands.set("join", msg => {
 	if (memeing.has(msg.guild.id)) return;
@@ -608,6 +583,10 @@ commands.set("plload", msg => {
 		});
 	}
 }, {dms: false, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
+
+commands.set("listenmoe", msg => {
+	if (memeing.has(msg.guild.id)) return;
+}, {dms: false, maxargs: 0});
 
 commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -978,7 +957,7 @@ commands.set("owstats", msg => {
 		.addField("Least played hero", heroes[heroes.length-1].name.firstUpper() + " (``" + Math.round(heroes[heroes.length-1].playtime) +  "`` hours)", true)
 		msg.channel.send("User: ``" + idents.join("#") + "``", embed);
 	}).catch(err => {
-		if (err.message.startsWith("404")) msg.channel.send("This user doesn't exist, isn't tracked or the API servers are down.");
+		if (err.message.startsWith("400")) msg.channel.send("This user doesn't exist, isn't tracked or the API servers are down.");
 		else if (err.message.startsWith("429")) msg.channel.send("Too many requests, please try again later.");
 		else funcs.logError(msg, err);
 	});
@@ -1060,18 +1039,6 @@ function isOwner(user) {
 }
 
 // PROTOTYPES
-Object.defineProperty(String.prototype, "fetchHTTP", {
-	value: function fetchHTTP() {
-		return new Promise((resolve, reject) => {
-			if (debug)
-				console.log("[HTTP] Fetch " + this);
-			snekfetch.get(this)
-			.then(resolve)
-			.catch(reject);
-		});
-	}
-});
-
 Object.defineProperty(discord.Message.prototype, "waitResponse", {
 	value: function(options) {
 		if (options === undefined)
@@ -1083,7 +1050,7 @@ Object.defineProperty(discord.Message.prototype, "waitResponse", {
 		let random = tools.random(0, 249999);
 		return new Promise(resolve => {
 			let delay;
-			if (options.delay > 0) {
+			if (options.delay >= 0) {
 				delay = setTimeout(() => {
 					tocall.delete(this.channel.id + "/" + random);
 					resolve(null);
@@ -1093,7 +1060,7 @@ Object.defineProperty(discord.Message.prototype, "waitResponse", {
 				if (msg.channel.id != this.channel.id) return;
 				if (!options.function(msg)) return;
 				tocall.delete(this.channel.id + "/" + random);
-				if (options.delay > 0)
+				if (options.delay >= 0)
 					clearTimeout(delay);
 				resolve(msg);
 			});

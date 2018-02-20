@@ -3,6 +3,7 @@
 
 const discord = require("discord.js");
 const https = require("https");
+const http = require("http");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
@@ -84,4 +85,34 @@ exports.defineAllProperties = (obj, option) => {
 	for (let property of properties)
 		Object.defineProperty(obj, property, option);
 	return obj;
+}
+
+exports.request = (host, headers) => {
+	return new Promise((resolve, reject) => {
+		let protocol;
+		if (host.startsWith("https://"))
+			protocol = https;
+		else if (host.startsWith("http://"))
+			protocol = http;
+		else {
+			reject(new Error("Invalid protocol: https or http"));
+			return;
+		}
+		host = host.replace("https://", "").replace("http://", "");
+		host = host.split("/");
+		if (headers === undefined)
+			headers = {};
+    protocol.request({host: host.shift(), path: "/" + host.join("/"), headers: headers}, res => {
+			let html = "";
+			res.on("data", data => {
+				html += data.toString();
+			});
+			res.on("end", () => {
+				if (("" + res.statusCode).startsWith("2"))
+					resolve({statusCode: res.statusCode, headers: res.headers, text: html});
+				else
+					reject(new Error("" + res.statusCode + " " + res.statusMessage));
+			});
+		}).on("error", reject).end();
+  });
 }
