@@ -1022,12 +1022,12 @@ commands.set("tictactoe", async msg => {
 		let players = [msg.member, msg2.member];
 		players.sort(() => Math.random() - 0.5);
 		let ttt = new TicTacToe(msg.channel.send, players[0], players[1]);
-		msg.channel.send("You probably already know the rules but I'll repeat then anyway: you need to align your three of you marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, simply reply with the number that corresponds to the postion where you want to place your mark.", ttt.grid);
+		msg.channel.send("You probably already know the rules but I'll repeat then anyway: you need to align three of your marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, simply reply with the number that corresponds to the position where you want to place your mark.", ttt.grid);
 		msg.channel.send("The first player is... ").then(async msg3 => {
 			await tools.sleep(1000);
 			msg3.edit(msg3.content + players[0] + "!");
 		})
-		await tools.sleep(2000);
+		await tools.sleep(5000);
 		let afk = false;
 		while (!ttt.finished) {
 			await msg.channel.send("It is now " + ttt.current.member + "'s turn.", ttt.embed);
