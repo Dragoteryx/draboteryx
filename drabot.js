@@ -1069,8 +1069,8 @@ commands.set("tictactoe", async msg => {
 }, {guildonly: true, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
 
 commands.set("tttstate", msg => {
-    msg.channel.send("TTTSTATE//" + msg.member.user.id + "//" + msg.channel.tictactoe.stringify()).then(msg2 => msg2.delete());
-}, {guildonly: true, maxargs: 0, function: msg => msg.author.bot && msg.channel.tictactoe !== undefined});
+  msg.channel.send("TTTSTATE//" + msg.member.user.id + "//" + msg.channel.tictactoe.stringify() + "//" + msg.channel.tictactoe.current.sign).then(msg2 => msg2.delete());
+}, {guildonly: true, bots: true, maxargs: 0, function: msg => msg.author.bot && msg.channel.tictactoe !== undefined});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
