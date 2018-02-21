@@ -56,6 +56,13 @@ class TicTacToe {
       if (tcase == " ") nb++
     return nb;
   }
+  stringify() {
+    return JSON.stringify([
+      [this.cases[6], this.cases[7], this.cases[8]],
+      [this.cases[3], this.cases[4], this.cases[5]],
+      [this.cases[0], this.cases[1], this.cases[2]]
+    ]);
+  }
 }
 
 module.exports = TicTacToe;
