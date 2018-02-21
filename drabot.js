@@ -1004,73 +1004,7 @@ commands.set("decrypt", async msg => {
 	}
 }, {minargs: 1, props: new classes.Command("decrypt [message]", "decrypt a message", miscType, true)});
 
-commands.set("tictactoe", async msg => {
-	if (msg.channel.playingttt) {
-		msg.reply("please wait until the current game of Tic-Tac-Toe is finished.");
-		return;
-	}
-	msg.channel.playingttt = true;
-	await msg.channel.send(msg.member + " wants to play Tic-Tac-Toe. Does anyone want to play with him? Reply ``" + config.prefix + "tttplay`` within ``20`` seconds.");
-	let msg2 = await msg.channel.waitResponse({delay: 20000, function: msg2 => {
-		return (msg2.author.id != msg.author.id && msg2.content == config.prefix + "tttplay" && !msg.author.bot);
-	}});
-	if (!msg2)
-		msg.channel.send("Sorry " + msg.member + ", but it seems like no one wants to play Tic-Tac-Toe right now.");
-	else {
-		let players = [msg.member, msg2.member];
-		msg.channel.send("Players: " + players[0] + " and " + players[1] + ".\nYou probably already know the rules but I'll repeat then anyway: you need to align three of your marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, you have ``20`` seconds to reply with the number that corresponds to the position where you want to place your mark.", TicTacToe.grid());
-		players.sort(() => Math.random() - 0.5);
-		let ttt = new TicTacToe(msg.channel.send, players[0], players[1]);
-		msg.channel.tictactoe = ttt;
-		msg.channel.send("The first player is... ").then(async msg3 => {
-			await tools.sleep(1000);
-			msg3.edit(msg3.content + players[0] + "!");
-		})
-		await tools.sleep(2000);
-		let afk = false;
-		while (!ttt.finished) {
-			await msg.channel.send("It is now " + ttt.current.member + "'s turn.", ttt.embed);
-			let msg3 = await msg.channel.waitResponse({delay: 20000, function: msg3 => {
-				if (msg3.author.id != ttt.current.member.user.id) return false;
-				let choix = Math.floor(Number(msg3.content));
-				if (isNaN(choix)) return false;
-				if (choix < 1 || choix > 9) {
-					msg.reply("you do know there are only 9 positions right?");
-					return false;
-				} else if (ttt.cases[choix-1] != " ") {
-					msg.reply("this position is not empty.");
-					return false;
-				}
-				return true;
-			}});
-			if (!msg3) {
-				if (!afk) {
-					msg.channel.send(ttt.current.member + " waited for too long.");
-					afk = true;
-					ttt.pass();
-				} else
-					break;
-			} else {
-				ttt.fill(Math.floor(Number(msg3.content))-1);
-				afk = false;
-				if (!ttt.finished && ttt.empty == 0)
-					break;
-			}
-		}
-		if (ttt.empty == 0)
-			msg.channel.send("Well that's a draw!", ttt.embed);
-		else if (ttt.finished)
-			msg.channel.send(ttt.current.member + " won the game. Well played!", ttt.embed);
-		else
-			msg.channel.send("Both players stopped playing, the game is finished.");
-		delete msg.channel.tictactoe;
-	}
-	delete msg.channel.playingttt;
-}, {guildonly: true, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
-
-commands.set("tttstate", msg => {
-  msg.channel.send("TTTSTATE//" + msg.member.user.id + "//" + msg.channel.tictactoe.stringify() + "//" + msg.channel.tictactoe.current.sign).then(msg2 => msg2.delete());
-}, {guildonly: true, bots: true, maxargs: 0, function: msg => msg.author.bot && msg.channel.tictactoe !== undefined});
+commands.set("tictactoe", TicTacToe.command, {guildonly: true, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
