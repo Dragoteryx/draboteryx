@@ -1069,8 +1069,8 @@ commands.set("tictactoe", async msg => {
 }, {guildonly: true, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
 
 commands.set("tttstate", msg => {
-	msg.author.send("TTTSTATE//" + msg.channel.id + "//" + msg.channel.tictactoe.stringify());
-}, {guildonly: true, bots: true, maxargs: 0, function: msg => msg.author.bot && msg.channel.tictactoe !== undefined});
+    msg.channel.send("TTTSTATE//" + msg.member.user.id + "//" + msg.channel.tictactoe.stringify()).then(msg2 => msg2.delete());
+}, {guildonly: true, maxargs: 0, function: msg => msg.author.bot && msg.channel.tictactoe !== undefined});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
@@ -1110,7 +1110,7 @@ function isOwner(user) {
 }
 
 // PROTOTYPES
-Object.defineProperty(discord.TextChannel.prototype, "waitResponse", {
+Object.defineProperty(discord.Channel.prototype, "waitResponse", {
 	value: function(options) {
 		return new Promise(resolve => {
 			if (options === undefined)

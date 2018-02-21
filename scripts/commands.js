@@ -65,7 +65,7 @@ class CommandsHandler {
 		if (options.function === undefined)
 			options.function = () => true;
 		let command = new Command(name, callback, Object.seal({
-			dms: options.dms,
+			guildonly: options.guildonly,
 			owner: options.owner,
 			guilds: options.guilds,
 			channels: options.channels,
@@ -195,7 +195,8 @@ class Command {
 							check.reasons = [];
 						check.reasons.push("command disabled");
 					}
-					if (msg.channel.type != "text" && this.options.guildonly) {
+					if (this.options.guildonly && msg.channel.type != "text") {
+						console.log("oui");
 						check.valid = false;
 						if (check.reasons === undefined)
 							check.reasons = [];
