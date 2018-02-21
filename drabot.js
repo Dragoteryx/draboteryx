@@ -998,9 +998,9 @@ commands.set("decrypt", async msg => {
 	let crypted = msg.content.replace(config.prefix + "decrypt ", "");
 	await msg.channel.send("Do you happen to know the key ? Reply with the key to decrypt this message within ``10`` seconds.");
 	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg3 => msg3.author.id == msg.author.id});
-	if (!msg3) msg.channel.send("If you don't know the key I can't decrypt this message.");
+	if (!msg2) msg.channel.send("If you don't know the key I can't decrypt this message.");
 	else {
-		let message = crypt.decrypt(crypted, msg3.content);
+		let message = crypt.decrypt(crypted, msg2.content);
 		if (!message) msg.channel.send("This doesn't seem to be the right key to decrypt this message.");
 		else msg.channel.send("I successfully decrypted this message: ``" + message + "``.");
 	}
@@ -1014,7 +1014,7 @@ commands.set("tictactoe", async msg => {
 	msg.channel.tictactoe = true;
 	await msg.channel.send(msg.member + " wants to play Tic-Tac-Toe. Does anyone want to play with him? Reply ``" + config.prefix + "playttt`` within ``10`` seconds.");
 	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => {
-		return (msg2.author.id != msg.author.id && msg2.content == config.prefix + "playttt");
+		return (msg2.author.id != msg.author.id && msg2.content == config.prefix + "playttt" && !msg.author.bot);
 	}});
 	if (!msg2)
 		msg.channel.send("Sorry " + msg.member + ", but it seems like no one wants to play Tic-Tac-Toe right now.");
@@ -1059,7 +1059,7 @@ commands.set("tictactoe", async msg => {
 				}
 		}
 		if (ttt.empty == 0)
-			msg.channel.send("Well that's a draw!");
+			msg.channel.send("Well that's a draw!", ttt.embed);
 		else if (ttt.finished)
 			msg.channel.send(ttt.current.member + " won the game. Well played!", ttt.embed);
 		else
