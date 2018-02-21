@@ -20,7 +20,6 @@ const config = require("./config.js");
 const tools = require("./scripts/tools.js")
 const funcs = require("./scripts/funcs.js");
 const classes = require("./scripts/classes.js");
-const Duration = require("./scripts/duration.js");
 const gamefetch = require("./scripts/gamefetch.js");
 const CommandsHandler = require("./scripts/commands.js");
 const crypt = require("./scripts/crypt.js");
@@ -47,10 +46,7 @@ let clever = true;
 let cleverbots = new Map();
 let debug = false;
 let babylogged = false;
-let uptime = new Duration();
-uptime.auto = true;
 let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"];
-let memeing = new Map();
 let musicLeaves = new Map();
 let redisOK = false;
 let tocall = new Map();
@@ -58,7 +54,6 @@ let tocall = new Map();
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
 exports.vars = vars;
-exports.uptime = uptime;
 exports.dbl = dbl;
 exports.redis = redis;
 
@@ -90,12 +85,14 @@ client.on("message", msg => {
 			else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
 			console.log(toLog);
 		}
-		else if (res.result.reasons.includes("DMs not allowed"))
+		else if (res.result.reasons.includes("guild only command"))
 			msg.channel.send("You can't use this command in private channels.");
 		else if (res.result.reasons.includes("owner only command"))
 			msg.channel.send("This is an owner only command.");
 		else if (res.result.reasons.includes("missing permissions"))
 			msg.channel.send("You don't have the necessary permissions.");
+		else if (res.result.reasons.includes("nsfw"))
+			msg.channel.send("What are you trying to do?");
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
@@ -117,7 +114,7 @@ client.on("message", msg => {
 client.on("ready", () => {
 	if (!connected) {
 		connected = true;
-		console.log("[DRABOT] I'm connected Senpai !");
+		console.log("[DRABOT] Connected!");
 		if (process.env.HEROKU !== undefined) {
 			console.log("(Heroku launch)");
 			client.guilds.get("255312496250978305").channels.get("275292955475050496").send("Heroku launch complete.");
@@ -130,6 +127,7 @@ client.on("ready", () => {
 	}
 });
 client.on("error", err => {
+	console.log("[DRABOT] Error.");
 	console.error(err);
 	connected = false;
 	login();
@@ -143,14 +141,12 @@ client.on("guildDelete", guild => {
 		dbl.postStats(client.guilds.size);
 });
 redis.on("ready", () => {
-	console.log("[REDIS] Ready.");
 	redisOK = true;
 });
 redis.on("end", () => {
-	console.log("[REDIS] End.");
 	redisOK = false;
 });
-redis.on("error", () => {
+redis.on("error", err => {
 	redisOK = false;
 });
 music.on("next", (playlist, next) => {
@@ -255,7 +251,10 @@ commands.set("exec", msg => {
 				val = await val;
 				str = "Executed (Promise):\n";
 			}
-			console.dir(val);
+			if (process.env.HEROKU !== undefined)
+				console.dir(val);
+			else
+				console.dir(val, {colors: true});
 			let tosend = val instanceof Function ? val : tools.stringifyObject(val);
 			msg.channel.send(str + tosend).catch(err => {
 				msg.channel.send("Execution sent to console.");
@@ -295,12 +294,12 @@ commands.set("info", msg => {
 }, {maxargs: 0});
 
 commands.set("uptime", msg => {
-	msg.channel.send("I have been up for ``" + uptime.strings.text + "``. My last reboot was ``" + client.readyAt.toUTCString() + "``.");
+	msg.channel.send("I have been up for ``" + tools.parseTimestamp(client.uptime).text + "``. My last reboot was ``" + client.readyAt.toUTCString() + "``.");
 }, {maxargs: 0, props: new classes.Command("uptime", "for how long the bot has been running", botType, true)});
 
 commands.set("serverinfo", async msg => {
 	msg.channel.send("", await funcs.showGuildInfo(msg.guild));
-}, {override: true, dms: false, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new classes.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
+}, {override: true, guildonly: true, maxargs: 0, permissions: ["MANAGE_GUILD"], props: new classes.Command("serverinfo", "info about this server, you need to have the permission to manage the server", utilityType, true)});
 
 commands.set("channelinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -311,7 +310,7 @@ commands.set("channelinfo", msg => {
 		msg.channel.send("This channel doesn't exist.");
 	else
 		msg.channel.send("", funcs.showChannelInfo(channel));
-}, {override: true, dms: false, permissions: ["MANAGE_CHANNELS"], props: new classes.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
+}, {override: true, guildonly: true, permissions: ["MANAGE_CHANNELS"], props: new classes.Command("channelinfo (channel name)", "info about a text/voice channel (case sensitive), you need to have the permission to manage channels", utilityType, true)});
 
 commands.set("userinfo", async msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -326,7 +325,7 @@ commands.set("userinfo", async msg => {
 		else
 			msg.channel.send("You don't have the necessary permissions.");
 	}
-}, {override: true, dms: false, props: new classes.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
+}, {override: true, guildonly: true, props: new classes.Command("userinfo (username)", "info about a user (case sensitive), your highest role needs to be above the user's highest role", utilityType, true)});
 
 commands.set("roleinfo", msg => {
 	let nb = msg.content.split(" ").slice(1).length;
@@ -337,11 +336,11 @@ commands.set("roleinfo", msg => {
 		msg.channel.send("This role doesn't exist.");
 	else
 		msg.channel.send("", funcs.showRoleInfo(role));
-}, {override: true, dms: false, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
+}, {override: true, guildonly: true, permissions: ["MANAGE_ROLES"], props: new classes.Command("roleinfo (role name)", "info about a role (case sensitive), you need to have the permission to manage roles", utilityType, true)});
 
 
 commands.set("join", msg => {
-	if (memeing.has(msg.guild.id)) return;
+	if (msg.guild.memes) return;
 	music.join(msg.member).then(() => {
 		if (tools.getDate() == "1/4") {
 			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
@@ -354,7 +353,7 @@ commands.set("join", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("join", "join a voice channel", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("join", "join a voice channel", musicType, true)});
 
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
@@ -364,7 +363,7 @@ commands.set("leave", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("leave", "leave the voice channel", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("leave", "leave the voice channel", musicType, true)});
 
 commands.set("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
@@ -382,7 +381,7 @@ commands.set("request", msg => {
 			else funcs.musicErrors(msg, err);
 		});
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
+}, {guildonly: true, minargs: 1, maxargs: 1, props: new classes.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
 commands.set("query", msg => {
 	let query = msg.content.replace(config.prefix + "query ","");
@@ -395,7 +394,7 @@ commands.set("query", msg => {
 			else funcs.musicErrors(msg, err);
 		});
 	});
-}, {dms: false, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
+}, {guildonly: true, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
 commands.set("plremove", msg => {
 	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
@@ -408,7 +407,7 @@ commands.set("plremove", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
+}, {guildonly: true, minargs: 1, maxargs: 1, props: new classes.Command("plremove [id]", "remove a music from the playlist", musicType, true)})
 
 commands.set("skip", msg => {
 	music.playNext(msg.guild).then(current => {
@@ -416,7 +415,7 @@ commands.set("skip", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("skip", "skip the current music", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("skip", "skip the current music", musicType, true)});
 
 commands.set("plclear", msg => {
 	music.clear(msg.guild).then(nb => {
@@ -427,7 +426,7 @@ commands.set("plclear", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err)
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("plclear", "clear the playlist", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("plclear", "clear the playlist", musicType, true)});
 
 commands.set("plshuffle", msg => {
 	music.shuffle(msg.guild).then(() => {
@@ -435,7 +434,7 @@ commands.set("plshuffle", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("plshuffle", "shuffle the playlist", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("plshuffle", "shuffle the playlist", musicType, true)});
 
 commands.set("loop", msg => {
 	music.toggleLooping(msg.guild).then(looping => {
@@ -447,7 +446,7 @@ commands.set("loop", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("loop", "loop the current music", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("loop", "loop the current music", musicType, true)});
 
 commands.set("plloop", msg => {
 	music.togglePlaylistLooping(msg.guild).then(looping => {
@@ -458,7 +457,7 @@ commands.set("plloop", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("plloop", "loop the playlist", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("plloop", "loop the playlist", musicType, true)});
 
 commands.set("toggle", msg => {
 	music.togglePaused(msg.guild).then(paused => {
@@ -469,7 +468,7 @@ commands.set("toggle", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, maxargs: 0, props: new classes.Command("toggle", "pause/resume the music", musicType, true)});;
+}, {guildonly: true, maxargs: 0, props: new classes.Command("toggle", "pause/resume the music", musicType, true)});;
 
 commands.set("volume", msg => {
 	let volume = Number(msg.content.split(" ").pop());
@@ -480,7 +479,7 @@ commands.set("volume", msg => {
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {dms: false, minargs: 1, maxargs: 1, props: new classes.Command("volume [value]", "set the volume of the music", musicType, true)});
+}, {guildonly: true, minargs: 1, maxargs: 1, props: new classes.Command("volume [value]", "set the volume of the music", musicType, true)});
 
 commands.set("current", msg => {
 	let current = music.currentInfo(msg.guild);
@@ -489,8 +488,6 @@ commands.set("current", msg => {
 		return;
 	}
 	let info = tools.defaultEmbed();
-	let timer = new Duration(current.time);
-	let end = new Duration(current.length);
 	if (!current.file) {
 		info.setThumbnail(current.thumbnailURL)
 		.addField("Title", current.title, true)
@@ -502,8 +499,8 @@ commands.set("current", msg => {
 		info.addField("File name", current.title, true)
 		.addField("Requested by", current.member, true);
 	}
-	msg.channel.send("Playing: ``" + timer.strings.timer + " / " + end.strings.timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
-}, {dms: false, maxargs: 0, props: new classes.Command("current", "info about the current music", musicType, true)});
+	msg.channel.send("Playing: ``" + tools.parseTimestamp(current.time).timer + " / " + tools.parseTimestamp(current.length).timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
+}, {guildonly: true, maxargs: 0, props: new classes.Command("current", "info about the current music", musicType, true)});
 
 commands.set("playlist", msg => {
 	let playlist = music.playlistInfo(msg.guild);
@@ -515,16 +512,16 @@ commands.set("playlist", msg => {
 	let i = 1;
 	for (let music of playlist) {
 		if (!music.file) {
-			info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + new Duration(music.length).strings.timer + "``)", "Requested by " + music.member);
+			info.addField(i + " - " + music.title + " by " + music.author.name + " (``" + tools.parseTimestamp(music.length).timer + "``)", "Requested by " + music.member);
 		}	else
-			info.addField(i + " - " + music.title + " (``" + new Duration(music.length).strings.timer + "``)", "Requested by " + music.member);
+			info.addField(i + " - " + music.title + " (``" + tools.parseTimestamp(music.length).timer + "``)", "Requested by " + music.member);
 		i++;
 	}
 	if (playlist.length > 0) {
 		msg.channel.send("Here's the playlist:", info);
 		msg.channel.send("Use ``" + config.prefix + "current`` to have information about the current music.");
 	} else msg.channel.send("The playlist is empty. Use ``" + config.prefix + "current`` to have information about the current music.");
-}, {dms: false, maxargs: 0, props: new classes.Command("playlist", "info about the playlist", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("playlist", "info about the playlist", musicType, true)});
 
 commands.set("plsave", msg => {
 	if (!redisOK) {
@@ -559,7 +556,7 @@ commands.set("plsave", msg => {
 			});
 		}
 	}
-}, {dms: false, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
 
 commands.set("plload", msg => {
 	if (!redisOK) {
@@ -584,11 +581,11 @@ commands.set("plload", msg => {
 			funcs.logError(msg, err);
 		});
 	}
-}, {dms: false, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
 
 commands.set("listenmoe", msg => {
 	if (memeing.has(msg.guild.id)) return;
-}, {dms: false, maxargs: 0});
+}, {guildonly: true, maxargs: 0});
 
 commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -834,7 +831,7 @@ commands.set("chrischansong", msg => {
 }, {owner: true});
 
 commands.set("nis", async msg => {
-	if (memeing.has(msg.guild.id) || music.isConnected(msg.guild)) return;
+	if (msg.guild.memes || music.isConnected(msg.guild)) return;
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + "nis ", "");
@@ -842,18 +839,19 @@ commands.set("nis", async msg => {
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
 		member.voiceChannel.join().then(connection => {
-			memeing.set(member.guild.id, true);
+			msg.guild.memes = true;
 			connection.playFile("./files/fart.mp3", {passes: 10}).on("end", () => {
 				setTimeout(() => {
 					connection.playFile("./files/burp.mp3", {passes: 10}).on("end", () => {
 						memeing.delete(member.guild.id);
 						msg.guild.me.voiceChannel.leave();
+						delete msg.guild.memes;
 					}).setVolume(2);
 				}, 500);
 			}).setVolume(2);
 		});
 	}
-}, {dms: false, users: [config.users.drago, config.users.nis]});
+}, {guildonly: true, users: [config.users.drago, config.users.nis]});
 
 commands.set("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
@@ -982,7 +980,7 @@ commands.set("reflex", async msg => {
 	if (!msg2) msg.channel.send("You guys are slow.");
 	else msg.channel.send("Well played " + msg2.member + ".");
 	delete msg.channel.reflex;
-}, {dms: false, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", gameType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("reflex", "the first user to react wins", gameType, true)});
 
 commands.set("encrypt", async msg => {
 	let message = msg.content.replace(config.prefix + "encrypt ", "");
@@ -1012,17 +1010,17 @@ commands.set("tictactoe", async msg => {
 		return;
 	}
 	msg.channel.tictactoe = true;
-	await msg.channel.send(msg.member + " wants to play Tic-Tac-Toe. Does anyone want to play with him? Reply ``" + config.prefix + "playttt`` within ``10`` seconds.");
-	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => {
+	await msg.channel.send(msg.member + " wants to play Tic-Tac-Toe. Does anyone want to play with him? Reply ``" + config.prefix + "playttt`` within ``1`` minute.");
+	let msg2 = await msg.channel.waitResponse({delay: 60000, function: msg2 => {
 		return (msg2.author.id != msg.author.id && msg2.content == config.prefix + "playttt" && !msg.author.bot);
 	}});
 	if (!msg2)
 		msg.channel.send("Sorry " + msg.member + ", but it seems like no one wants to play Tic-Tac-Toe right now.");
 	else {
 		let players = [msg.member, msg2.member];
+		msg.channel.send("Players: " + players[0] + " and " + players[1] + ".\nYou probably already know the rules but I'll repeat then anyway: you need to align three of your marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, you have ``20`` seconds to reply with the number that corresponds to the position where you want to place your mark.", TicTacToe.grid());
 		players.sort(() => Math.random() - 0.5);
 		let ttt = new TicTacToe(msg.channel.send, players[0], players[1]);
-		msg.channel.send("You probably already know the rules but I'll repeat then anyway: you need to align three of your marks in a horizontal, vertical or diagonal row.\nWhen it is your turn, you have ``20`` seconds to reply with the number that corresponds to the position where you want to place your mark.", ttt.grid);
 		msg.channel.send("The first player is... ").then(async msg3 => {
 			await tools.sleep(1000);
 			msg3.edit(msg3.content + players[0] + "!");
@@ -1054,9 +1052,9 @@ commands.set("tictactoe", async msg => {
 			} else {
 				ttt.fill(Math.floor(Number(msg3.content))-1);
 				afk = false;
-				if (ttt.empty == 0)
+				if (!ttt.finished && ttt.empty == 0)
 					break;
-				}
+			}
 		}
 		if (ttt.empty == 0)
 			msg.channel.send("Well that's a draw!", ttt.embed);
@@ -1066,14 +1064,13 @@ commands.set("tictactoe", async msg => {
 			msg.channel.send("Both players stopped playing, the game is finished.");
 	}
 	delete msg.channel.tictactoe;
-}, {dms: false, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
+}, {guildonly: true, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
-	client.login(process.env.DISCORDTOKEN).catch(async err => {
-		console.log("[DRABOT] Connection failed.");
-		console.error(err);
+	client.login(process.env.DISCORDTOKEN).catch(async () => {
+		console.log("[DRABOT] Connection failed. Retry in 60 seconds.");
 		await tools.sleep(60000);
 		login();
 	});
@@ -1081,7 +1078,7 @@ function login() {
 
 function addMeme(name) {
 	commands.set(name, async msg => {
-		if (memeing.has(msg.guild.id) || music.isConnected(msg.guild)) return;
+		if (msg.guild.memes || music.isConnected(msg.guild)) return;
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");
@@ -1089,16 +1086,17 @@ function addMeme(name) {
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
-				memeing.set(member.guild.id, true);
+				msg.guild.memes = true;
 				connection.playFile("./files/" + name + ".mp3", {passes: 10}).on("end", () => {
 					setTimeout(() => {
 						memeing.delete(member.guild.id);
 						msg.guild.me.voiceChannel.leave();
+						delete msg.guild.memes;
 					}, 500);
 				}).setVolume(2);
 			});
 		}
-	}, {dms: false});
+	}, {guildonly: true});
 }
 
 function isOwner(user) {
@@ -1115,7 +1113,10 @@ Object.defineProperty(discord.TextChannel.prototype, "waitResponse", {
 				options.delay = -1;
 			if (options.function === undefined)
 				options.function = () => true;
-			let random = tools.random(0, 249999);
+			let random;
+			do {
+				random = tools.random(0, 255);
+			} while (tocall.has(this.id + "/" + random));
 			let delay;
 			if (options.delay >= 0) {
 				delay = setTimeout(() => {

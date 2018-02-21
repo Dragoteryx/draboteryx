@@ -133,7 +133,7 @@ exports.cacheUser = function(user) {
 exports.showInfo = async msg => {
 	try {
 		let stats = "";
-		stats += "Uptime: ``" + drabot.uptime.strings.simple + "``\n";
+		stats += "Uptime: ``" + tools.parseTimestamp(drabot.client.uptime).simple + "``\n";
 		stats += "``" + Array.from(drabot.client.guilds.keys()).length + "`` servers\n";
 		let channels = Array.from(drabot.client.channels.values());
 		let nbv = 0;
@@ -197,8 +197,9 @@ exports.kanjiInfo = res => {
 }
 
 exports.logError = (msg, err) => {
-	drabot.client.fetchApplication().then(app => {
-		msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "server`` to join the test server.```\n" + err.stack + "\n```");
+	drabot.client.fetchApplication().then(async app => {
+		try {msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "server`` to join the test server.```\n" + err.stack + "\n```");
+		} catch(err) {}
 		console.error(err);
 	}).catch(console.error);
 }

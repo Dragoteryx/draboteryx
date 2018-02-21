@@ -34,8 +34,8 @@ class CommandsHandler {
 		let options = opts !== undefined ? opts : {};
 		if (options.override === undefined)
 			options.override = false;
-		if (options.dms === undefined)
-			options.dms = true;
+		if (options.guildonly === undefined)
+			options.guildonly = false;
 		if (options.owner === undefined)
 			options.owner = false;
 		if (options.guilds === undefined)
@@ -195,11 +195,11 @@ class Command {
 							check.reasons = [];
 						check.reasons.push("command disabled");
 					}
-					if (msg.channel.type != "text" && !this.options.dms) {
+					if (msg.channel.type != "text" && this.options.guildonly) {
 						check.valid = false;
 						if (check.reasons === undefined)
 							check.reasons = [];
-						check.reasons.push("DMs not allowed");
+						check.reasons.push("guild only command");
 					}
 					if (!that.handler.owners.includes(msg.author.id) && this.options.owner) {
 						check.valid = false;
