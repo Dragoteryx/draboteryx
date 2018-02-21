@@ -1025,7 +1025,7 @@ commands.set("tictactoe", async msg => {
 			await tools.sleep(1000);
 			msg3.edit(msg3.content + players[0] + "!");
 		})
-		await tools.sleep(5000);
+		await tools.sleep(2000);
 		let afk = false;
 		while (!ttt.finished) {
 			await msg.channel.send("It is now " + ttt.current.member + "'s turn.", ttt.embed);
