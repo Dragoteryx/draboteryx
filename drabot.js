@@ -1006,7 +1006,8 @@ commands.set("decrypt", async msg => {
 	}
 }, {minargs: 1, props: new classes.Command("decrypt [message]", "decrypt a message", miscType, true)});
 
-commands.set("tictactoe", TicTacToe.command, {guildonly: true, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
+commands.set("tictactoe", TicTacToe.command
+, {guildonly: true, props: new classes.Command("tictactoe (user)", "play Tic-Tac-Toe with someone, you can also tag the bot", gameType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
