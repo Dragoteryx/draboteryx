@@ -12,6 +12,13 @@ class TicTacToe {
     this.cases = new Array(10).fill("_");
     this.cases[0] = "Z";
     this.current = this.player1;
+    this.wligns = [[7, 5, 3], [1, 5, 9]];
+    let tab = [[7, 8, 9], [4, 5, 6], [1, 2, 3], [7, 4, 1], [8, 5, 2], [9, 6, 3]]
+    this.wligns.sort(() => 0.5 > Math.random());
+    tab.sort(() => 0.5 > Math.random());
+    for (let lign of tab)
+      this.wligns.push(lign);
+    this.wligns.forEach(lign => lign.sort(() => 0.5 > Math.random()));
   }
 
   // PLAY
@@ -33,7 +40,7 @@ class TicTacToe {
 
   // INFO
   get finished() {
-    for (let lign of TicTacToe.wligns) {
+    for (let lign of this.wligns) {
       let stats = this.lignStats(lign);
       if (stats.own == 3 || stats.enemy == 3)
         return true;
@@ -48,9 +55,6 @@ class TicTacToe {
   	str += " "+this.cases[4]+"   "+this.cases[5]+"   "+this.cases[6]+" \n\n";
   	str += " "+this.cases[1]+"   "+this.cases[2]+"   "+this.cases[3]+" \n```";
   	return tools.defaultEmbed().addField("Tic-Tac-Toe", str);
-  }
-  static get wligns() {
-    return [[7, 8, 9], [4, 5, 6], [1, 2, 3], [7, 4, 1], [8, 5, 2], [9, 6, 3], [7, 5, 3], [1, 5, 9]];
   }
   static get grid() {
     let str = "```js\n 7   8   9 \n\n";
@@ -77,18 +81,19 @@ class TicTacToe {
     return nb;
   }
   emptyinArray(cases) {
+    cases.sort(() => 0.5 > Math.random());
     return cases.reduce((acc, id) => this.cases[id] == "_" ? id : acc, null);
   }
   best() {
-    for (let lign of TicTacToe.wligns) {
+    for (let lign of this.wligns) {
       let stats = this.lignStats(lign);
       if (stats.own == 2 && stats.empty == 1) return this.emptyinArray(lign);
     }
-    for (let lign of TicTacToe.wligns) {
+    for (let lign of this.wligns) {
       let stats = this.lignStats(lign);
       if (stats.enemy == 2 && stats.empty == 1) return this.emptyinArray(lign);
     }
-    for (let lign of TicTacToe.wligns) {
+    for (let lign of this.wligns) {
       let stats = this.lignStats(lign);
       if (stats.own == 1 && stats.empty == 2) return this.emptyinArray(lign);
     }
