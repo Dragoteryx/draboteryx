@@ -45,7 +45,6 @@ exports.stringToMembers = (str, guild) => {
 					member = [member];
 			} else
 				member = guildFetched.members.findAll("displayName",str);
-			console.log(member);
 			resolve(member);
 		} catch(err) {
 			reject(err);

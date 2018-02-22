@@ -85,6 +85,8 @@ client.on("message", msg => {
 			else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
 			console.log(toLog);
 		}
+		else if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
+			return;
 		else if (res.result.reasons.includes("guild only command"))
 			msg.channel.send("You can't use this command in private channels.");
 		else if (res.result.reasons.includes("owner only command"))
@@ -203,7 +205,7 @@ commands.set("help", msg => {
 		}
 		msg.author.send("", embed);
 		if (msg.channel.type != "dm")
-			msg.dreply(checkDM);
+			msg.reply(checkDM);
 	} else {
 		if (commands.has(args[0])) {
 			let command = commands.get(args[0]);
@@ -217,7 +219,7 @@ commands.set("help", msg => {
 				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
 				msg.author.send("", embed);
 				if (msg.channel.type != "dm")
-					msg.dreply(checkDM);
+					msg.reply(checkDM);
 			}
 		} else {
 			msg.channel.send(unknown);
@@ -608,7 +610,7 @@ commands.set("fact", msg => {
 }, {props: new classes.Command("fact (query)", "procedurally generates a random stupid fact", funType, true)});
 
 commands.set("shitpost", msg => {
-	msg.dreply("this command is now called ``" + config.prefix + "fact``. It works exactly the same though. :wink:");
+	msg.reply("this command is now called ``" + config.prefix + "fact``. It works exactly the same though. :wink:");
 });
 
 commands.set("say", msg => {
@@ -779,9 +781,9 @@ commands.set("waifu", msg => {
 commands.set("daisuki", msg => {
 	dbl.hasVoted(msg.author.id).then(voted => {
 		if (voted)
-			msg.dreply("yes! :heart:");
+			msg.reply("yes! :heart:");
 		else
-			msg.dreply("no, but I would if you voted for me here: https://discordbots.org/bot/273576577512767488");
+			msg.reply("no, but I would if you voted for me here: https://discordbots.org/bot/273576577512767488");
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
@@ -1004,7 +1006,7 @@ commands.set("decrypt", async msg => {
 	}
 }, {minargs: 1, props: new classes.Command("decrypt [message]", "decrypt a message", miscType, true)});
 
-commands.set("tictactoe", TicTacToe.command, {guildonly: true, maxargs: 0, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
+commands.set("tictactoe", TicTacToe.command, {guildonly: true, props: new classes.Command("tictactoe", "play Tic-Tac-Toe with someone", gameType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

@@ -5,6 +5,8 @@ const funcs = require("./funcs.js");
 
 Object.defineProperty(String.prototype, "firstUpper", {
 	value: function() {
+		if (this.length == 0)
+			return "";
 		return this[0].toUpperCase() + this.slice(1);
 	}
 });
@@ -12,17 +14,17 @@ Object.defineProperty(String.prototype, "firstUpper", {
 Object.defineProperty(Array.prototype, "random", {
 	value: function() {
 		if (this.length == 0)
-			return null;
+			return undefined;
 		return this[tools.random(this.length-1)];
 	}
 });
 
-Object.defineProperty(discord.Message.prototype, "dreply", {
-	value: function(content) {
+Object.defineProperty(discord.Message.prototype, "reply", {
+	value: function(content, options) {
 		if (this.channel.type == "text")
-			return this.reply(content);
+			return this.channel.send(this.member.displayed + ", " + content, options);
 		else
-			return this.channel.send(content.firstUpper());
+			return this.channel.send(content.firstUpper(), options);
 	}
 });
 
@@ -67,5 +69,11 @@ Object.defineProperty(discord.User.prototype, "rdsend", {
 Object.defineProperty(String.prototype, "fetchHTTP", {
 	value: function fetchHTTP() {
 		return tools.request(this);
+	}
+});
+
+Object.defineProperty(discord.GuildMember.prototype, "displayed", {
+	get: function() {
+		return "``" + this.displayName + "``";
 	}
 });
