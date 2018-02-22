@@ -69,15 +69,19 @@ class TicTacToe {
 
   // THE BOT PLAYS
   random() {
-    if (this.full) return null;
+    let id = 0;
+    return this.emptyinArray(new Array(9).fill(0).map(() => {
+      id++;
+      return id;
+    }));
+  }
+  emptyinArray(cases) {
+    if (!cases.reduce((acc, id) => this.cases[id] == "_" ? true : acc, false)) return null;
     let nb;
     do {
       nb = tools.random(1, 9);
     } while (this.cases[nb] != "_");
     return nb;
-  }
-  emptyinArray(cases) {
-    return cases.reduce((acc, id) => this.cases[id] == "_" ? id : acc, null);
   }
   best() {
     for (let lign of TicTacToe.wligns) {
