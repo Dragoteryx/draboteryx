@@ -18,7 +18,6 @@ class TicTacToe {
     tab.sort(() => 0.5 > Math.random());
     for (let lign of tab)
       this.wligns.push(lign);
-    this.wligns.forEach(lign => lign.sort(() => 0.5 > Math.random()));
   }
 
   // PLAY
@@ -73,16 +72,12 @@ class TicTacToe {
 
   // THE BOT PLAYS
   random() {
-    if (this.full) return null;
-    let nb;
-    do {
-      nb = tools.random(1, 9);
-    } while (this.cases[nb] != "_");
-    return nb;
+    return this.emptyinArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   }
   emptyinArray(cases) {
-    cases.sort(() => 0.5 > Math.random());
-    return cases.reduce((acc, id) => this.cases[id] == "_" ? id : acc, null);
+    cases = cases.filter(id => this.cases[id] == "_");
+    if (cases.length == 0) return null;
+    return cases.random();
   }
   best() {
     for (let lign of this.wligns) {
@@ -147,7 +142,7 @@ async function command(msg) {
   } else
     msg2 = await msg.reply("you want to play with me? Okay! :heart:");
 	if (!msg2)
-		msg.channel.send("Sorry" + msg.member.displayed + ", but it seems like no one wants to play Tic-Tac-Toe right now.");
+		msg.channel.send("Sorry " + msg.member.displayed + ", but it seems like no one wants to play Tic-Tac-Toe right now.");
 	else {
 		let players = [msg.member, msg2.member];
 		let withbot = players.reduce((acc, cur) => !acc ? cur.user.id ==  drabot.client.user.id : true, false);
@@ -164,12 +159,12 @@ async function command(msg) {
 		while (!ttt.finished) {
 			let msg3;
 			if (ttt.current.member.user.id ==  drabot.client.user.id) {
-				await msg.channel.send("It's my turn.", ttt.embed);
+				await msg.channel.send("It's my turn. (``" + ttt.current.sign + "``)", ttt.embed);
 				await tools.sleep(1000);
 			 	msg3 = await msg.channel.send(ttt.best());
 			} else {
-				if (!withbot) await msg.channel.send("It is now " + ttt.current.member.displayed + "'s turn.", ttt.embed);
-				else await msg.channel.send("It's your turn, " + ttt.current.member.displayed + ".", ttt.embed);
+				if (!withbot) await msg.channel.send("It is now " + ttt.current.member.displayed + "'s turn. (``" + ttt.current.sign + "``)", ttt.embed);
+				else await msg.channel.send("It's your turn, " + ttt.current.member.displayed + ". (``" + ttt.current.sign + "``)", ttt.embed);
 				msg3 = await msg.channel.waitResponse({delay: 20000, function: msg3 => {
 					if (msg3.author.id != ttt.current.member.user.id) return false;
 					let choix = Math.floor(Number(msg3.content));
