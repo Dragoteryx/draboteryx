@@ -11,14 +11,6 @@ Object.defineProperty(String.prototype, "firstUpper", {
 	}
 });
 
-Object.defineProperty(Array.prototype, "random", {
-	value: function() {
-		if (this.length == 0)
-			return undefined;
-		return this[tools.random(this.length-1)];
-	}
-});
-
 Object.defineProperty(Array.prototype, "copy", {
 	value: function() {
 		return this.map(x => x);
@@ -28,6 +20,13 @@ Object.defineProperty(Array.prototype, "copy", {
 Object.defineProperty(Array.prototype, "shuffle", {
 	value: function() {
 		this.sort(() => 0.5 > Math.random());
+		return this;
+	}
+});
+
+Object.defineProperty(Array.prototype, "random", {
+	value: function() {
+		return this.copy().shuffle().shift();
 	}
 });
 

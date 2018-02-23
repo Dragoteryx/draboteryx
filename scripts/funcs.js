@@ -1,12 +1,15 @@
 "use strict";
 const discord = require("discord.js");
-const snekfetch = require("snekfetch");
+const Danbooru = require("danbooru");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
 const classes = require("./classes.js");
 const tools = require("./tools.js");
 const pack = require("../package.json");
+
+const booru = new Danbooru();
+const safebooru = new Danbooru.Safebooru();
 
 exports.showMemberInfo = function(member) {
 	let tempRoles = Array.from(member.roles.values());
@@ -200,6 +203,7 @@ exports.logError = (msg, err) => {
 	drabot.client.fetchApplication().then(async app => {
 		try {msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "server`` to join the test server.```\n" + err.stack + "\n```");
 		} catch(err) {}
+		console.log("[ERROR]");
 		console.error(err);
 	}).catch(console.error);
 }
@@ -253,6 +257,6 @@ exports.searchDanbooru = async (msg, nsfw) => {
 			msg.channel.send("Search: ``" + query.join(" ") + "``", {file: link});
 		}
 	} catch(err) {
-		funcs.logError(msg, err);
+		exports.logError(msg, err);
 	}
 }

@@ -7,7 +7,6 @@ const discord = require("discord.js");
 const fs = require("fs");
 const cleverbotIO = require("cleverbot.io");
 const util = require("util");
-const Danbooru = require("danbooru");
 const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
 const qr = require("qrcode");
@@ -34,8 +33,6 @@ const music = new MusicHandler(client);
 const commands = new CommandsHandler();
 const redis = require("redis").createClient(process.env.REDIS_URL);
 const vars = {};
-const booru = new Danbooru();
-const safebooru = new Danbooru.Safebooru();
 const jisho = new jishoApi();
 const dbl = new DBL(process.env.DBLAPITOKEN);
 
@@ -113,6 +110,14 @@ client.on("message", msg => {
 });
 
 // EVENTS ----------------------------------------------------------------------------------------------
+process.on("unhandledRejection", err => {
+	if (err.message.includes("DiscordAPIError: Missing Permissions"))
+		console.log("[ERROR] Unhandled Promise Rejection: DiscordAPIError: Missing Permissions");
+	else {
+		console.log("[ERROR] Unhandled Promise Rejection:");
+		console.error(err);
+	}
+})
 client.on("ready", () => {
 	if (!connected) {
 		connected = true;
@@ -232,9 +237,12 @@ commands.set("invite", msg => {
 }, {maxargs: 0, props: new classes.Command("invite", "get a link to invite the bot to your server", botType, true)});
 
 commands.set("server", msg => {
-	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test)
-		msg.channel.send("You want to join the test server? https://discord.gg/aCgwj8M");
-	else
+	if (msg.channel.type != "text" || msg.guild.id != config.guilds.test) {
+		msg.reply("you want to join the test server? https://discord.gg/aCgwj8M").catch(() => {
+			msg.author.send("you want to join the test server? https://discord.gg/aCgwj8M");
+			msg.reply("you should have received a private message.")
+		});
+	} else
 		msg.channel.send("And... you're arrived!");
 }, {maxargs: 0, props: new classes.Command("server", "get an invite to the test server", botType, true)});
 
