@@ -593,10 +593,6 @@ commands.set("plload", msg => {
 	}
 }, {guildonly: true, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
 
-commands.set("listenmoe", msg => {
-	if (memeing.has(msg.guild.id)) return;
-}, {guildonly: true, maxargs: 0});
-
 commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let link = "https://factgenerator.herokuapp.com";
@@ -853,7 +849,6 @@ commands.set("nis", async msg => {
 			connection.playFile("./files/fart.mp3", {passes: 10}).on("end", () => {
 				setTimeout(() => {
 					connection.playFile("./files/burp.mp3", {passes: 10}).on("end", () => {
-						memeing.delete(member.guild.id);
 						msg.guild.me.voiceChannel.leave();
 						delete msg.guild.memes;
 					}).setVolume(2);
@@ -1040,7 +1035,6 @@ function addMeme(name) {
 				msg.guild.memes = true;
 				connection.playFile("./files/" + name + ".mp3", {passes: 10}).on("end", () => {
 					setTimeout(() => {
-						memeing.delete(member.guild.id);
 						msg.guild.me.voiceChannel.leave();
 						delete msg.guild.memes;
 					}, 500);
