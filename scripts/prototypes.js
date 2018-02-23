@@ -19,6 +19,18 @@ Object.defineProperty(Array.prototype, "random", {
 	}
 });
 
+Object.defineProperty(Array.prototype, "copy", {
+	value: function() {
+		return this.map(x => x);
+	}
+});
+
+Object.defineProperty(Array.prototype, "shuffle", {
+	value: function() {
+		this.sort(() => 0.5 > Math.random());
+	}
+});
+
 Object.defineProperty(discord.Message.prototype, "reply", {
 	value: function(content, options) {
 		if (this.channel.type == "text")
@@ -44,25 +56,25 @@ Object.defineProperty(discord.Guild.prototype, "nbCon", {
 
 Object.defineProperty(discord.Guild.prototype, "rdfetch", {
 	value: function() {
-		return funcs.fetchRedis("guilds", this);
+		return funcs.fetchRedis("guilds/" + this.id);
 	}
 });
 
 Object.defineProperty(discord.Guild.prototype, "rdsend", {
 	value: function(data) {
-		return funcs.sendRedis("guilds", this, data);
+		return funcs.sendRedis("guilds/" + this.id, data);
 	}
 });
 
 Object.defineProperty(discord.User.prototype, "rdfetch", {
 	value: function() {
-		return funcs.fetchRedis("users", this);
+		return funcs.fetchRedis("users/" + this.id);
 	}
 });
 
 Object.defineProperty(discord.User.prototype, "rdsend", {
 	value: function(data) {
-		return funcs.sendRedis("users", this, data);
+		return funcs.sendRedis("users/" + this.id, data);
 	}
 });
 

@@ -6,7 +6,6 @@ class TicTacToe {
   constructor(player1, player2) {
     this.player1 = {sign: "X", member: player1};
     this.player2 = {sign: "O", member: player2};
-    Object.defineProperty(this, "channel", {writable: false});
     Object.defineProperty(this, "player1", {writable: false});
     Object.defineProperty(this, "player2", {writable: false});
     this.cases = new Array(10).fill("_");
@@ -14,8 +13,8 @@ class TicTacToe {
     this.current = this.player1;
     this.wligns = [[7, 5, 3], [1, 5, 9]];
     let tab = [[7, 8, 9], [4, 5, 6], [1, 2, 3], [7, 4, 1], [8, 5, 2], [9, 6, 3]]
-    this.wligns.sort(() => 0.5 > Math.random());
-    tab.sort(() => 0.5 > Math.random());
+    this.wligns.shuffle();
+    tab.shuffle();
     for (let lign of tab)
       this.wligns.push(lign);
   }
@@ -31,7 +30,7 @@ class TicTacToe {
     return "next player";
   }
   pass() {
-    if (this.current.member.user.id == this.player1.member.user.id)
+    if (this.current.sign == this.player1.sign)
       this.current = this.player2;
     else
       this.current = this.player1;
@@ -39,12 +38,10 @@ class TicTacToe {
 
   // INFO
   get finished() {
-    for (let lign of this.wligns) {
+    return this.wligns.some(lign => {
       let stats = this.lignStats(lign);
-      if (stats.own == 3 || stats.enemy == 3)
-        return true;
-    }
-    return false;
+      return stats.own == 3 || stats.enemy == 3;
+    });
   }
   get full() {
     return this.cases.every(sign => sign != "_");

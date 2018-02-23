@@ -153,9 +153,9 @@ redis.on("error", err => {
 });
 music.on("next", (playlist, next) => {
 	if (!next.file)
-		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member +")");
+		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "`` by ``" + next.author.name + "``. (requested by " + next.member.displayed +")");
 	else
-		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member +")");
+		musicChannels.get(playlist.guild.id).send("Now playing: ``" + next.title + "``. (requested by " + next.member.displayed +")");
 });
 music.on("empty", playlist => {
 	musicChannels.get(playlist.guild.id).send("The playlist is empty.");
@@ -806,7 +806,7 @@ commands.set("dicksize", async msg => {
 		str += "=";
 	str += "D";
 	if (msg.channel.type == "text")
-		msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayName +")");
+		msg.channel.send(":straight_ruler: | " + str + " (" + msg.member.displayed +")");
 	else
 		msg.channel.send(":straight_ruler: | " + str);
 	await tools.sleep(1500);

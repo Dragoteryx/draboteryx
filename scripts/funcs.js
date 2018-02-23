@@ -219,9 +219,9 @@ exports.musicErrors = (msg, err) => {
 	else exports.logError(msg, err);
 }
 
-exports.fetchRedis = (directory, object) => {
+exports.fetchRedis = (path) => {
 	return new Promise((resolve, reject) => {
-		drabot.redis.get(directory + "/" + object.id, (err, data) => {
+		drabot.redis.get(path, (err, data) => {
 			if (err) reject(err);
 			else if (data === null) resolve({});
 			else resolve(JSON.parse(data));
@@ -229,8 +229,8 @@ exports.fetchRedis = (directory, object) => {
 	});
 }
 
-exports.sendRedis = (directory, object, data) => {
-	return drabot.redis.set(directory + "/" + object.id, JSON.stringify(data));
+exports.sendRedis = (path, data) => {
+	return drabot.redis.set(path, JSON.stringify(data));
 }
 
 exports.searchDanbooru = async (msg, nsfw) => {
