@@ -89,7 +89,7 @@ Object.defineProperty(discord.GuildMember.prototype, "displayed", {
 	}
 });
 
-Object.definePropety(String.prototype, "focus", {
+Object.defineProperty(String.prototype, "focus", {
 	value: function() {
 		return "``" + this + "``";
 	}
