@@ -54,7 +54,18 @@ class Timer extends EventEmitter {
 	}
 }
 
+class ReactionAwaits {
+	constructor(reaction, user) {
+		this.reaction = reaction;
+		this.user = user;
+	}
+	compare(emoji) {
+		return emoji.toString() == this.reaction.emoji.toString();
+	}
+}
+
 module.exports = {
 	Command: Command,
-	Timer: Timer
+	Timer: Timer,
+	ReactionAwaits: ReactionAwaits
 }

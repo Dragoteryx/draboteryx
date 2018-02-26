@@ -46,7 +46,7 @@ let babylogged = false;
 let memes = ["fart", "burp", "damnit", "dewae", "spaghet", "airhorns", "omaewa"];
 let musicLeaves = new Map();
 let redisOK = false;
-let tocall = new Map();
+let onMessageCallbacks = new Map();
 
 // EXPORTS ----------------------------------------------------------------------------------------------
 exports.client = client;
@@ -67,7 +67,7 @@ const warframeType = "Warframe related commands";
 const gameType = "Games"
 const commandTypes = [utilityType, gameType, funType, miscType, musicType, nsfwType, botType];
 
-// LISTENING TO MESSAGES ----------------------------------------------------------------------------------------------
+// LISTENING TO MESSAGES AND REACTIONS ----------------------------------------------------------------------------------------------
 client.on("message", msg => {
 
 	// COMMANDS
@@ -105,7 +105,7 @@ client.on("message", msg => {
 	}
 
 	// CALL ONMESSAGE FUNCTIONS
-	tocall.forEach(func => func(msg));
+	onMessageCallbacks.forEach(func => func(msg));
 
 });
 
@@ -973,7 +973,7 @@ commands.set("reflex", async msg => {
 	await tools.sleep(tools.random(5000, 15000));
 	let random = tools.random(100, 999);
 	await msg.channel.send("The fastest one wins! ``" + random + "``");
-	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => {
+	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => {
 		if (msg2.content == random && msg2.author.bot) {
 			msg2.reply("bots are not authorized to play this game. That's cheating!");
 			return false;
@@ -989,7 +989,7 @@ commands.set("encrypt", async msg => {
 	let message = msg.content.replace(config.prefix + "encrypt ", "");
 	let key;
 	await msg.channel.send("Do you want me to use a specific key ? If you do reply with the key within ``10`` seconds.");
-	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg2 => msg2.author.id == msg.author.id});
+	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => msg2.author.id == msg.author.id});
 	if (!msg2) key = crypt.genNoise(8);
 	else key = msg2.content;
 	msg.channel.send("Your encrypted message: ``" + crypt.encrypt(message, key) + "``. Key: ``" + key + "``.")
@@ -998,7 +998,7 @@ commands.set("encrypt", async msg => {
 commands.set("decrypt", async msg => {
 	let crypted = msg.content.replace(config.prefix + "decrypt ", "");
 	await msg.channel.send("Do you happen to know the key ? Reply with the key to decrypt this message within ``10`` seconds.");
-	let msg2 = await msg.channel.waitResponse({delay: 10000, function: msg3 => msg3.author.id == msg.author.id});
+	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg3 => msg3.author.id == msg.author.id});
 	if (!msg2) msg.channel.send("If you don't know the key I can't decrypt this message.");
 	else {
 		let message = crypt.decrypt(crypted, msg2.content);
@@ -1054,23 +1054,23 @@ Object.defineProperty(discord.Channel.prototype, "waitResponse", {
 				options = {};
 			if (options.delay === undefined)
 				options.delay = -1;
-			if (options.function === undefined)
-				options.function = () => true;
+			if (options.filter === undefined)
+				options.filter = () => true;
 			let random;
 			do {
 				random = tools.random(0, 255);
-			} while (tocall.has(this.id + "/" + random));
+			} while (onMessageCallbacks.has(this.id + "/" + random));
 			let delay;
 			if (options.delay >= 0) {
 				delay = setTimeout(() => {
-					tocall.delete(this.id + "/" + random);
+					onMessageCallbacks.delete(this.id + "/" + random);
 					resolve(null);
 				}, options.delay);
 			}
-			tocall.set(this.id + "/" + random, msg => {
+			onMessageCallbacks.set(this.id + "/" + random, msg => {
 				if (msg.channel.id != this.id) return;
-				if (!options.function(msg)) return;
-				tocall.delete(this.id + "/" + random);
+				if (!options.filter(msg)) return;
+				onMessageCallbacks.delete(this.id + "/" + random);
 				if (options.delay >= 0)
 					clearTimeout(delay);
 				resolve(msg);

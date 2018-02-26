@@ -132,7 +132,7 @@ async function command(msg) {
       await msg.channel.send(msg.member.displayed + " wants to play Tic-Tac-Toe. Does anyone want to play with him? Reply ``" + config.prefix + "tttplay`` within ``20`` seconds.");
     else
       await msg.channel.send(other.displayed + "? " + msg.member.displayed + " wants to play Tic-Tac-Toe with you. Reply ``" + config.prefix + "tttplay`` within ``20`` seconds.");
-  	msg2 = await msg.channel.waitResponse({delay: 20000, function: msg2 => {
+  	msg2 = await msg.channel.waitResponse({delay: 20000, filter: msg2 => {
       if (other !== null && other.user.id != msg2.author.id) return;
   		return ((msg2.author.id != msg.author.id && msg2.content == config.prefix + "tttplay") || (msg2.author.id == msg.author.id && msg2.content == config.prefix + "tttbot"));
   	}});
@@ -162,7 +162,7 @@ async function command(msg) {
 			} else {
 				if (!withbot) await msg.channel.send("It is now " + ttt.current.member.displayed + "'s turn. (``" + ttt.current.sign + "``)", ttt.embed);
 				else await msg.channel.send("It's your turn, " + ttt.current.member.displayed + ". (``" + ttt.current.sign + "``)", ttt.embed);
-				msg3 = await msg.channel.waitResponse({delay: 20000, function: msg3 => {
+				msg3 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => {
 					if (msg3.author.id != ttt.current.member.user.id) return false;
 					let choix = Math.floor(Number(msg3.content));
 					if (isNaN(choix)) return false;
