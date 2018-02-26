@@ -26,7 +26,7 @@ Object.defineProperty(Array.prototype, "shuffle", {
 
 Object.defineProperty(Array.prototype, "random", {
 	value: function() {
-		return this.copy().shuffle().shift();
+		return this[tools.random(this.length-1)];
 	}
 });
 
@@ -85,6 +85,12 @@ Object.defineProperty(String.prototype, "fetchHTTP", {
 
 Object.defineProperty(discord.GuildMember.prototype, "displayed", {
 	get: function() {
-		return "``" + this.displayName + "``";
+		return this.displayName.focus();
+	}
+});
+
+Object.definePropety(String.prototype, "focus", {
+	value: function() {
+		return "``" + this + "``";
 	}
 });
