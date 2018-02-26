@@ -201,8 +201,8 @@ exports.kanjiInfo = res => {
 
 exports.logError = (msg, err) => {
 	drabot.client.fetchApplication().then(async app => {
-		try {msg.channel.send("A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "server`` to join the test server.```\n" + err.stack + "\n```");
-		} catch(err) {}
+		let str = "A random error occured. Please contact ``" + app.owner.tag + "``. ``" + config.prefix + "server`` to join the test server.```\n" + err.stack;
+		msg.channel.send(str.substring(0, 1995) + "\n```");
 		console.log("[ERROR]");
 		console.error(err);
 	}).catch(console.error);

@@ -130,7 +130,7 @@ exports.request = (host, options, data) => {
 }
 
 exports.stringifyObject = object => {
-	return "```js\n" + util.inspect(object, {depth: 0, breakLength: 0}) + "\n```";
+	return "```js\n" + util.inspect(object, {depth: 0, breakLength: 0}).substring(0, 1950) + "\n```";
 }
 
 exports.parseTimestamp = timestamp => {

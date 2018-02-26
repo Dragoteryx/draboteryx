@@ -111,8 +111,8 @@ client.on("message", msg => {
 
 // EVENTS ----------------------------------------------------------------------------------------------
 process.on("unhandledRejection", err => {
-	if (err.message.includes("DiscordAPIError: Missing Permissions"))
-		console.log("[ERROR] Unhandled Promise Rejection: DiscordAPIError: Missing Permissions");
+	if (err instanceof discord.DiscordAPIError)
+		console.log("[ERROR] Unhandled Promise Rejection:\nDiscordAPIError: " + err.message);
 	else {
 		console.log("[ERROR] Unhandled Promise Rejection:");
 		console.error(err);
@@ -266,9 +266,7 @@ commands.set("exec", msg => {
 			else
 				console.dir(val, {colors: true});
 			let tosend = val instanceof Function ? val : tools.stringifyObject(val);
-			msg.channel.send(str + tosend).catch(err => {
-				msg.channel.send("Execution sent to console.");
-			});
+			msg.channel.send(str + tosend);
 			msg.react("✅");
 		} catch(err) {
 			funcs.logError(msg, err);
