@@ -10,6 +10,7 @@ const util = require("util");
 const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
 const qr = require("qrcode");
+const edsm = require("./scripts/edsm.js");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
 const MusicHandler = require("drg-music2");
@@ -1009,6 +1010,25 @@ commands.set("decrypt", async msg => {
 
 commands.set("tictactoe", TicTacToe.command
 , {guildonly: true, bots: true, props: new classes.Command("tictactoe (user)", "play Tic-Tac-Toe with someone, you can also tag the bot", gameType, true)});
+
+commands.set("edsm", async msg => {
+	let name = msg.content.replace(config.prefix + "edsm ", "");
+	if (name == config.prefix + "edsm")
+		msg.channel.send("You need to specify a system name (``" + config.prefix + "edsm [system name]``).")
+	else {
+		let system = (await edsm.systems.fetch(name)).shift();
+		if (system === undefined)
+			msg.reply("this system doesn't seem to exist or isn't referenced in EDSM's database.");
+		else {
+			await system.fetchBodies();
+			await system.fetchStations();
+			await system.fetchFactions();
+			await system.fetchTraffic();
+			await system.fetchDeaths();
+			msg.channel.send("System: " + system.name.focus(), funcs.systemInfo(system));
+	}
+	}
+}, {props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

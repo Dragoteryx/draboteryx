@@ -1,6 +1,7 @@
 "use strict";
 const discord = require("discord.js");
 const Danbooru = require("danbooru");
+const edsm = require("./edsm.js");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
@@ -259,4 +260,64 @@ exports.searchDanbooru = async (msg, nsfw) => {
 	} catch(err) {
 		exports.logError(msg, err);
 	}
+}
+
+exports.systemInfo = system => {
+	let embed = tools.defaultEmbed()
+	.addField("Coordinates", system.coords.x + " / " + system.coords.y + " / " + system.coords.z);
+	if (system.information !== null) {
+		embed.addField("Allegiance", system.information.allegiance, true)
+		.addField("Controlling faction", system.information.faction, true)
+		.addField("Governement", system.information.government, true)
+		.addField("Population", system.information.population, true);
+	}
+	let str = "";
+	let nb = 0;
+	let bodies = Array.from(system.bodies.values());
+	for (let body of bodies) {
+		if (nb < 10)
+			str += "\n- " + body.name.focus() + " (``" + body.distanceToArrival + "`` ls) => " + body.subType.focus();
+		else {
+			str += "\n- and ``" + (bodies.length-10) + "`` more...";
+			break;
+		}
+		nb++
+	}
+	embed.addField("Bodies", str.replace("\n", ""));
+	str = "";
+	nb = 0;
+	let stations = Array.from(system.stations.values());
+	for (let station of stations) {
+		if (nb < 10)
+			str += "\n- " + station.name.focus() + " (``" + station.distanceToArrival + "`` ls)";
+		else {
+			str += "\n- and ``" + (stations.length-10) + "`` more...";
+			break;
+		}
+		nb++
+	}
+	if (stations.length > 0)
+		embed.addField("Stations", str.replace("\n", ""));
+	str = "";
+	nb = 0;
+	let factions = Array.from(system.factions.values());
+	for (let faction of factions) {
+		if (nb < 10)
+			str += "\n- " + faction.name.focus();
+		else {
+			str += "\n- and ``" + (factions.length-10) + "`` more...";
+			break;
+		}
+		nb++
+	}
+	if (factions.length > 0)
+		embed.addField("Factions", str.replace("\n", ""));
+	str = "https://www.edsm.net/en/system/id/" + system.id + "/name/" + system.name;
+	while (str.includes(" "))
+		str.replace(" ", "+");
+	embed.addField("Distance to Sol", "``" + edsm.systems.SOL.distance(system).toFixed(2) + "`` ly", true)
+	.addField("Distance to Colonia", "``" + edsm.systems.COLONIA.distance(system).toFixed(2) + "`` ly", true)
+	.addField("EDSM page", str)
+	.setThumbnail("https://vignette.wikia.nocookie.net/elite-dangerous/images/1/1a/Elite_Dangerous_Logo_Big.png/revision/latest/scale-to-width-down/528?cb=20170225174743");
+	return embed;
 }
