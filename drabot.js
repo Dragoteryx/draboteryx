@@ -77,29 +77,25 @@ client.on("message", msg => {
 			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
 			console.log(res);
 		}
-		if (res.result.valid) {
-			let toLog = "";
-			if (msg.channel.type != "dm") toLog += "[COMMAND] (" + msg.guild.name + " / #"+ msg.channel.name + ") " + msg.member.displayName + ": " + msg.content;
-			else toLog += "[COMMAND] (DM) " + msg.author.username + ": " + msg.content;
-			console.log(toLog);
+		if (!res.result.valid) {
+			if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
+				return;
+			else if (res.result.reasons.includes("guild only command"))
+				msg.channel.send("You can't use this command in private channels.");
+			else if (res.result.reasons.includes("owner only command"))
+				msg.channel.send("This is an owner only command.");
+			else if (res.result.reasons.includes("missing permissions"))
+				msg.channel.send("You don't have the necessary permissions.");
+			else if (res.result.reasons.includes("nsfw"))
+				msg.channel.send("What are you trying to do?");
 		}
-		else if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
-			return;
-		else if (res.result.reasons.includes("guild only command"))
-			msg.channel.send("You can't use this command in private channels.");
-		else if (res.result.reasons.includes("owner only command"))
-			msg.channel.send("This is an owner only command.");
-		else if (res.result.reasons.includes("missing permissions"))
-			msg.channel.send("You don't have the necessary permissions.");
-		else if (res.result.reasons.includes("nsfw"))
-			msg.channel.send("What are you trying to do?");
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
 
 	// CORRIGER VLTBOT
-	if (msg.content === "/id") {
-		msg.waitResponse({delay: 5000, function: msg2 => msg2.author.id == config.users.vltbot}).then(msg2 => {
+	if (msg.content == "/id") {
+		msg.channel.waitResponse({delay: 5000, filter: msg2 => msg2.author.id == config.users.vltbot}).then(msg2 => {
 			if (!msg2) return;
 			msg.channel.send("What a silly bot, here is your true true ID: ``" + msg.author.id + "``.");
 		});
@@ -1028,7 +1024,7 @@ commands.set("edsm", async msg => {
 			msg.channel.send("System: " + system.name.focus(), funcs.systemInfo(system));
 	}
 	}
-}, {props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, true)});
+}, {owner: true, props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, false)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {

@@ -283,7 +283,8 @@ exports.systemInfo = system => {
 		}
 		nb++
 	}
-	embed.addField("Bodies", str.replace("\n", ""));
+	if (bodies.length > 0)
+		embed.addField("Bodies", str.replace("\n", ""));
 	str = "";
 	nb = 0;
 	let stations = Array.from(system.stations.values());
