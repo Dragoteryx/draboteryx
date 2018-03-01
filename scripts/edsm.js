@@ -32,6 +32,7 @@ class EDSMHandler {
     let systems = new EDSMMap();
     for (let info of data) {
       let system = new System(this, info);
+			console.dir(system, {colors: true})
       this.systems.set(system.id, system, system.name);
       systems.set(system.id, system, system.name);
     }

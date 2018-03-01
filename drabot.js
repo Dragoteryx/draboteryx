@@ -1029,7 +1029,7 @@ commands.set("edsm", async msg => {
 			msg.channel.send("System: " + system.name.focus(), funcs.systemInfo(system));
 		}
 	}
-}, {props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, true)});
+}, {owner: true, props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, false)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
