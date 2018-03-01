@@ -264,12 +264,12 @@ exports.searchDanbooru = async (msg, nsfw) => {
 
 exports.systemInfo = system => {
 	let embed = tools.defaultEmbed()
-	.addField("Coordinates", system.coords.x + " / " + system.coords.y + " / " + system.coords.z);
+	.addField("Coordinates", "``" + system.coords.x + "`` / ``" + system.coords.y + "`` / ``" + system.coords.z + "``");
 	if (system.information !== null) {
 		embed.addField("Allegiance", system.information.allegiance, true)
 		.addField("Controlling faction", system.information.faction, true)
 		.addField("Governement", system.information.government, true)
-		.addField("Population", system.information.population, true);
+		.addField("Population", "``" + system.information.population + "``", true);
 	}
 	let str = "";
 	let nb = 0;
@@ -316,8 +316,8 @@ exports.systemInfo = system => {
 	str = "https://www.edsm.net/en/system/id/" + system.id + "/name/" + system.name;
 	while (str.includes(" "))
 		str.replace(" ", "+");
-	embed.addField("Distance to Sol", "``" + edsm.systems.SOL.distance(system).toFixed(2) + "`` ly", true)
-	.addField("Distance to Colonia", "``" + edsm.systems.COLONIA.distance(system).toFixed(2) + "`` ly", true)
+	embed.addField("Distance to Sol", "``" + drabot.edsm.SOL.distance(system).toFixed(2) + "`` ly", true)
+	.addField("Distance to Colonia", "``" + drabot.edsm.COLONIA.distance(system).toFixed(2) + "`` ly", true)
 	.addField("EDSM page", str)
 	.setThumbnail("https://vignette.wikia.nocookie.net/elite-dangerous/images/1/1a/Elite_Dangerous_Logo_Big.png/revision/latest/scale-to-width-down/528?cb=20170225174743");
 	return embed;

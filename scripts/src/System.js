@@ -2,6 +2,7 @@ const snekfetch = require("snekfetch");
 const CelestialBody = require("./CelestialBody.js");
 const Station = require("./Station.js");
 const Faction = require("./Faction.js");
+const EDSMMap = require("./EDSMMap.js");
 
 const weakmapPrivates = new WeakMap();
 function prv(object) {
@@ -10,148 +11,95 @@ function prv(object) {
 	return weakmapPrivates.get(object);
 }
 
-class SystemsMap {
-  constructor() {
-    prv(this).map = new Map();
-    prv(this).index = new Map();
-    this.fetch("Sol");
-    this.fetch("Colonia");
-  }
-  get(val, type) {
-    if (val === undefined)
-      throw new Error("'val' is undefined");
-    if (typeof val != "string" && typeof val != "number")
-      throw new Error("'val' must be a String or a Number");
-    if (type === undefined)
-      type = "name";
-    if (type == "name") {
-      let systems = [];
-      for (let id of prv(this).index.get(val))
-        systems.push(prv(this).map.get(id));
-      return systems;
-    }
-    else if (type == "id")
-      return prv(this).map.get(val);
-    else
-      throw new Error("Invalid type: 'name' or 'id'");
-
-  }
-  async fetch(name) {
-    if (name === undefined)
-      throw new Error("'name' is undefined");
-    if (typeof name != "string")
-      throw new Error("'name' must be a String");
-    let res = await snekfetch.get("https://www.edsm.net/api-v1/systems?systemName=" + name + "&showId=1&showCoordinates=1&showPermit=1&showInformation=1");
-    let data = JSON.parse(res.text);
-    let systems = [];
-    if (data.length == 0)
-      return systems;
-    for (let info of data) {
-      let system = new System(info)
-      prv(this).map.set(system.id, system);
-      systems.push(system);
-    }
-    let ids = [];
-    for (let system of systems)
-      ids.push(system.id);
-    prv(this).index.set(name, ids);
-    return systems;
-  }
-
-  // IMPORTANT SYSTEMS
-  get SOL() {
-    return this.get("Sol").shift();
-  }
-  get COLONIA() {
-    return this.get("Colonia").shift();
-  }
-}
-
 class System {
-  constructor(obj) {
-    this.name = obj.name;
-    this.id = obj.id;
-    this.coordinates = obj.coords === undefined ? null : Object.freeze(obj.coords);
-    this.requirePermit = obj.requirePermit;
-    this.permitName = this.requirePermit ? obj.permitName : null;
-    this.information = obj.information instanceof Array ? null : Object.freeze(obj.information);
-    for (let property of Object.keys(this))
-      Object.defineProperty(this, property, {writable: false});
-    this.bodies = new Map();
-    this.stations = new Map();
-    this.factions = new Map();
+  constructor(handler, obj) {
+		prv(this).handler = handler;
+		this.id = obj.id;
+		this.name = obj.name;
+		this.coordinates = Object.freeze(obj.coords);
+		this.coordsLocked = obj.coordsLocked;
+		this.requirePermit = obj.requirePermit;
+		this.permitName = this.requirePermit ? obj.permitName : null;
+		this.information = obj.information instanceof Array ? null : Object.freeze(obj.information);
+		for (let property of Object.keys(this))
+			Object.defineProperty(this, property, {writable: false});
+    this.bodies = null;
+    this.stations = null;
+		this.factions = null;
     this.traffic = null;
     this.deaths = null;
-    Object.defineProperty(this, "coords", {value: this.coordinates});
   }
+	get controllingFaction() {
+		if (!this.information.faction)
+      return undefined;
+    return prv(this).handler.factions.get(this.information.faction);
+	}
+	get coords() {
+		return this.coordinates;
+	}
+	async fetchAll() {
+		let fetched = {};
+		fetched.bodies = await this.fetchBodies()
+		fetched.stations = await this.fetchStations();
+		fetched.factions = await this.fetchFactions();
+		fetched.traffic = await this.fetchTraffic();
+		fetched.deaths = await this.fetchDeaths();
+		return fetched;
+	}
   async fetchBodies() {
     let res = await snekfetch.get("https://www.edsm.net/api-system-v1/bodies?systemName=" + this.name + "&systemId=" + this.id);
     let data = JSON.parse(res.text).bodies;
-    this.bodies = new Map();
-    for (let info of data)
-      this.bodies.set(info.name, new CelestialBody(this, info));
+		if (data === undefined)
+			return null;
+    this.bodies = new EDSMMap();
+    for (let info of data) {
+			let body = new CelestialBody(prv(this).handler, this, info);
+      this.bodies.set(body.id, body, body.name);
+			prv(this).handler.bodies.set(body.id, body, body.name);
+		}
     return this.bodies;
   }
   async fetchStations() {
     let res = await snekfetch.get("https://www.edsm.net/api-system-v1/stations?systemName=" + this.name + "&systemId=" + this.id);
     let data = JSON.parse(res.text).stations;
-    this.stations = new Map();
-    for (let info of data)
-      this.stations.set(info.name, new Station(this, info));
+		if (data === undefined)
+			return null;
+    this.stations = new EDSMMap();
+    for (let info of data) {
+			let station = new Station(prv(this).handler, this, info);
+      this.stations.set(station.id, station, station.name);
+			prv(this).handler.stations.set(station.id, station, station.name);
+		}
     return this.stations;
   }
-  async fetchFactions() {
-    let res = await snekfetch.get("https://www.edsm.net/api-system-v1/factions?systemName=" + this.name + "&systemId=" + this.id);
-    let data = JSON.parse(res.text);
-    this.factions = new Map();
-    for (let info of data.factions) {
-      let faction = new Faction(this, info);
-      if (faction.id == data.controllingFaction.id)
-        faction.controllingFaction = true;
-      this.factions.set(faction.name, faction);
-    }
-    return this.factions;
-  }
+	async fetchFactions() {
+		let res = await snekfetch.get("https://www.edsm.net/api-system-v1/factions?systemName=" + this.name + "&systemId=" + this.id);
+    let data = JSON.parse(res.text).factions;
+		if (data === undefined)
+			return null;
+		this.factions = new EDSMMap();
+		for (let info of data) {
+			let faction = new Faction(prv(this).handler, info);
+      this.factions.set(faction.id, faction, faction.name);
+			prv(this).handler.factions.set(faction.id, faction, faction.name);
+		}
+		return this.factions;
+	}
   async fetchTraffic() {
     let res = await snekfetch.get("https://www.edsm.net/api-system-v1/traffic?systemName=" + this.name + "&systemId=" + this.id);
     let data = JSON.parse(res.text);
+		if (data.traffic === undefined || data.breakdown === undefined)
+			return null;
     this.traffic = Object.freeze({total: data.traffic.total, week: data.traffic.week, day: data.traffic.day, breakdown: Object.freeze(data.breakdown)});
     return this.traffic;
   }
   async fetchDeaths() {
     let res = await snekfetch.get("https://www.edsm.net/api-system-v1/deaths?systemName=" + this.name + "&systemId=" + this.id);
-    this.deaths = Object.freeze(JSON.parse(res.text).deaths);
+		let data = JSON.parse(res.text).deaths;
+		if (data === undefined)
+			return null;
+    this.deaths = Object.freeze(data);
     return this.deaths;
-  }
-  async sphere(minRadius, maxRadius) {
-    if (minRadius === undefined)
-      throw new Error("'minRadius' is undefined")
-    if (maxRadius === undefined) {
-      maxRadius = minRadius;
-      minRadius = 0;
-    }
-    if (maxRadius < 0 || maxRadius > 200)
-      throw new Error("'maxRadius' must be comprised within 0 and 200'");
-    if (minRadius < 0 || minRadius > maxRadius)
-      throw new Error("'minRadius' must be comprised within 0 and 'maxRadius''");
-    let info = await snekfetch.get("https://www.edsm.net/api-v1/sphere-systems?systemName=" + this.name + "&radius=" + maxRadius + "&minRadius= " + minRadius + "&showId=1&showCoordinates=1&showPermit=1&showInformation=1");
-    info = JSON.parse(info.text);
-    let systems = new Map();
-    for (let system of info)
-      systems.set(info.name, new System(system));
-    return systems;
-  }
-  async cube(size) {
-    if (minRadius === undefined)
-      throw new Error("'size' is undefined")
-    if (size < 0 || size > 200)
-      throw new Error("'size' must be comprised within 0 and 200'");
-    let info = await snekfetch.get("https://www.edsm.net/api-v1/sphere-systems?systemName=" + this.name + "&size=" + size + "&showId=1&showCoordinates=1&showPermit=1&showInformation=1");
-    info = JSON.parse(info.text);
-    let systems = new Map();
-    for (let system of info)
-      systems.set(info.name, new System(system));
-    return systems;
   }
   distance(other) {
     if (!(other instanceof System))
@@ -163,4 +111,4 @@ class System {
 }
 Object.defineProperty(System.prototype, "toString", {value: function() {return this.name}});
 
-module.exports = new SystemsMap();
+module.exports = System;

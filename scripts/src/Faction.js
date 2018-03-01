@@ -1,12 +1,19 @@
+const weakmapPrivates = new WeakMap();
+function prv(object) {
+	if (!weakmapPrivates.has(object))
+		weakmapPrivates.set(object, {});
+	return weakmapPrivates.get(object);
+}
+
+
 class Faction {
-  constructor(system, obj) {
-    this.system = system;
-    console.dir(obj, {colors: true})
+  constructor(handler, obj) {
+    prv(this).handler = handler;
     delete obj.id64;
-    for (let property of Object.keys(obj))
-      this[property] = obj[property];
-    this.lastUpdate = new Date(obj.lastUpdate);
-    this.controllingFaction = false;
+    for (let property of Object.keys(obj)) {
+      this[property] = Object.freeze(obj[property]);
+      Object.defineProperty(this, property, {writable: false})
+    }
   }
 }
 Object.defineProperty(Faction.prototype, "toString", {value: function() {return this.name}});

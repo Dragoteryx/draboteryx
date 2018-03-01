@@ -10,7 +10,7 @@ const util = require("util");
 const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
 const qr = require("qrcode");
-const edsm = require("./scripts/edsm.js");
+const EDSMApi = require("./scripts/edsm.js");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
 const MusicHandler = require("drg-music2");
@@ -36,6 +36,7 @@ const redis = require("redis").createClient(process.env.REDIS_URL);
 const vars = {};
 const jisho = new jishoApi();
 const dbl = new DBL(process.env.DBLAPITOKEN);
+const edsm = new EDSMApi();
 
 // GLOBALS ----------------------------------------------------------------------------------------------
 let connected = false;
@@ -54,6 +55,7 @@ exports.client = client;
 exports.vars = vars;
 exports.dbl = dbl;
 exports.redis = redis;
+exports.edsm = edsm;
 
 // COMMAND TYPES ----------------------------------------------------------------------------------------------
 commands.defaultPrefix = config.prefix;
@@ -1010,21 +1012,24 @@ commands.set("tictactoe", TicTacToe.command
 commands.set("edsm", async msg => {
 	let name = msg.content.replace(config.prefix + "edsm ", "");
 	if (name == config.prefix + "edsm")
-		msg.channel.send("You need to specify a system name (``" + config.prefix + "edsm [system name]``).")
+		msg.channel.send("You need to specify a system name.");
 	else {
-		let system = (await edsm.systems.fetch(name)).shift();
-		if (system === undefined)
-			msg.reply("this system doesn't seem to exist or isn't referenced in EDSM's database.");
+		if (!(await edsm.knownSystem(name)))
+			msg.channel.send("This system isn't present in EDSM's database or doesn't exist.");
 		else {
-			await system.fetchBodies();
-			await system.fetchStations();
-			await system.fetchFactions();
-			await system.fetchTraffic();
-			await system.fetchDeaths();
+			if (!edsm.systems.has(name))
+				await edsm.fetchSystems(name);
+			let system = edsm.systems.get(name);
+			if (system === undefined) {
+				msg.channel.send("This system isn't present in EDSM's database or doesn't exist.");
+				return;
+			}
+			if (system.bodies == null)
+				await system.fetchAll();
 			msg.channel.send("System: " + system.name.focus(), funcs.systemInfo(system));
+		}
 	}
-	}
-}, {owner: true, props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, false)});
+}, {props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
