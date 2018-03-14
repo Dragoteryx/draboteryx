@@ -90,6 +90,8 @@ client.on("message", msg => {
 				msg.channel.send("You don't have the necessary permissions.");
 			else if (res.result.reasons.includes("nsfw"))
 				msg.channel.send("What are you trying to do?");
+			else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
+				msg.channel.send("This is not how you're supposed to use this command. Use ``" + config.prefix + "help " + res.command.name + "`` to learn the correct syntax.");
 		}
 	}).catch(err => {
 		funcs.logError(msg, err);
@@ -220,7 +222,7 @@ commands.set("help", msg => {
 				.addField("Command", command.name, true)
 				.addField("Type", command.options.props.type, true)
 				.addField("Description", command.options.props.desc.firstUpper())
-				.addField("Usage", "```" + config.prefix + command.options.props.usage + "```");
+				.addField("Syntax", "```" + config.prefix + command.options.props.usage + "```");
 				msg.author.send("", embed);
 				if (msg.channel.type != "dm")
 					msg.reply(checkDM);
@@ -347,8 +349,9 @@ commands.set("roleinfo", msg => {
 
 
 commands.set("join", msg => {
-	if (msg.guild.memes) return;
+	if (msg.guild.busy) return;
 	music.join(msg.member).then(() => {
+		msg.guild.busy = true;
 		if (tools.getDate() == "1/4") {
 			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
 				msg.channel.send("Happy April Fools' !");
@@ -364,6 +367,7 @@ commands.set("join", msg => {
 
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
+		delete msg.guild.busy;
 		musicChannels.delete(msg.guild.id);
 		console.log("[MUSICBOT] Leaved guild " + msg.guild.name + " (" + msg.guild.id + ")");
 		msg.channel.send("Goodbye o/");
@@ -834,7 +838,7 @@ commands.set("chrischansong", msg => {
 }, {owner: true});
 
 commands.set("nis", async msg => {
-	if (msg.guild.memes || music.isConnected(msg.guild)) return;
+	if (msg.guild.busy) return;
 	let member = msg.member;
 	if (msg.content.split(" ").length != 1) {
 		let str = msg.content.replace(config.prefix + "nis ", "");
@@ -842,12 +846,12 @@ commands.set("nis", async msg => {
 	}
 	if (member !== undefined && member.voiceChannel !== undefined) {
 		member.voiceChannel.join().then(connection => {
-			msg.guild.memes = true;
+			msg.guild.busy = true;
 			connection.playFile("./files/fart.mp3", {passes: 10}).on("end", () => {
 				setTimeout(() => {
 					connection.playFile("./files/burp.mp3", {passes: 10}).on("end", () => {
 						msg.guild.me.voiceChannel.leave();
-						delete msg.guild.memes;
+						delete msg.guild.busy;
 					}).setVolume(2);
 				}, 500);
 			}).setVolume(2);
@@ -1006,8 +1010,7 @@ commands.set("decrypt", async msg => {
 	}
 }, {minargs: 1, props: new classes.Command("decrypt [message]", "decrypt a message", miscType, true)});
 
-commands.set("tictactoe", TicTacToe.command
-, {guildonly: true, bots: true, props: new classes.Command("tictactoe (user)", "play Tic-Tac-Toe with someone, you can also tag the bot", gameType, true)});
+commands.set("tictactoe", TicTacToe.command, {guildonly: true, bots: true, props: new classes.Command("tictactoe (user)", "play Tic-Tac-Toe with someone, you can also tag the bot", gameType, true)});
 
 commands.set("edsm", async msg => {
 	let name = msg.content.replace(config.prefix + "edsm ", "");
@@ -1043,7 +1046,7 @@ function login() {
 
 function addMeme(name) {
 	commands.set(name, async msg => {
-		if (msg.guild.memes || music.isConnected(msg.guild)) return;
+		if (msg.guild.busy) return;
 		let member = msg.member;
 		if (msg.content.split(" ").length != 1) {
 			let str = msg.content.replace(config.prefix + name + " ", "");
@@ -1051,11 +1054,11 @@ function addMeme(name) {
 		}
 		if (member !== undefined && member.voiceChannel !== undefined) {
 			member.voiceChannel.join().then(connection => {
-				msg.guild.memes = true;
+				msg.guild.busy = true;
 				connection.playFile("./files/" + name + ".mp3", {passes: 10}).on("end", () => {
 					setTimeout(() => {
 						msg.guild.me.voiceChannel.leave();
-						delete msg.guild.memes;
+						delete msg.guild.busy;
 					}, 500);
 				}).setVolume(2);
 			});
@@ -1063,9 +1066,7 @@ function addMeme(name) {
 	}, {guildonly: true});
 }
 
-function isOwner(user) {
-	return commands.owners.includes(user.id);
-}
+let isOwner = user => commands.owners.includes(user.id);
 
 // PROTOTYPES
 Object.defineProperty(discord.Channel.prototype, "waitResponse", {
