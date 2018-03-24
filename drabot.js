@@ -77,6 +77,7 @@ client.on("message", msg => {
 	commands.check(msg, {prefix: config.prefix}).then(res => {
 		if (debug) {
 			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
+			console.log("[DEBUG] " + msg.content);
 			console.log(res);
 		}
 		if (!res.result.valid) {
@@ -394,17 +395,43 @@ commands.set("request", msg => {
 	});
 }, {guildonly: true, minargs: 1, maxargs: 1, props: new classes.Command("request [youtube link]", "request a Youtube video using a Youtube link", musicType, true)});
 
-commands.set("query", msg => {
-	let query = msg.content.replace(config.prefix + "query ","");
-	msg.channel.send("Searching for ``" + query + "`` on Youtube.").then(msg2 => {
-		music.add(query, msg.member, {type: "ytquery", passes: 10, apiKey: process.env.YOUTUBEAPIKEY}).then(added => {
-			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
-		}).catch(err => {
-			if (err.message == "the client is not in a voice channel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			else if (err.message == "no query results") msg2.edit("Sorry but I did not find anything.");
-			else funcs.musicErrors(msg, err);
-		});
-	});
+commands.set("query", async msg => {
+	try {
+		if (!music.isConnected(msg.guild)) {
+			msg.channel.send("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+			return;
+		}
+		let query = msg.content.replace(config.prefix + "query ", "");
+		let msg2 = await msg.channel.send("Searching for ``" + query + "`` on Youtube.");
+		let links = await MusicHandler.queryYoutube(query, process.env.YOUTUBEAPIKEY, 5);
+		if (links.length == 0) {
+			msg2.edit("Sorry but I did not find anything.");
+			return;
+		}
+		let embed = tools.defaultEmbed();
+		for (let i = 0; i < links.length; i++) {
+			let info = await MusicHandler.youtubeInfo(links[i]);
+			embed.addField((i+1) + " - " + info.title + " by " + info.author.name + " (" + tools.parseTimestamp(info.length).timer + ")", info.link);
+		}
+		msg2.edit("So, which one do you want to listen to?", embed);
+		let msg3 = await msg.channel.waitResponse({delay: 10000, filter: msg3 => {
+			let choice = Number(msg3.content);
+			if (msg3.author.id != msg.author.id || isNaN(choice)) return false;
+			else if (!tools.range(1, links.length).includes(choice)) {
+				msg.channel.send("You need to enter an index between ``1`` and ``" + links.length + "``.");
+				return false;
+			} else return true;
+		}});
+		let choice;
+		if (msg3 === undefined) {
+			msg.channel.send("You didn't respond in time, so I'll play the first one.");
+			choice = 0;
+		} else choice = Number(msg3.content) - 1;
+		let added = await music.add(links[choice], msg.member, {passes: 10});
+		msg.channel.send("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
+	} catch(err) {
+		funcs.musicErrors(msg, err);
+	}
 }, {guildonly: true, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
 
 commands.set("plremove", msg => {

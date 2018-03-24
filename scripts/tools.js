@@ -101,8 +101,7 @@ exports.request = (host, options, data) => {
 				reject(new Error("Invalid protocol: https or http"));
 				return;
 			}
-			host = host.replace("https://", "").replace("http://", "");
-			host = host.split("/");
+			host = host.replace("https://", "").replace("http://", "").split("/");
 			if (options === undefined)
 				options = {};
 			options.hostname = host.shift();
@@ -205,4 +204,15 @@ exports.parseTimestamp = timestamp => {
 		text: text,
 		timer: timer
 	});
+}
+
+exports.range = function(min, max) {
+	if (max === undefined) {
+		max = min;
+		min = 0;
+	}
+	let array = [];
+	for (let i = min; i <= max; i++)
+		array.push(i);
+	return array;
 }
