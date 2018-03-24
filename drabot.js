@@ -424,7 +424,7 @@ commands.set("query", async msg => {
 			} else return true;
 		}});
 		let choice;
-		if (msg3 === undefined) {
+		if (msg3 === null) {
 			msg.channel.send("You didn't respond in time, so I'll play the first one.");
 			choice = 0;
 		} else choice = Number(msg3.content) - 1;
