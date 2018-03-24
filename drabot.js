@@ -183,6 +183,7 @@ music.on("memberLeave", (member, channel) => {
 		musicLeaves.set(member.guild.id,
 		client.setTimeout(() => {
 			member.guild.playlist.leave().then(() => {
+				delete member.guild.busy;
 				musicChannels.get(member.guild.id).send("Goodbye o/");
 				musicChannels.delete(member.guild.id);
 				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
