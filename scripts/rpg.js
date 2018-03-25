@@ -14,8 +14,8 @@ function prv(object) {
 }
 
 // GLOBALS
-let itemId = 1;
-let entityId = 1;
+let entityId = 0;
+let itemId = 0;
 
 // CLASSES
 class World {
@@ -80,23 +80,15 @@ class Entity extends EventEmitter {
 			stats.intellect = 0;
 		if (stats.lvl === undefined)
 			stats.lvl = 1;
-		prv(this).maxhealth = stats.maxhealth;
+		that.maxhealth = stats.maxhealth;
 		this.name = stats.name;
+		this.lvl = stats.lvl;
 		this.force = stats.force;
 		this.dexterity = stats.name;
 		this.intellect = stats.intellect;
-		prv(this).lvl = stats.lvl;
   }
 	get id() {
 		return prv(this).id;
-	}
-	get lvl() {
-		return prv(this).lvl;
-	}
-	set lvl(value) {
-		let that = prv(this);
-		let old = that.lvl;
-		prv(this).lvl = value;
 	}
 	get maxhealth() {
 		return prv(this).maxhealth(this.force, this.dexterity, this.intellect, this.lvl);

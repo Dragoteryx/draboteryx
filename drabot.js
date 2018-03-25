@@ -14,6 +14,7 @@ const EDSMApi = require("./scripts/edsm.js");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
 const MusicHandler = require("drg-music2");
+MusicHandler.setYoutubeApiKey(process.env.YOUTUBEAPIKEY);
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js");
@@ -406,22 +407,21 @@ commands.set("query", async msg => {
 		}
 		let query = msg.content.replace(config.prefix + "query ", "");
 		let msg2 = await msg.channel.send("Searching for ``" + query + "`` on Youtube.");
-		let links = await MusicHandler.queryYoutube(query, process.env.YOUTUBEAPIKEY, 5);
-		if (links.length == 0) {
+		let videos = await MusicHandler.queryYoutube(query, 5);
+		if (videos.length == 0) {
 			msg2.edit("Sorry but I did not find anything.");
 			return;
 		}
 		let embed = tools.defaultEmbed();
-		for (let i = 0; i < links.length; i++) {
-			let info = await MusicHandler.youtubeInfo(links[i]);
-			embed.addField((i+1) + " - " + info.title + " by " + info.author.name + " (" + tools.parseTimestamp(info.length).timer + ")", info.link);
+		for (let i = 0; i < videos.length; i++) {
+			embed.addField((i+1) + " - " + videos[i].title + " by " + videos[i].authorName + " (" + tools.parseTimestamp(videos[i].length).timer + ")", videos[i].link);
 		}
 		msg2.edit("So, which one do you want to listen to?", embed);
 		let msg3 = await msg.channel.waitResponse({delay: 10000, filter: msg3 => {
 			let choice = Number(msg3.content);
 			if (msg3.author.id != msg.author.id || isNaN(choice)) return false;
-			else if (!tools.range(1, links.length).includes(choice)) {
-				msg.channel.send("You need to enter an index between ``1`` and ``" + links.length + "``.");
+			else if (!tools.range(1, videos.length).includes(choice)) {
+				msg.channel.send("You need to enter an index between ``1`` and ``" + videos.length + "``.");
 				return false;
 			} else return true;
 		}});
@@ -430,12 +430,37 @@ commands.set("query", async msg => {
 			msg.channel.send("You didn't respond in time, so I'll play the first one.");
 			choice = 0;
 		} else choice = Number(msg3.content) - 1;
-		let added = await music.add(links[choice], msg.member, {passes: 10});
+		let added = await music.add(videos[choice].link, msg.member, {passes: 10});
 		msg.channel.send("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 	} catch(err) {
 		funcs.musicErrors(msg, err);
 	}
 }, {guildonly: true, minargs: 1, props: new classes.Command("query [youtube query]", "request a Youtube video with a Youtube query", musicType, true)});
+
+commands.set("ytbplaylist", async msg => {
+	let link = msg.content.replace(config.prefix + "ytbplaylist ","");
+	if (!music.isConnected(msg.guild)) {
+		msg.channel.send("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+		return;
+	}
+	if (!link.startsWith("https://www.youtube.com/playlist?list=")) {
+		msg.channel.send("This playlist link is not valid.");
+		return;
+	}
+	let msg2 = await msg.channel.send("Fetching the playlist ``" + link + "`` from Youtube.");
+	MusicHandler.ytbplaylist(link).then(async playlist => {
+		msg2.edit("Fetching the playlist ``" + playlist.title + "`` from Youtube.")
+		for (let video of playlist.videos) {
+			try {
+				await music.add(video.link, msg.member, {passes: 10});
+			} catch(err){}
+		}
+		msg.channel.send("The playlist ``" + playlist.title + "`` has been added to the current playlist.");
+	}).catch(err => {
+		console.error(err);
+		msg.channel.send("An error happened while trying to fetch the playlist.");
+	});
+}, {guildonly: true, minargs: 1, maxargs: 1, props: new classes.Command("ytbplaylist [youtube playlist link]", "request a Youtube playlist", musicType, true)});
 
 commands.set("plremove", msg => {
 	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
@@ -745,7 +770,7 @@ commands.set("csshumor", msg => {
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
-}, {maxargs: 0, props: new classes.Command("csshumor", "random CSS joke", funType, true)});
+}, {owner: true, maxargs: 0, props: new classes.Command("csshumor", "random CSS joke", funType, false)});
 
 commands.set("httpdog", msg => {
 	let lien = "https://httpstatusdogs.com";

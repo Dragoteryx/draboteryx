@@ -21,6 +21,7 @@
     "prism-media": "^0.1.0",
     "qrcode": "^1.2.0",
     "redis": "^2.8.0",
+    "simple-youtube-api": "^5.0.1",
     "unofficial-jisho-api": "^1.0.5",
     "ws": "^3.1.0",
     "youtube-search": "^1.0.10",

@@ -2,6 +2,7 @@
 const discord = require("discord.js");
 const Danbooru = require("danbooru");
 const edsm = require("./edsm.js");
+const ytdl = require("ytdl-core");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
