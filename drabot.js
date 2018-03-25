@@ -89,6 +89,8 @@ client.on("message", msg => {
 				msg.channel.send("This is an owner only command.");
 			else if (res.result.reasons.includes("missing permissions"))
 				msg.channel.send("You don't have the necessary permissions.");
+			else if (res.result.reasons.includes("vote required"))
+				msg.channel.send("To use this command you need to vote for the bot: https://discordbots.org/bot/273576577512767488/vote");
 			else if (res.result.reasons.includes("nsfw"))
 				msg.channel.send("What are you trying to do?");
 			else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
@@ -595,7 +597,7 @@ commands.set("plsave", msg => {
 			});
 		}
 	}
-}, {guildonly: true, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
+}, {vote: true, guildonly: true, maxargs: 0, props: new classes.Command("plsave", "save the current playlist", musicType, true)});
 
 commands.set("plload", msg => {
 	if (!redisOK) {
@@ -620,7 +622,7 @@ commands.set("plload", msg => {
 			funcs.logError(msg, err);
 		});
 	}
-}, {guildonly: true, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
+}, {vote: true, guildonly: true, maxargs: 0, props: new classes.Command("plload", "load a saved playlist", musicType, true)});
 
 commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -812,7 +814,7 @@ commands.set("waifu", msg => {
 }, {maxargs: 0, props: new classes.Command("waifu", "get to know who your waifu is", funType, true)});
 
 commands.set("daisuki", msg => {
-	dbl.hasVoted(msg.author.id).then(voted => {
+	msg.author.voted().then(voted => {
 		if (voted)
 			msg.reply("yes! :heart:");
 		else
@@ -955,7 +957,7 @@ commands.set("wfalerts", msg => {
 		else if (err.message == "invalid platform") msg.channel.send("Available platforms: ``pc``, ``ps4``, ``xb1``.");
 		else funcs.logError(msg, err);
 	});
-}, {maxargs: 1, props: new classes.Command("wfalerts (platform)", "get the current state of alerts", warframeType, true)});
+}, {owner: true, maxargs: 1, props: new classes.Command("wfalerts (platform)", "get the current state of alerts", warframeType, false)});
 
 commands.set("owstats", msg => {
 	let args = msg.content.split(" ").slice(1);
@@ -1126,6 +1128,12 @@ Object.defineProperty(discord.Channel.prototype, "waitResponse", {
 				resolve(msg);
 			});
 		});
+	}
+});
+
+Object.defineProperty(discord.User.prototype, "voted", {
+	value: function() {
+		return dbl.hasVoted("" + this.id);
 	}
 });
 

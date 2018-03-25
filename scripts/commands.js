@@ -52,6 +52,8 @@ class CommandsHandler {
 			options.nsfw = false;
 		if (options.bots === undefined)
 			options.bots = false;
+		if (options.vote === undefined)
+			options.vote = false;
 		if (options.minargs === undefined)
 			options.minargs = -1;
 		if (options.maxargs === undefined)
@@ -74,6 +76,7 @@ class CommandsHandler {
 			rolenames: options.rolenames,
 			nsfw: options.nsfw,
 			bots: options.bots,
+			vote: options.vote,
 			minargs: Math.round(Number(options.minargs)),
 			maxargs: Math.round(Number(options.maxargs)),
 			uses: Math.round(Number(options.uses)),
@@ -259,6 +262,12 @@ class Command {
 						if (check.reasons === undefined)
 							check.reasons = [];
 						check.reasons.push("bot user");
+					}
+					if (!(await msg.author.voted()) && this.options.vote) {
+						check.valid = false;
+						if (check.reasons === undefined)
+							check.reasons = [];
+						check.reasons.push("vote required");
 					}
 					if (this.options.minargs > 0 && nbargs < this.options.minargs) {
 						check.valid = false;
