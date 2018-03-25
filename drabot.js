@@ -448,7 +448,7 @@ commands.set("ytbplaylist", async msg => {
 		return;
 	}
 	let msg2 = await msg.channel.send("Fetching the playlist ``" + link + "`` from Youtube.");
-	MusicHandler.ytbplaylist(link).then(async playlist => {
+	MusicHandler.youtubePlaylist(link).then(async playlist => {
 		msg2.edit("Fetching the playlist ``" + playlist.title + "`` from Youtube.")
 		for (let video of playlist.videos) {
 			try {
