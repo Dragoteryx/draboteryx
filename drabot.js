@@ -11,6 +11,7 @@ const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
 const qr = require("qrcode");
 const EDSMApi = require("./scripts/edsm.js");
+const mc = require("minecraft-protocol");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
 const MusicHandler = require("drg-music2");
@@ -1088,6 +1089,15 @@ commands.set("edsm", async msg => {
 		}
 	}
 }, {owner: true, props: new classes.Command("edsm [system name]", "gives you information about a system using ESDM's API", miscType, false)});
+
+commands.set("fbw", msg => {
+	mc.ping({
+    host: "play.fantabobworld.com"
+  }, (err, res) => {
+    if (err) funcs.logError(msg, err);
+    else msg.reply("il y a actuellement ``" + res.players.online + "`` joueurs sur le FantaBobWorld.");
+  });
+}, {guilds: [config.guilds.patate]});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
