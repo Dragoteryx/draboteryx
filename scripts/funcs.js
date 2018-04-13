@@ -3,6 +3,7 @@ const discord = require("discord.js");
 const Danbooru = require("danbooru");
 const edsm = require("./edsm.js");
 const ytdl = require("ytdl-core");
+const DrGMusic2 = require("drg-music2");
 
 const drabot = require("../drabot.js");
 const config = require("../config.js");
@@ -211,21 +212,21 @@ exports.logError = (msg, err) => {
 }
 
 exports.musicErrors = (msg, err) => {
-	if (err.message == "this member is not in a voice channel") msg.channel.send("You're not in a voice channel.");
-	else if (err.message == "the client can't join this voice channel") msg.channel.send("I can't join this voice channel.");
-	else if (err.message == "the client is not authorized to speak in this channel") msg.channel.send("I'm not allowed to speak in this voice channel.");
-	else if (err.message == "this voice channel is full") msg.channel.send("This voice channel is full.");
-	else if (err.message == "the client already joined a voice channel in this guild") msg.channel.send("I'm already in a voice channel.");
-	else if (err.message == "the client is not in a voice channel") msg.channel.send("I am not in a voice channel.");
-	else if (err.message == "the client is not playing") msg.channel.send("I am not playing music at the moment.");
-	else if (err.message == "the playlist is empty") msg.channel.send("The playlist is empty.");
-	else if (err.message == "invalid music index") msg.channel.send("There is no music with that index in the playlist.");
-	else if (err.message == "this website is not supported") msg.channel.send("Sorry but I don't know this website.");
-	else if (err.message == "volume < 0") msg.channel.send("The volume must be above ``0``.");
+	if (err.message == DrGMusic2.errorMessages.memberNotInVoiceChannel) msg.channel.send("You're not in a voice channel.");
+	else if (err.message == DrGMusic2.errorMessages.voiceChannelNotJoinable) msg.channel.send("I can't join this voice channel.");
+	else if (err.message == DrGMusic2.errorMessages.voiceChannelNotSpeakable) msg.channel.send("I'm not allowed to speak in this voice channel.");
+	else if (err.message == DrGMusic2.errorMessages.voiceChannelFull) msg.channel.send("This voice channel is full.");
+	else if (err.message == DrGMusic2.errorMessages.guildAlreadyJoined) msg.channel.send("I'm already in a voice channel.");
+	else if (err.message == DrGMusic2.errorMessages.notConnected) msg.channel.send("I am not in a voice channel.");
+	else if (err.message == DrGMusic2.errorMessages.notPlaying) msg.channel.send("I am not playing any music at the moment.");
+	else if (err.message == DrGMusic2.errorMessages.emptyPlaylist) msg.channel.send("The playlist is empty.");
+	else if (err.message == DrGMusic2.errorMessages.invalidMusicIndex) msg.channel.send("There is no music with that index in the playlist.");
+	else if (err.message == DrGMusic2.errorMessages.videoWebsite) msg.channel.send("Sorry but I don't know this website.");
+	else if (err.message == DrGMusic2.errorMessages.invalidVolume) msg.channel.send("The volume must be above ``0``.");
 	else exports.logError(msg, err);
 }
 
-exports.fetchRedis = (path) => {
+exports.fetchRedis = path => {
 	return new Promise((resolve, reject) => {
 		drabot.redis.get(path, (err, data) => {
 			if (err) reject(err);
@@ -246,9 +247,7 @@ exports.searchDanbooru = async (msg, nsfw) => {
 			msg.channel.send("You can't search for more than 2 tags at the same time.");
 			return;
 		}
-		let posts;
-		if (nsfw) posts = await booru.posts(query);
-		else posts = await safebooru.posts(query);
+		let posts = nsfw ? (await booru.posts(query)) : (await safebooru.posts(query));
 		if (posts.length == 0)
 			msg.channel.send("Sorry, I didn't find anything about ``" + query.join(" ") + "``.");
 		else {

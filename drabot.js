@@ -14,8 +14,8 @@ const EDSMApi = require("./scripts/edsm.js");
 const mc = require("minecraft-protocol");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
-const MusicHandler = require("drg-music2");
-MusicHandler.setYoutubeApiKey(process.env.YOUTUBEAPIKEY);
+const DrGMusic2 = require("drg-music2");
+DrGMusic2.setYoutubeApiKey(process.env.YOUTUBEAPIKEY);
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js");
@@ -32,7 +32,7 @@ const TicTacToe = require("./scripts/tictactoe.js");
 // CONSTS ----------------------------------------------------------------------------------------------
 const client = new discord.Client();
 const baby = new discord.Client();
-const music = new MusicHandler(client);
+const music = new DrGMusic2(client);
 const commands = new CommandsHandler();
 const redis = require("redis").createClient(process.env.REDIS_URL);
 const vars = {};
@@ -384,7 +384,11 @@ commands.set("leave", msg => {
 
 commands.set("request", msg => {
 	let link = msg.content.replace(config.prefix + "request ","");
-	if (MusicHandler.videoWebsite(link) === undefined) {
+	if (!music.isConnected(msg.guild)) {
+		msg.channel.send("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
+		return;
+	}
+	if (DrGMusic2.videoWebsite(link) === undefined) {
 		msg.channel.send("This link is not valid or this website is not supported.");
 		return;
 	}
@@ -392,9 +396,8 @@ commands.set("request", msg => {
 		music.add(link, msg.member, {passes: 10}).then(added => {
 			msg2.edit("``" + added.title + "`` by ``" + added.author.name + "`` has been added to the playlist.");
 		}).catch(err => {
-			if (err.message == "the client is not in a voice channel") msg2.edit("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			else if (err.message == "this video id is invalid") msg2.edit("This Youtube link is invalid.");
-			else if (err.message == "this video is unavailable") msg2.edit("This video is unavailable.");
+			if (err.message.includes("unavailable")) msg2.edit("This video is unavailable.");
+			else if (err.message.includes("does not match expected format")) msg2.edit("This video ID doesn't match the expected format.");
 			else funcs.musicErrors(msg, err);
 		});
 	});
@@ -402,13 +405,9 @@ commands.set("request", msg => {
 
 commands.set("query", async msg => {
 	try {
-		if (!music.isConnected(msg.guild)) {
-			msg.channel.send("I am not in a voice channel. You can ask me to join you using ``" + config.prefix + "join``.");
-			return;
-		}
 		let query = msg.content.replace(config.prefix + "query ", "");
 		let msg2 = await msg.channel.send("Searching for ``" + query + "`` on Youtube.");
-		let videos = await MusicHandler.queryYoutube(query, 5);
+		let videos = await DrGMusic2.queryYoutube(query, 5);
 		if (videos.length == 0) {
 			msg2.edit("Sorry but I did not find anything.");
 			return;
@@ -418,7 +417,7 @@ commands.set("query", async msg => {
 			embed.addField((i+1) + " - " + videos[i].title + " by " + videos[i].authorName + " (" + tools.parseTimestamp(videos[i].length).timer + ")", videos[i].link);
 		}
 		msg2.edit("So, which one do you want to listen to?", embed);
-		let msg3 = await msg.channel.waitResponse({delay: 10000, filter: msg3 => {
+		let msg3 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => {
 			let choice = Number(msg3.content);
 			if (msg3.author.id != msg.author.id || isNaN(choice)) return false;
 			else if (!tools.range(1, videos.length).includes(choice)) {
@@ -449,7 +448,7 @@ commands.set("ytbplaylist", async msg => {
 		return;
 	}
 	let msg2 = await msg.channel.send("Fetching the playlist ``" + link + "`` from Youtube.");
-	MusicHandler.youtubePlaylist(link).then(async playlist => {
+	DrGMusic2.youtubePlaylist(link).then(async playlist => {
 		msg2.edit("Fetching the playlist ``" + playlist.title + "`` from Youtube.")
 		for (let video of playlist.videos) {
 			try {
@@ -458,8 +457,7 @@ commands.set("ytbplaylist", async msg => {
 		}
 		msg.channel.send("The playlist ``" + playlist.title + "`` has been added to the current playlist.");
 	}).catch(err => {
-		console.error(err);
-		msg.channel.send("An error happened while trying to fetch the playlist.");
+		funcs.logError(msg, err);
 	});
 }, {guildonly: true, minargs: 1, maxargs: 1, props: new classes.Command("ytbplaylist [youtube playlist link]", "request a Youtube playlist", musicType, true)});
 
@@ -654,7 +652,7 @@ commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
 	let link = "https://factgenerator.herokuapp.com";
 	if (args.length > 0) {
-		link += "/?query=";
+		link += "/generate?includes=";
 		for (let arg of args)
 			link += arg + "_";
 		link = link.substring(0, link.length-1);
@@ -856,12 +854,12 @@ commands.set("dicksize", async msg => {
 	let smedium = ["Seems like it's normal sized to me.", "The average.", "A decent size."];
 	let medium = ["You're slightly above the average.", "Good job.", "To be honest it's not that impressive."];
 	let large = ["My horse is jealous.", "This is something I would be proud of.", "Almost as long as my arm."];
-	let xlarge = ["Keep that thing away from me! D:", "You could knock down someone with that.", "Do you sometimes bang it on the ceiling?", "Don't trip over it.", "Damn son."];
+	let xlarge = ["Please don't hurt me", "Keep that thing away from me! D:", "You could knock down someone with that.", "Do you sometimes bang it on the ceiling?", "Don't trip over it.", "Damn son."];
 	let id = msg.author.id.split("");
 	let sum = 0;
 	for (let i of id)
 		sum += Number(i);
-	let length = sum%10+1;
+	let length = msg.author.id != config.users.kissy ? sum%10+1 : 100;
 	let str = "8";
 	for (let i = 0; i < length; i++)
 		str += "=";
@@ -881,13 +879,13 @@ commands.set("dicksize", async msg => {
 		msg.channel.send(medium.random());
 	else if (length <= 9)
 		msg.channel.send(large.random());
-	else if (length == 10)
+	else if (length >= 10)
 		msg.channel.send(xlarge.random());
 }, {bots: true});
 
 commands.set("chrischansong", msg => {
 	music.add("./files/chrischan.oga", msg.member, {type: "file", passes: 10}).then(added => {
-		msg.channel.send("Test file (``" + added.title + "``) added to the playlist with success.");
+		msg.channel.send("Test file successfully (``" + added.title + "``) added to the playlist.");
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
@@ -935,10 +933,10 @@ commands.set("hug", async msg => {
 
 commands.set("ytbthumb", msg => {
 	let link = msg.content.replace(config.prefix + "ytbthumb ","");
-	if (MusicHandler.videoWebsite(link) != "Youtube")
+	if (DrGMusic2.videoWebsite(link) != "Youtube")
 		msg.channel.send("This isn't a Youtube link.");
 	else {
-		MusicHandler.youtubeInfo(link).then(info => {
+		DrGMusic2.youtubeInfo(link).then(info => {
 			msg.channel.send("No need to thank me. :wink:", {files: [info.maxResThumbnailURL]});
 		}).catch(err => {
 			msg.channel.send("I was unable to download the thumbnail for some reason, sorry.");
@@ -947,18 +945,15 @@ commands.set("ytbthumb", msg => {
 	}
 }, {minargs: 1, maxargs: 1, props: new classes.Command("ytbthumb [youtube link]", "retrieve the thumbnail from a Youtube video", miscType, true)});
 
-commands.set("jisho", async msg => {
+commands.set("jisho", msg => {
 	let kanjis = msg.content.replace(config.prefix + "jisho ", "").split("");
 	let atlone = false;
-	for (let kanji of kanjis) {
+	if (!kanjis.some(async kanji => {
 		let res = await jisho.searchForKanji(kanji);
-		if (res.found) {
-			atlone = true;
+		if (res.found)
 			msg.channel.send("Kanji: ``" + kanji + "``", funcs.kanjiInfo(res));
-		}
-	}
-	if (!atlone)
-		msg.channel.send("I did not find any kanji in your message.");
+		return res.found;
+	})) msg.channel.send("I did not find any kanji in your message.");
 }, {minargs: 1, props: new classes.Command("jisho [text]", "returns information about every kanji in the text", miscType, true)});
 
 commands.set("qrcode", msg => {
@@ -1097,7 +1092,26 @@ commands.set("fbw", msg => {
     if (err) funcs.logError(msg, err);
     else msg.reply("il y a actuellement ``" + res.players.online + "`` joueurs sur le FantaBobWorld.");
   });
-}, {guilds: [config.guilds.patate]});
+}, {guildonly: true, guilds: [config.guilds.patate]});
+
+commands.set("hentai", msg => {
+	let query = msg.content.replace(config.prefix + "hentai ", "");
+	let apiquery = query;
+	while (apiquery.includes(" "))
+		apiquery.replace(" ", "+");
+	tools.request("https://nhentai.net/api/galleries/search?query=" + apiquery).then(res => {
+		let data = JSON.parse(res.text);
+		if (data.num_pages == 0)
+			msg.channel.send("Sorry, but I didn't find anything about ``" + query + "``.");
+		else {
+			let scan = data.result.random();
+			console.dir(scan, {colors: true});
+			msg.channel.send("What about this? ``" + scan.title.pretty + "`` => https://nhentai.net/g/" + scan.id, {files: ["https://t.nhentai.net/galleries/" + scan.media_id + "/cover.jpg"]})
+		}
+	}).catch(err => {
+		console.error(err);
+	});
+}, {nsfw: true, minargs: 1, props: new classes.Command("hentai [query]", "search for hentai on nhentai.net", nsfwType, true)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
@@ -1135,10 +1149,8 @@ let isOwner = user => commands.owners.includes(user.id);
 
 // PROTOTYPES
 Object.defineProperty(discord.Channel.prototype, "waitResponse", {
-	value: function(options) {
+	value: function(options = {}) {
 		return new Promise(resolve => {
-			if (options === undefined)
-				options = {};
 			if (options.delay === undefined)
 				options.delay = -1;
 			if (options.filter === undefined)

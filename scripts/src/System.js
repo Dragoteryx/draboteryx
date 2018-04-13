@@ -101,13 +101,18 @@ class System {
     this.deaths = Object.freeze(data);
     return this.deaths;
   }
-  distance(other) {
-    if (!(other instanceof System))
+  static distance(sys1, sys2) {
+		if (!(sys instanceof System))
       return null;
-    if (this.coords === null || other.coords === null)
+    if (!(sys2 instanceof System))
       return null;
-    return Math.sqrt(Math.pow(this.coords.x - other.coords.x, 2) + Math.pow(this.coords.y - other.coords.y, 2) + Math.pow(this.coords.z - other.coords.z, 2));
+    if (sys1.coords === null || sys2.coords === null)
+      return null;
+    return Math.sqrt(Math.pow(sys1.coords.x - sys2.coords.x, 2) + Math.pow(sys1.coords.y - sys2.coords.y, 2) + Math.pow(sys1.coords.z - sys2.coords.z, 2));
   }
+	distance(other) {
+		return System.distance(this, other);
+	}
 }
 Object.defineProperty(System.prototype, "toString", {value: function() {return this.name}});
 

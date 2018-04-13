@@ -88,7 +88,7 @@ exports.defineAllProperties = (obj, option) => {
 	return obj;
 }
 
-exports.request = (host, options, data) => {
+exports.request = (host, options = {}, data = null) => {
 	return new Promise((resolve, reject) => {
 		if (host === undefined) reject(new Error("'host' is undefined"));
 		else {
@@ -102,8 +102,6 @@ exports.request = (host, options, data) => {
 				return;
 			}
 			host = host.replace("https://", "").replace("http://", "").split("/");
-			if (options === undefined)
-				options = {};
 			options.hostname = host.shift();
 			options.path = "/" + host.join("/");
 	    let req = protocol.request(options, res => {
@@ -119,10 +117,7 @@ exports.request = (host, options, data) => {
 						reject(new Error("" + res.statusCode + " " + res.statusMessage));
 				});
 			}).on("error", reject);
-			if (options.method == "POST") {
-				if (data === undefined) reject(new Error("'data' is undefined"));
-				else req.write(data);
-			}
+			if (data != null)  req.write(data);
 			req.end();
 		}
   });
