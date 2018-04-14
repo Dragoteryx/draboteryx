@@ -650,14 +650,14 @@ commands.set("plload", msg => {
 
 commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
-	let link = "https://factgenerator.herokuapp.com";
+	let link = "https://factgenerator.herokuapp.com/generate";
 	if (args.length > 0) {
-		link += "/generate?includes=";
+		link += "?includes=";
 		for (let arg of args)
 			link += arg + "_";
 		link = link.substring(0, link.length-1);
 	}
-	link.fetchHTTP().then(res => {
+	tools.request(link).then(res => {
 		let parsed = JSON.parse(res.text);
 		if (!parsed.found)
 			msg.channel.send("I did not find any interesting fact sorry.");
