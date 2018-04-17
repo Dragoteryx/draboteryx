@@ -650,9 +650,8 @@ commands.set("plload", msg => {
 
 commands.set("fact", msg => {
 	let args = msg.content.split(" ").slice(1);
-	let link = "https://factgenerator.herokuapp.com/generate";
+	let link = "https://factgenerator.herokuapp.com/generate/";
 	if (args.length > 0) {
-		link += "?includes=";
 		for (let arg of args)
 			link += arg + "_";
 		link = link.substring(0, link.length-1);
