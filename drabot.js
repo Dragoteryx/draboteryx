@@ -12,6 +12,7 @@ const DBL = require("dblapi.js");
 const qr = require("qrcode");
 const EDSMApi = require("./scripts/edsm.js");
 const mc = require("minecraft-protocol");
+const snekfetch = require("snekfetch");
 
 // CUSTOM NPM -----------------------------------------------------------------------------------
 const DrGMusic2 = require("drg-music2");
@@ -656,7 +657,7 @@ commands.set("fact", msg => {
 			link += arg + "_";
 		link = link.substring(0, link.length-1);
 	}
-	tools.request(link).then(res => {
+	snekfetch.get(link).then(res => {
 		let parsed = JSON.parse(res.text);
 		if (!parsed.found)
 			msg.channel.send("I did not find any interesting fact sorry.");
@@ -1098,7 +1099,7 @@ commands.set("hentai", msg => {
 	let apiquery = query;
 	while (apiquery.includes(" "))
 		apiquery.replace(" ", "+");
-	tools.request("https://nhentai.net/api/galleries/search?query=" + apiquery).then(res => {
+	snekfetch.get("https://nhentai.net/api/galleries/search?query=" + apiquery).then(res => {
 		let data = JSON.parse(res.text);
 		if (data.num_pages == 0)
 			msg.channel.send("Sorry, but I didn't find anything about ``" + query + "``.");
@@ -1111,6 +1112,71 @@ commands.set("hentai", msg => {
 		console.error(err);
 	});
 }, {nsfw: true, minargs: 1, props: new classes.Command("hentai [query]", "search for hentai on nhentai.net", nsfwType, true)});
+
+commands.set("facts", msg => {
+	let command = msg.content.split(" ")[1];
+	let nbargs = msg.content.split(" ").slice(1).length;
+	let alias;
+	let str;
+	if (nbargs >= 2)
+		alias = msg.content.split(" ")[2];
+	if (nbargs >= 3)
+		str = msg.content.replace(config.prefix + "facts " + command + " " + alias + " ", "");
+	if (command == "insert" && nbargs >= 3) {
+		snekfetch.patch("https://factgenerator.herokuapp.com/database/" + alias, {headers: {Authorization: process.env.FACTSTOKEN}})
+		.send({insert: str}).then(res => {
+			if (res.body.inserted) {
+				msg.channel.send("Insertion successful.");
+			} else {
+				msg.channel.send("Insertion failed.");
+			}
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "remove" && nbargs >= 3) {
+		snekfetch.patch("https://factgenerator.herokuapp.com/database/" + alias, {headers: {Authorization: process.env.FACTSTOKEN}})
+		.send({remove: str}).then(res => {
+			if (res.body.removed) {
+				msg.channel.send("Removal successful.");
+			} else {
+				msg.channel.send("Removal failed.");
+			}
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "rename" && nbargs >= 3) {
+		snekfetch.patch("https://factgenerator.herokuapp.com/database/" + alias, {headers: {Authorization: process.env.FACTSTOKEN}})
+		.send({rename: str}).then(res => {
+			if (res.body.renamed) {
+				msg.channel.send("Rename successful.");
+			} else {
+				msg.channel.send("Rename failed.");
+			}
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "create" && nbargs == 2) {
+		snekfetch.put("https://factgenerator.herokuapp.com/database/" + alias, {headers: {Authorization: process.env.FACTSTOKEN}})
+		.then(res => {
+			msg.channel.send("New category ``" + alias + "`` created.");
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "delete" && nbargs == 2) {
+		snekfetch.delete("https://factgenerator.herokuapp.com/database/" + alias, {headers: {Authorization: process.env.FACTSTOKEN}})
+		.then(res => {
+			if (res.body.deleted)
+			msg.channel.send("Category ``" + alias + "`` deleted.");
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "save") {
+		snekfetch.put("https://factgenerator.herokuapp.com/save", {headers: {Authorization: process.env.FACTSTOKEN}})
+		.then(res => {
+			msg.channel.send("Saved database.");
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "load") {
+		snekfetch.put("https://factgenerator.herokuapp.com/load", {headers: {Authorization: process.env.FACTSTOKEN}})
+		.then(res => {
+			msg.channel.send("Loaded database.");
+		}).catch(err => funcs.logError(msg, err));
+	} else if (command == "reset") {
+		snekfetch.put("https://factgenerator.herokuapp.com/reset", {headers: {Authorization: process.env.FACTSTOKEN}})
+		.then(res => {
+			msg.channel.send("Restored database.");
+		}).catch(err => funcs.logError(msg, err));
+	} else msg.reply("This facts command doesn't exist.");
+}, {owner: true, minargs: 1});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
