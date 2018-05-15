@@ -1,6 +1,6 @@
 "use strict";
 require("dotenv").config();
-require("./scripts/prototypes.js");
+require("./src/prototypes.js");
 
 // REQUIREMENTS ----------------------------------------------------------------------------------------------
 const discord = require("discord.js");
@@ -10,7 +10,7 @@ const util = require("util");
 const jishoApi = new require('unofficial-jisho-api');
 const DBL = require("dblapi.js");
 const qr = require("qrcode");
-const EDSMApi = require("./scripts/edsm.js");
+const EDSMApi = require("./src/edsm.js");
 const mc = require("minecraft-protocol");
 const snekfetch = require("snekfetch");
 
@@ -20,13 +20,14 @@ DrGMusic2.setYoutubeApiKey(process.env.YOUTUBEAPIKEY);
 
 // FILES ----------------------------------------------------------------------------------------------
 const config = require("./config.js");
-const tools = require("./scripts/tools.js")
-const funcs = require("./scripts/funcs.js");
-const classes = require("./scripts/classes.js");
-const gamefetch = require("./scripts/gamefetch.js");
-const CommandsHandler = require("./scripts/commands.js");
-const crypt = require("./scripts/crypt.js");
-const TicTacToe = require("./scripts/tictactoe.js");
+const tools = require("./src/tools.js")
+const funcs = require("./src/funcs.js");
+const classes = require("./src/classes.js");
+const gamefetch = require("./src/gamefetch.js");
+const CommandsHandler = require("./src/commands.js");
+const crypt = require("./src/crypt.js");
+const TicTacToe = require("./src/tictactoe.js");
+const Poker = require("./src/poker.js");
 
 // DRABOT ----------------------------------------------------------------------------------------------------------------------
 
@@ -1177,6 +1178,8 @@ commands.set("facts", msg => {
 		}).catch(err => funcs.logError(msg, err));
 	} else msg.reply("This facts command doesn't exist.");
 }, {owner: true, minargs: 1});
+
+commands.set("poker", Poker.command, {owner: true, maxargs: 0, props: new classes.Command("poker", "play Texas Hold'em", gameType, false)});
 
 // FUNCTIONS ----------------------------------------------------------------------------------------------
 function login() {
