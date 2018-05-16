@@ -6,7 +6,7 @@ require("./src/prototypes.js");
 const discord = require("discord.js");
 const snekfetch = require("snekfetch");
 const mc = require("minecraft-protocol");
-const DBL = require("dblposter");
+const DBL = require("dblapi.js");
 
 // FILES
 const config = require("./config.js");
@@ -29,10 +29,10 @@ const langs = {
   fr: new Lang("fr")
 }
 const commandTypes = ["utility", "game", "fun", "misc", "music", "nsfw", "bot"];
-let poster = null;
-if (process.env.HEROKU !== undefined) {
-  poster = new DBL(process.env.DBLAPITOKEN, client);
-  poster.bind();
+let dbl = null;
+if (process.env.HEROKU) {
+  dbl = new DBL(process.env.DBLAPITOKEN, client);
+  // other stuff
 }
 
 // GLOBALS
@@ -107,7 +107,7 @@ process.on("unhandledRejection", err => {
 		console.log("[ERROR] Unhandled Promise Rejection:");
 		console.error(err);
 	}
-})
+});
 client.on("ready", async () => {
 	if (!connected) {
     let owner = (await client.fetchApplication()).owner;
@@ -254,7 +254,7 @@ commands.set("prefix", async msg => {
 commands.set("lang", async msg => {
   let args = msg.content.split(" ");
   if (args.length == 1) {
-    let str = '';
+    let str = "";
     for (let lang of Object.values(langs))
       str += "\n- " + lang.name() + "(`" + lang.id() + "`)";
     msg.reply(msg.lang.commands.lang.list() + str);
