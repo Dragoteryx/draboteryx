@@ -254,7 +254,7 @@ commands.set("prefix", async msg => {
 commands.set("lang", async msg => {
   let args = msg.content.split(" ");
   if (args.length == 1) {
-    let str = "";
+    let str = '';
     for (let lang of Object.values(langs))
       str += "\n- " + lang.name() + "(`" + lang.id() + "`)";
     msg.reply(msg.lang.commands.lang.list() + str);
