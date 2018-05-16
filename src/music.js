@@ -30,25 +30,13 @@ let youtube = null;
 let errYtbApiKey = "you must provide a valid Youtube API Key using '.setYoutubeApiKey' to use this function.";
 
 // UTIL FUNCTIONS
-function sleep(ms = 1000) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
+const sleep = (ms = 1000) => new Promise(resolve => setTimeout(resolve, ms));
 function missingParam(name, info = "") {
 	throw new Error("parameter '" + name + "' is undefined." + (info.length == 0 ? "" : " (" + info + ")"));
-}
-function checkType(args) {
-	args.forEach(arg => {
-		let msg = "parameter '" + arg[0] + "' must be a " + arg[2].split(".").pop() + ".";
-		if (["boolean", "undefined", "number", "string", "symbol", "object"].includes(arg[2])) {
-			if (typeof arg[1] != arg[2]) throw new TypeError(msg);
-		} else if (!(arg[1] instanceof eval(arg[2])))
-			throw new TypeError(msg);
-	});
 }
 
 // FUNCTIONS
 function setYoutubeApiKey(newApiKey = "") {
-	checkType([["newApiKey", newApiKey, "string"]]);
 	apiKey = newApiKey;
 	youtube = apiKey == "" ? null : new YoutubeAPI(apiKey);
 }
@@ -57,7 +45,6 @@ function getYoutubeApiKey() {
 }
 
 function videoWebsite(str = "") {
-	checkType([["link", str, "string"]]);
 	if (str.startsWith("https://www.youtube.com/watch?v=") || str.startsWith("https://youtu.be/"))
 		return "Youtube";
 	/*else if (str.startsWith("https://soundcloud.com/"))
@@ -70,55 +57,50 @@ function videoWebsite(str = "") {
 }
 
 function playYoutube(voiceConnection = missingParam("voiceConnection"), link = missingParam("link"), options = {}) {
-	checkType([["link", link, "string"], ["options", options, "object"]]);
 	return voiceConnection.playStream(ytdl(link, {filter:"audioonly"}), options);
 }
 
 async function queryYoutube(query = missingParam("query"), nb = 1) {
-	checkType([["query", query, "string"], ["nb", nb, "number"]]);
 	if (youtube === null) throw new Error(errYtbApiKey);
 	let res =	await youtube.searchVideos(query, nb);
 	let videos = [];
 	for (let video of res) {
 		video = await video.fetch();
-		videos.push(Object.freeze({title: video.title, link: video.url, authorName: video.channel.title, length: video.durationSeconds*1000}));
+		videos.push({title: video.title, link: video.url, authorName: video.channel.title, length: video.durationSeconds*1000});
 	}
-	return Object.freeze(videos);
+	return videos;
 }
 
 async function youtubePlaylist(link = missingParam("link")) {
-	checkType([["link", link, "string"]]);
 	if (youtube === null) throw new Error(errYtbApiKey);
 	let playlist = await youtube.getPlaylist(link);
 	let res = await playlist.getVideos();
 	let videos = [];
 	for (let video of res) {
-		videos.push(Object.freeze({title: video.title, link: video.url}));
+		videos.push({title: video.title, link: video.url});
 	}
-	return Object.freeze({title: playlist.title, videos: videos});
+	return {title: playlist.title, videos: videos};
 }
 
 async function youtubeInfo(link = missingParam("link")) {
-	checkType([["link", link, "string"]]);
 	let info = await ytdl.getInfo(link);
-	return Object.freeze({
+	return {
 		title: info.title,
 		link: link,
 		description: info.description,
-		author: Object.freeze({
+		author: {
 			name: info.author.name,
 			avatarURL: info.author.avatar,
 			channelURL: info.author.channel_url
-		}),
+		},
 		thumbnailURL: info.thumbnail_url,
 		maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
 		length: Number(info.length_seconds)*1000,
 		keywords: info.keywords
-	});
+	};
 }
 
 async function fileInfo(path = missingParam("path")) {
-	checkType([["path", path, "string"]]);
 	return new Promise((resolve, reject) => {
 		let readableStream = fs.createReadStream(path);
 		let parser = mm(readableStream, {duration: true, fileSize: fs.statSync(path).size}, (err, metadata) => {
@@ -160,7 +142,6 @@ class DrGMusicError extends Error {
 class MusicHandler extends EventEmitter {
 
 	constructor(client = missingParam("client")) {
-		checkType([["client", client, "discord.Client"]]);
 		super();
 		let that = prv(this);
 		that.ready = new Map();
@@ -168,30 +149,15 @@ class MusicHandler extends EventEmitter {
 			throw new Error("a Discord Client can't be linked to more than one MusicHandler.");
 		client.musicHandler = this;
 		client.on("voiceStateUpdate", (oldMember, newMember) => {
-			if (!this.isConnected(oldMember.guild))
-				return;
+			if (!this.isConnected(oldMember.guild)) return;
 			let musicChannel = oldMember.guild.me.voiceChannel;
-			if (oldMember.user.id == client.user.id) {
-				if (that.ready.has(oldMember.guild.id))
-					this.emit("clientMove", oldMember.voiceChannel, newMember.voiceChannel);
-			} else {
-				try {
-					if (oldMember.voiceChannel === undefined && newMember.voiceChannel.id == musicChannel.id)
-						this.emit("memberJoin", newMember, newMember.voiceChannel);
-				} catch(err) {null}
-				try {
-					if (oldMember.voiceChannel.id != musicChannel.id && newMember.voiceChannel.id == musicChannel.id)
-						this.emit("memberJoin", newMember, newMember.voiceChannel);
-				} catch(err) {null}
-				try {
-					if (oldMember.voiceChannel.id == musicChannel.id && newMember.voiceChannel === undefined)
-						this.emit("memberLeave", newMember, oldMember.voiceChannel);
-				} catch(err) {null}
-				try {
-					if (oldMember.voiceChannel.id == musicChannel.id && newMember.voiceChannel.id != musicChannel.id)
-						this.emit("memberLeave", newMember, oldMember.voiceChannel);
-				} catch(err) {null}
-			}
+			let movements = (voiceChannel1, voiceChannel2) => (voiceChannel1 === undefined || voiceChannel1.id != musicChannel.id) && voiceChannel2 !== undefined && voiceChannel2.id == musicChannel.id;
+			if (oldMember.user.id == client.user.id && that.ready.has(oldMember.guild.id))
+				this.emit("clientMove", oldMember.voiceChannel, newMember.voiceChannel);
+			else if (movements(oldMember.voiceChannel, newMember.voiceChannel))
+				this.emit("memberJoin", newMember, newMember.voiceChannel);
+			else if (movements(newMember.voiceChannel, oldMember.voiceChannel))
+				this.emit("memberLeave", newMember, oldMember.voiceChannel);
 		});
 		that.playlists = new Map();
 		this.client = client;
@@ -262,7 +228,6 @@ class MusicHandler extends EventEmitter {
 		return joinPromise;
 	}
 	async leave(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		that.playlists.get(guild.id).playlist.leaving = true;
@@ -272,7 +237,6 @@ class MusicHandler extends EventEmitter {
 		guild.me.voiceChannel.leave();
 	}
 	async add(request = missingParam("request", "Youtube link, Youtube query or path to file"), member = missingParam("member", "GuildMember who requested the music"), options = {}) {
-		checkType([["request", request, "string"], ["member", member, "discord.GuildMember"], ["options", options, "object"]]);
 		let that = prv(this);
     if (!this.isConnected(member.guild)) throw new DrGMusicError(messages.notConnected);
     if (options.type === undefined) options.type = "link";
@@ -315,7 +279,6 @@ class MusicHandler extends EventEmitter {
     } else throw new DrGMusicError("options.type => '" + options.type + "' is not a valid option ('link', 'ytquery' or 'file')");
 	}
 	async remove(guild = missingParam("guild"), index = missingParam("index", "index of the music in the playlist")) {
-		checkType([["guild", guild, "discord.Guild"], ["index", index, "number"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -324,7 +287,6 @@ class MusicHandler extends EventEmitter {
 		return that.playlists.get(guild.id).playlist.list.splice(index, 1)[0].info;
 	}
 	async playNext(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -335,11 +297,9 @@ class MusicHandler extends EventEmitter {
 		return current;
 	}
 	async skip(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		return this.playNext(guild);
 	}
 	async clear(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -348,7 +308,6 @@ class MusicHandler extends EventEmitter {
 		return nb;
 	}
 	async shuffle(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -356,7 +315,6 @@ class MusicHandler extends EventEmitter {
 		that.playlists.get(guild.id).playlist.list.sort(() => Math.random() - 0.5);
 	}
 	async resume(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -366,7 +324,6 @@ class MusicHandler extends EventEmitter {
 		return that.playlists.get(guild.id).playlist.current.info;
 	}
 	async pause(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -376,7 +333,6 @@ class MusicHandler extends EventEmitter {
 		return that.playlists.get(guild.id).playlist.current.info;
 	}
 	async togglePaused(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -388,7 +344,6 @@ class MusicHandler extends EventEmitter {
 		return that.playlists.get(guild.id).playlist.paused;
 	}
 	async toggleLooping(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (!this.isPlaying(guild)) throw new DrGMusicError(messages.notPlaying);
@@ -398,7 +353,6 @@ class MusicHandler extends EventEmitter {
 		return playlist.looping;
 	}
 	async togglePlaylistLooping(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		let playlist = that.playlists.get(guild.id).playlist;
@@ -407,7 +361,6 @@ class MusicHandler extends EventEmitter {
 		return playlist.pllooping;
 	}
 	async setVolume(guild = missingParam("guild"), volume = missingParam("volume", "> 0")) {
-		checkType([["guild", guild, "discord.Guild"], ["volume", volume, "number"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) throw new DrGMusicError(messages.notConnected);
 		if (volume < 0) throw new DrGMusicError(messages.invalidVolume);
@@ -420,57 +373,49 @@ class MusicHandler extends EventEmitter {
 
 	//------------
 	isConnected(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		return prv(this).playlists.has(guild.id);
 	}
 	isPlaying(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild))
 			return false;
 		return that.playlists.get(guild.id).playlist.playing;
 	}
 	isPaused(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isPlaying(guild))
 			return false;
 		return that.playlists.get(guild.id).playlist.paused;
 	}
 	isLooping(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isPlaying(guild))
 			return false;
 		return that.playlists.get(guild.id).playlist.looping;
 	}
 	isPlaylistLooping(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild))
 			return false;
 		return that.playlists.get(guild.id).playlist.pllooping;
 	}
 	currentInfo(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) return undefined;
 		if (!this.isPlaying(guild)) return null;
-		let info = Object.assign({}, that.playlists.get(guild.id).playlist.current.info);
+		let info = that.playlists.get(guild.id).playlist.current.info;
 		info.time = that.playlists.get(guild.id).playlist.dispatcher.time;
-		return Object.freeze(info);
+		return info;
 	}
 	playlistInfo(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) return undefined;
 		let tab = [];
 		for (let music of that.playlists.get(guild.id).playlist.list)
 			tab.push(music.info);
-		return Object.freeze(tab);
+		return tab;
 	}
 	getVolume(guild = missingParam("guild")) {
-		checkType([["guild", guild, "discord.Guild"]]);
 		let that = prv(this);
 		if (!this.isConnected(guild)) return undefined;
 		return that.playlists.get(guild.id).playlist.volume;
@@ -657,25 +602,25 @@ class Music {
 	get info() {
 		if (!this.file) {
 			if (this.website == "Youtube") {
-				return Object.freeze({
+				return {
 					title: this.title,
 					link: this.link,
 					description: this.description,
-					author: Object.freeze(this.author),
+					author: this.author,
 					thumbnailURL: this.thumbnailURL,
 					maxResThumbnailURL: this.maxResThumbnailURL,
 					length: this.length,
 					time: 0,
-					keywords: Object.freeze(this.keywords),
+					keywords: this.keywords,
 					file: false,
 					website: "Youtube",
 					member: this.member,
-					props: Object.freeze(this.props),
+					props: this.props,
 					playlist: this.playlist
-				});
+				}
 			}
 		} else {
-			return Object.freeze({
+			return {
 				title: this.title,
 				path: this.link,
 				length: this.length,
@@ -684,7 +629,7 @@ class Music {
 				member: this.member,
 				props: this.props,
 				playlist: this.playlist
-			});
+			}
 		}
 	}
 }

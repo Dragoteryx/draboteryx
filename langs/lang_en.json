@@ -1,0 +1,217 @@
+{
+  "id": "en",
+  "name": "English",
+  "author": "Dragoteryx#0407",
+  "test": "This is a test.",
+  "test2": "This is only available in english",
+  "noResults": "Sorry but I did not find anything.",
+  "errors": {
+    "guildOnlyCommand": "You can't use this command in private channels.",
+    "ownerOnlyCommand": "This is an owner only command.",
+    "missingPermissionsCommand": "You don't have the necessary permissions.",
+    "voteRequiredCommand": "To use this command you need to vote for the bot: $VOTELINK",
+    "nsfwCommand": "What are you trying to do?",
+    "wrongSyntax": "Use `$PREFIXhelp $COMMANDNAME` to learn how to use this command.",
+    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
+  },
+  "music": {
+    "join": "Hi! o/",
+    "leave": "Bye!",
+    "addingToPlaylist": "Adding `$LINK` to the playlist.",
+    "addedToPlaylist": "`$TITLE` by `$AUTHOR` has been added to the playlist.",
+    "by": "by",
+    "videoUnavailable": "This video is unavailable.",
+    "unexpectedFormat": "This video ID doesn't match the expected format.",
+    "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
+    "queryChoice": "So, which one do you want to listen to?",
+    "queryNumber": "You need to enter an index between `1` and `$NBVIDEOS`.",
+    "noResFirstOne": "You didn't respond in time, so I'll play the first one.",
+    "emptyPlaylist": "The playlist is empty.",
+    "memberNotInVoiceChannel": "You're not in a voice channel.",
+  	"voiceChannelNotJoinable": "I can't join this voice channel.",
+  	"voiceChannelNotSpeakable": "I'm not allowed to speak in this voice channel.",
+  	"voiceChannelFull": "This voice channel is full.",
+  	"guildAlreadyJoined": "I'm already in a voice channel.",
+  	"notConnected": "I am not in a voice channel.",
+    "askToJoin": "You can ask me to join you using `$PREFIXjoin`.",
+  	"notPlaying": "I am not playing any music at the moment.",
+  	"invalidMusicIndex": "There is no music with that index in the playlist.",
+    "unknownWebsite": "Sorry but I don't know this website.",
+  	"invalidVolume": "The volume must be above `0`.",
+    "nowPlaying": "Now playing: `$TITLE` by `$AUTHOR`. (requested by `$MEMBER`)",
+    "nowPlayingFile": "Now playing: `$TITLE`. (requested by `$MEMBER`)",
+    "clientMoved": "I moved to $CHANNEL.",
+    "memberJoined": "Someone joined, staying for a little longer.",
+    "leaveInactivity": "The voice channel is empty, I will leave in `one minute`.",
+    "invalidYoutubePlaylistLink": "This playlist link is not valid.",
+    "fetchingYoutubePlaylist": "Fetching the playlist `$LINK` from Youtube.",
+    "fetchingYoutubePlaylist2": "Fetching the playlist `$TITLE` from Youtube.",
+    "youtubePlaylistFetched": "The playlist `$TITLE` has been added to the current playlist.",
+    "removedFromPlaylist": "`$TITLE` has been removed from the playlist.",
+    "skipped": "The current music (`$TITLE`) has been skipped.",
+    "clear1": "`1` music has been removed from the playlist.",
+    "clearMore": "`$NB` musics have been removed from the playlist.",
+    "shuffled": "The playlist has been shuffled.",
+    "loopingOn": "The current music (`$TITLE`) is now looping.",
+    "loopingOff": "The current music is no longer looping.",
+    "playlistLoopingOn": "The playlist is now looping.",
+    "playlistLoopingOff": "The playlist is no longer looping.",
+    "paused": "The music has been paused.",
+    "resumed": "The music has been resumed.",
+    "volumeSet": "The volume has been set to `$VOLUME%`.",
+    "title": "Title",
+    "author": "Author",
+    "description": "Description",
+    "link": "Link",
+    "requestedBy": "Requested by",
+    "fileName": "File name",
+    "playingDisplay": "Playing:",
+    "playlistDisplay": "Here's the playlist:",
+    "playlistDisplayCurrent": "Use `$PREFIXcurrent` to have information about the current music."
+  },
+  "types": {
+    "utility": "Utility commands",
+    "fun": "Fun commands",
+    "music": "Music commands",
+    "nsfw": "NSFW commands",
+    "misc": "Misc commands",
+    "bot": "Bot related commands",
+    "warframe": "Warframe related commands",
+    "game": "Games"
+  },
+  "commands": {
+    "help": {
+      "syntax": "help (command)",
+      "description": "You probably know what this command does or else you wouldn't be reading this.",
+      "takeALook": "take a look at your private messages!",
+      "unknownCommand": "This command doesn't seem to exist. Use `$PREFIXhelp` to get a list of all commands.",
+      "info": "Options between brackets are `required`. Those between parenthesis are `optional`.\nIf you need some help, use `$PREFIXserver` to join the test server.\nYou can also use `$PREFIXhelp [command]` to obtain help about one particular command.",
+      "embedcontent1": "Command",
+      "embedcontent2": "Type",
+      "embedcontent3": "Description",
+      "embedcontent4": "Syntax"
+    },
+    "prefix": {
+      "syntax": "prefix (new prefix)",
+      "description": "Show the current prefix, or set a new one.",
+      "current": "my current prefix is `$PREFIX`.",
+      "set": "My prefix has been set to `$PREFIX`.",
+      "guildonly": "you can't set a new prefix here."
+    },
+    "lang": {
+      "syntax": "lang (langage)",
+      "description": "Show the list of languages available, or set a new one.",
+      "list": "you can choose between any of those languages:",
+      "set": "Language set to `$LANG`.",
+      "guildonly": "you can't set the language here.",
+      "unknown": "this language doesn't exist or the bot doesn't support it."
+    },
+    "join": {
+      "syntax": "join",
+      "description": "Join a voice channel."
+    },
+    "leave": {
+      "syntax": "leave",
+      "description": "Leave a voice channel."
+    },
+    "request": {
+      "syntax": "request [Youtube link]",
+      "description": "Request a Youtube video using a link."
+    },
+    "query": {
+      "syntax": "query [Youtube query]",
+      "description": "Search for a Youtube video."
+    },
+    "ytbplaylist": {
+      "syntax": "ytbplaylist [Youtube playlist link]",
+      "description": "Request a Youtube playlist."
+    },
+    "plremove": {
+      "syntax": "plremove [id]",
+      "description": "Remove a music from the playlist."
+    },
+    "skip": {
+      "syntax": "skip",
+      "description": "Skip the current music."
+    },
+    "plclear": {
+      "syntax": "plclear",
+      "description": "Clear the playlist."
+    },
+    "plshuffle": {
+      "syntax": "plshuffle",
+      "description": "Shuffle the playlist."
+    },
+    "loop": {
+      "syntax": "loop",
+      "description": "Loop the current music."
+    },
+    "plloop": {
+      "syntax": "plloop",
+      "description": "Loop the playlist."
+    },
+    "toggle": {
+      "syntax": "toggle",
+      "description": "Pause/resume the music."
+    },
+    "volume": {
+      "syntax": "volume [value]",
+      "description": "Set the volume of the music."
+    },
+    "current": {
+      "syntax": "current",
+      "description": "Info about the current music."
+    },
+    "playlist": {
+      "syntax": "playlist",
+      "description": "Info about the playlist."
+    },
+    "fact": {
+      "syntax": "fact (query)",
+      "description": "Generates a random stupid fact.",
+      "noResults": "I did not find any interesting fact sorry.",
+      "offline": "I'm not in the mood for this right now. Try again later. :grimacing:"
+    },
+    "roll": {
+      "syntax": "roll (size = 6)",
+      "description": "Roll a dice, invalid dice sizes will roll a 6."
+    },
+    "reflex": {
+      "syntax": "reflex",
+      "description": "The first user to react wins.",
+      "rules": "I will post a message, the first to respond with the correct number wins!",
+      "msg": "The fastest one wins! `$RANDOM`",
+      "bots": "bots are not authorized to play this game. That's cheating!",
+      "slow": "You guys are slow.",
+      "wellPlayed": "Well played `$WINNER`!"
+    },
+    "cyanidehappiness": {
+      "syntax": "cyanidehappiness",
+      "description": "Random Cyanide and Happiness comic.",
+      "from": "from"
+    },
+    "httpdog": {
+      "syntax": "httpdog",
+      "description": "HTTP, and dogs."
+    },
+    "waifu": {
+      "syntax": "waifu",
+      "description": "Get to know who your waifu is.",
+      "theTruth": "your waifu doesn't exist and if she did she wouldn't like you."
+    },
+    "encrypt": {
+      "syntax": "encrypt [message]",
+      "description": "Encrypt a message. (AES)",
+      "specificKey": "Do you want me to use a specific key ? If you do reply with the key within ``10`` seconds.",
+      "encrypted": "Your encrypted message: `$MESSAGE`. Key: `$KEY`."
+    },
+    "decrypt": {
+      "syntax": "decrypt [message]",
+      "description": "decrypt a message",
+      "keyRequest": "Do you happen to know the key ? Reply with the key to decrypt this message within ``10`` seconds.",
+      "unknownKey": "If you don't know the key I can't decrypt this message.",
+      "wrongKey": "This doesn't seem to be the right key to decrypt this message.",
+      "decrypted": "I successfully decrypted this message: `$MESSAGE`."
+    }
+  }
+}

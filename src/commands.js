@@ -60,8 +60,8 @@ class CommandsHandler {
 			options.maxargs = -1;
 		if (options.uses === undefined)
 			options.uses = -1;
-		if (options.props === undefined)
-			options.props = {};
+		if (options.info === undefined)
+			options.info = {};
 		if (options.delay === undefined)
 			options.delay = 0;
 		if (options.function === undefined)
@@ -80,7 +80,7 @@ class CommandsHandler {
 			minargs: Math.round(Number(options.minargs)),
 			maxargs: Math.round(Number(options.maxargs)),
 			uses: Math.round(Number(options.uses)),
-			props: options.props,
+			info: options.info,
 			delay: options.delay,
 			function: options.function,
 			override: options.override,
@@ -112,15 +112,13 @@ class CommandsHandler {
 		prv(this).commands.delete(name);
 		return this;
 	}
-	check(msg, options) {
+	check(msg, options = {}) {
 		let that = prv(this);
 		return new Promise((resolve, reject) => {
 			if (msg === undefined)
 				throw new Error("parameter 'message' is missing");
 			if (!(msg instanceof discord.Message))
 				throw new TypeError("'message' must be a Discord Message");
-			if (options === undefined)
-				options = {};
 			if (options.exec === undefined)
 				options.exec = true;
 			if (options.prefix === undefined)
@@ -263,12 +261,12 @@ class Command {
 							check.reasons = [];
 						check.reasons.push("bot user");
 					}
-					if (!(await msg.author.voted()) && this.options.vote) {
+					/*if (!(await msg.author.voted()) && this.options.vote) {
 						check.valid = false;
 						if (check.reasons === undefined)
 							check.reasons = [];
 						check.reasons.push("vote required");
-					}
+					}*/
 					if (this.options.minargs > 0 && nbargs < this.options.minargs) {
 						check.valid = false;
 						if (check.reasons === undefined)

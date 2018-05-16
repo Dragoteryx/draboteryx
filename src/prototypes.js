@@ -1,8 +1,9 @@
+const drabot = require("../drabot.js");
 const discord = require("discord.js");
-
+const config = require("../config.js");
 const tools = require("./tools.js");
-const funcs = require("./funcs.js");
 
+// GLOBAL JS OBJECTS
 Object.defineProperty(String.prototype, "firstUpper", {
 	value: function() {
 		if (this.length == 0)
@@ -11,9 +12,9 @@ Object.defineProperty(String.prototype, "firstUpper", {
 	}
 });
 
-Object.defineProperty(Array.prototype, "copy", {
-	value: function() {
-		return this.map(x => x);
+Object.defineProperty(String.prototype, "replaceAll", {
+	value: function(before, after) {
+		return this.split(before).join(after);
 	}
 });
 
@@ -30,10 +31,59 @@ Object.defineProperty(Array.prototype, "random", {
 	}
 });
 
+// DISCORD RELATED
+Object.defineProperty(discord.Message.prototype, "lang", {
+  get: function() {
+    return this.channel.lang;
+  }
+});
+
+Object.defineProperty(discord.Channel.prototype, "lang", {
+  get: function() {
+		if (this._lang !== undefined)
+      return drabot.langs[this._lang]
+    else if (this.guild)
+      return this.guild.lang;
+    return drabot.langs.en;
+  }
+});
+
+Object.defineProperty(discord.Guild.prototype, "lang", {
+  get: function() {
+    if (this._lang !== undefined)
+			return drabot.langs[this._lang];
+    return drabot.langs.en;
+  }
+});
+
+Object.defineProperty(discord.Message.prototype, "prefix", {
+  get: function() {
+    return this.channel.prefix;
+  }
+});
+
+Object.defineProperty(discord.Channel.prototype, "prefix", {
+  get: function() {
+		if (this._prefix !== undefined)
+			return this._prefix;
+    if (this.guild)
+      return this.guild.prefix;
+    else return config.prefix;
+  }
+});
+
+Object.defineProperty(discord.Guild.prototype, "prefix", {
+  get: function() {
+		if (this._prefix !== undefined)
+			return this._prefix;
+    return config.prefix;
+  }
+});
+
 Object.defineProperty(discord.Message.prototype, "reply", {
 	value: function(content, options) {
 		if (this.channel.type == "text")
-			return this.channel.send(this.member.displayed + ", " + content, options);
+			return this.channel.send("``" + this.member.displayName + "``, " + content, options);
 		else
 			return this.channel.send(content.firstUpper(), options);
 	}
@@ -50,47 +100,5 @@ Object.defineProperty(discord.Guild.prototype, "nbCon", {
 				resolve(h);
 			}).catch(reject);
 		});
-	}
-});
-
-Object.defineProperty(discord.Guild.prototype, "rdfetch", {
-	value: function() {
-		return funcs.fetchRedis("guilds/" + this.id);
-	}
-});
-
-Object.defineProperty(discord.Guild.prototype, "rdsend", {
-	value: function(data) {
-		return funcs.sendRedis("guilds/" + this.id, data);
-	}
-});
-
-Object.defineProperty(discord.User.prototype, "rdfetch", {
-	value: function() {
-		return funcs.fetchRedis("users/" + this.id);
-	}
-});
-
-Object.defineProperty(discord.User.prototype, "rdsend", {
-	value: function(data) {
-		return funcs.sendRedis("users/" + this.id, data);
-	}
-});
-
-Object.defineProperty(String.prototype, "fetchHTTP", {
-	value: function fetchHTTP() {
-		return tools.request(this);
-	}
-});
-
-Object.defineProperty(discord.GuildMember.prototype, "displayed", {
-	get: function() {
-		return this.displayName.focus();
-	}
-});
-
-Object.defineProperty(String.prototype, "focus", {
-	value: function() {
-		return "``" + this + "``";
 	}
 });

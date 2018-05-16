@@ -1,14 +1,6 @@
-function exp(mod) {
-  for (const key in mod) {
-    module.exports[key] = mod[key];
-  }
-}
+const Prism = require('./Prism');
+const MediaTranscoder = require('./transcoders/MediaTranscoder');
 
-module.exports = {
-  opus: require('./transcoders/Opus.js'),
-  FFmpeg: require('./transcoders/FFmpeg'),
-  OggOpusDemuxer: require('./demuxers/OggOpus'),
-  WebmOpusDemuxer: require('./demuxers/WebmOpus'),
-};
+Prism.MediaTranscoder = MediaTranscoder;
 
-exp(require('./transformers/PCMVolume'));
+module.exports = Prism;

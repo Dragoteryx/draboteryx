@@ -1,0 +1,188 @@
+{
+  "id": "fr",
+  "name": "Français",
+  "author": "Dragoteryx#0407",
+  "test": "Ceci est un test.",
+  "noResults": "Désolé mais je n'ai rien trouvé.",
+  "errors": {
+    "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
+    "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
+    "missingPermissionsCommand": "Vous n'avez pas les permissions nécessaires.",
+    "voteRequiredCommand": "Afin d'utiliser cette commande il est nécessaire de voter pour le bot : $VOTELINK",
+    "nsfwCommand": "T'essayes de faire quoi là en fait ?",
+    "wrongSyntax": "Utilise `$PREFIXhelp $COMMANDNAME` pour apprendre à utiliser cette commande.",
+    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test."
+  },
+  "music": {
+    "join": "Salut ! o/",
+    "leave": "À plus !",
+    "addingToPlaylist": "J'ajoute `$LINK` à la playlist.",
+    "addedToPlaylist": "`$TITLE` par `$AUTHOR` a été ajoutée à la playlist.",
+    "by": "par",
+    "videoUnavailable": "Cette vidéo n'est pas disponible.",
+    "unexpectedFormat": "L'ID de cette vidéo ne correspond pas au format attendu.",
+    "searchingOnYoutube": "Je recherche `$QUERY` sur Youtube.",
+    "queryChoice": "Donc, laquelle veux-tu écouter ?",
+    "queryNumber": "Tu dois faire un choix compris entre `1` et `$NBVIDEOS`.",
+    "noResFirstOne": "Tu n'as pas répondu dans le délai requis, je vais donc jouer la première.",
+    "emptyPlaylist": "La playlist est vide.",
+    "memberNotInVoiceChannel": "Vous n'êtes pas dans un channel vocal.",
+  	"voiceChannelNotJoinable": "Je ne peux pas vous rejoindre.",
+  	"voiceChannelNotSpeakable": "Je ne suis pas autorisé à parler dans ce channel.",
+  	"voiceChannelFull": "Ce channel vocal est plain.",
+  	"guildAlreadyJoined": "Je suis déjà connecté dans un channel.",
+  	"notConnected": "Je ne suis pas connecté dans un channel vocal.",
+    "askToJoin": "Tu peux me demander de te rejoindre avec `$PREFIXjoin`.",
+  	"notPlaying": "Je ne suis pas en train de jouer de musique.",
+  	"invalidMusicIndex": "Il n'y a aucune musique avec ce numéro dans la playlist.",
+    "unknownWebsite": "Désolé mais je ne connais pas ce site web.",
+  	"invalidVolume": "Le volume doit être supérieur à `0`.",
+    "nowPlaying": "Musique suivante : `$TITLE` par `$AUTHOR`. (ajoutée par `$MEMBER`)",
+    "nowPlayingFile": "Musique suivante : `$TITLE`. (ajoutée par `$MEMBER`)",
+    "clientMoved": "Je me suis déplacé dans $CHANNEL.",
+    "memberJoined": "Quelqu'un est arrivé, je vais rester encore un peu.",
+    "leaveInactivity": "Il n'y a plus personne, je m'en vais dans `une minute`.",
+    "invalidYoutubePlaylistLink": "Ce lien de playlist n'est pas valide.",
+    "fetchingYoutubePlaylist": "Je récupère la playlist `$LINK` depuis Youtube.",
+    "fetchingYoutubePlaylist2": "Je récupère la playlist `$TITLE` depuis Youtube.",
+    "youtubePlaylistFetched": "La playlist `$TITLE` a été ajoutée à la playlist actuelle.",
+    "removedFromPlaylist": "`$TITLE` a été retirée de la playlist.",
+    "skipped": "La musique actuelle (`$TITLE`) a été passée.",
+    "clear1": "`1` musique a été retirée de la playlist.",
+    "clearMore": "`$NB` musiques ont été retirées de la playlist.",
+    "shuffled": "La playlist a été mélangée.",
+    "loopingOn": "La musique actuelle (`$TITLE`) tourne en boucle.",
+    "loopingOff": "La musique actuelle ne tourne plus en boucle.",
+    "playlistLoopingOn": "La playlist tourne en boucle.",
+    "playlistLoopingOff": "La playlist ne tourne plus en boucle",
+    "paused": "La musique a été mise en pause.",
+    "resumed": "La musique n'est plus en pause.",
+    "volumeSet": "Le volume a été réglé sur `$VOLUME%`.",
+    "title": "Titre",
+    "author": "Auteur",
+    "description": "Description",
+    "link": "Lien",
+    "requestedBy": "Ajoutée par",
+    "fileName": "Nom du fichier",
+    "playingDisplay": "Musique actuelle :",
+    "playlistDisplay": "Voici la playlist :",
+    "playlistDisplayCurrent": "Utilise `$PREFIXcurrent` pour obtenir les infos sur la musique en cours."
+  },
+  "types": {
+    "utility": "Commandes utilitaires",
+    "fun": "Commandes fun",
+    "music": "Commandes musicales",
+    "nsfw": "Commandes NSFW",
+    "misc": "Commandes diverses",
+    "bot": "Commandes du bot",
+    "warframe": "Commandes Warframe",
+    "game": "Jeux"
+  },
+  "commands": {
+    "help": {
+      "syntax": "help (commande)",
+      "description": "Tu sais probablement déjà ce que fais cette commande ou tu ne serais pas en train de lire ça.",
+      "takeALook": "jette un coup d'oeil à tes messages privés !",
+      "unknownCommand": "Cette commande n'existe pas. Utilise `$PREFIXhelp` pour obtenir une liste de toutes les commandes.",
+      "info": "Les options entre crochets sont `requises`. Celles entre parenthèses sont `optionnelles`.\nSi tu as besoin d'aide, utilise `$PREFIXserver` pour rejoindre le serveur de test.\nTu peux également utiliser `$PREFIXhelp [commande]` pour obtenir les informations détaillées d'une commande.",
+      "embedcontent1": "Commande",
+      "embedcontent2": "Type",
+      "embedcontent3": "Description",
+      "embedcontent4": "Syntaxe"
+    },
+    "prefix": {
+      "syntax": "prefix (nouveau préfixe)",
+      "description": "Montrer le préfixe actuel, ou en choisir un nouveau.",
+      "current": "mon préfixe actuel est `$PREFIX`.",
+      "set": "Mon nouveau préfixe est `$PREFIX`.",
+      "guildonly": "tu ne peux pas changer mon préfixe ici."
+    },
+    "lang": {
+      "syntax": "lang (langue)",
+      "description": "Montrer la liste des langues disponibles, ou en choisir une nouvelle.",
+      "list": "voilà la liste des langues disponibles :",
+      "set": "La langue a été réglée sur `$LANG`.",
+      "guildonly": "tu ne peux pas changer la langue ici.",
+      "unknown": "cette langue n'existe pas ou le bot ne la supporte pas."
+    },
+    "join": {
+      "syntax": "join",
+      "description": "Rejoindre un channel vocal."
+    },
+    "leave": {
+      "syntax": "leave",
+      "description": "Quitter un channel vocal."
+    },
+    "request": {
+      "syntax": "request [lien Youtube]",
+      "description": "Ajouter une vidéo Youtube à partir d'un lien."
+    },
+    "query": {
+      "syntax": "query [recherche Youtube]",
+      "description": "Rechercher une vidéo sur Youtube."
+    },
+    "ytbplaylist": {
+      "syntax": "ytbplaylist [lien playlist Youtube]",
+      "description": "Ajouter une playlist Youtube."
+    },
+    "plremove": {
+      "syntax": "plremove [id]",
+      "description": "Retirer une musique de la playlist."
+    },
+    "skip": {
+      "syntax": "skip",
+      "description": "Passer la musique actuelle."
+    },
+    "plclear": {
+      "syntax": "plclear",
+      "description": "Vider la playlist."
+    },
+    "plshuffle": {
+      "syntax": "plshuffle",
+      "description": "Mélanger la playlist."
+    },
+    "loop": {
+      "syntax": "loop",
+      "description": "Jouer la musique actuelle en boucle."
+    },
+    "plloop": {
+      "syntax": "plloop",
+      "description": "Jouer la playlist en boucle."
+    },
+    "toggle": {
+      "syntax": "toggle",
+      "description": "Pauser/reprendre la musique."
+    },
+    "volume": {
+      "syntax": "volume [valeur]",
+      "description": "Définir le volume de la musique."
+    },
+    "current": {
+      "syntax": "current",
+      "description": "Infos sur la musique en cours."
+    },
+    "playlist": {
+      "syntax": "playlist",
+      "description": "Infos sur la playlist."
+    },
+    "fact": {
+      "syntax": "fact (requête)",
+      "description": "Génère un fait aléatoire stupide. (en anglais)",
+      "noResults": "Je n'ai trouvé aucun fait intéressant.",
+      "offline": "Je ne suis pas d'humeur. Essaye plus tard. :grimacing:"
+    },
+    "roll": {
+      "syntax": "roll (taille = 6)",
+      "description": "Lancer un dé, une taille de dé invalide correspond à un 6."
+    },
+    "reflex": {
+      "syntax": "reflex",
+      "description": "La première personne a réagir gagne.",
+      "rules": "Je vais poster un message, le premier à répondre avec le bon nombre gagne !",
+      "msg": "Que le meilleur gagne ! `$RANDOM`",
+      "bots": "les bots n'ont pas le droit de jouer à ce jeu. C'est de la triche !",
+      "slow": "Vous êtes lents.",
+      "wellPlayed": "Bien joué `$WINNER` !"
+    }
+  }
+}
