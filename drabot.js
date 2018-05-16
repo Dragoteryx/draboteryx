@@ -82,7 +82,7 @@ client.on("message", async msg => {
 			else if (res.result.reasons.includes("owner only command"))
 				msg.channel.send(msg.lang.errors.ownerOnlyCommand());
 			else if (res.result.reasons.includes("missing permissions"))
-				msg.channel.send(msg.lang.errors.missingPermissionsCommand());
+				msg.channel.send(msg.lang.errors.missingPermissionsCommand("$PREFIX", msg.prefix));
 			else if (res.result.reasons.includes("vote required"))
 				msg.channel.send(msg.lang.errors.voteRequiredCommand("$VOTELINK", "https://discordbots.org/bot/273576577512767488/vote"));
 			else if (res.result.reasons.includes("nsfw"))
@@ -237,6 +237,10 @@ commands.set("help", msg => {
 	}
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
+commands.set("about", async msg => {
+  msg.channel.send("", await funcs.showInfo(msg));
+}, {maxargs: 0, info: {show: true, type: "bot"}});
+
 commands.set("prefix", async msg => {
   let args = msg.content.split(" ");
   if (args.length == 1) {
@@ -272,7 +276,41 @@ commands.set("lang", async msg => {
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
 // UTILS
+commands.set("serverinfo", async msg => {
+  msg.channel.send("", await msg.guild.embedInfo());
+}, {guildonly: true, maxargs: 0, info: {show: true, type: "utility"}});
 
+commands.set("userinfo", async msg => {
+	let member = msg.member;
+	if (msg.content.split(" ").slice(1).length > 0)
+	  member = (await tools.stringToMembers(msg.content.replace(msg.prefix + "userinfo ", ""), msg.guild)).shift();
+	if (!member)
+		msg.channel.send(msg.lang.commands.userinfo.noUser());
+	else
+		msg.channel.send("", member.embedInfo());
+}, {guildonly: true, info: {show: true, type: "utility"}});
+
+commands.set("channelinfo", msg => {
+	let nb = msg.content.split(" ").slice(1).length;
+	let channel = msg.channel;
+	if (nb > 0)
+		channel = tools.stringToChannels(msg.content.replace(msg.prefix + "channelinfo ", ""), msg.guild).shift();
+	if (!channel)
+		msg.channel.send(msg.lang.commands.channelinfo.noChannel());
+	else
+		msg.channel.send("", channel.embedInfo());
+}, {guildonly: true, info: {show: true, type: "utility"}});
+
+commands.set("roleinfo", msg => {
+	let nb = msg.content.split(" ").slice(1).length;
+	let role = msg.member.highestRole;
+	if (nb > 0)
+		role = tools.stringToRoles(msg.content.replace(msg.prefix + "roleinfo ", ""), msg.guild).shift();
+	if (!role)
+		msg.channel.send(msg.lang.commands.roleinfo.noRole());
+	else
+		msg.channel.send("", role.embedInfo());
+}, {guildonly: true, info: {show: true, type: "utility"}});
 
 // MUSIC
 commands.set("join", async msg => {
@@ -573,7 +611,7 @@ commands.set("fbw", msg => {
 commands.set("cyanidehappiness", msg => {
   let link = "http://explosm.net/rcg";
 	snekfetch.get(link).then(res => {
-		msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from() + " " + link + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
+		msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
 	}).catch(err => {
 		funcs.logError(msg, err);
 	});
@@ -610,7 +648,7 @@ commands.set("encrypt", async msg => {
 commands.set("decrypt", async msg => {
 	let crypted = msg.content.replace(msg.prefix + "decrypt ", "");
 	await msg.channel.send(msg.lang.commands.decrypt.keyRequest());
-	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg3 => msg3.author.id == msg.author.id});
+	let msg2 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => msg3.author.id == msg.author.id});
 	if (!msg2) msg.channel.send(msg.lang.commands.decrypt.unknownKey());
 	else {
 		let message = crypt.decrypt(crypted, msg2.content);

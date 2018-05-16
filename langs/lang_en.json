@@ -4,6 +4,8 @@
   "author": "Dragoteryx#0407",
   "test": "This is a test.",
   "test2": "This is only available in english",
+  "yes": "Yes",
+  "no": "No",
   "noResults": "Sorry but I did not find anything.",
   "errors": {
     "guildOnlyCommand": "You can't use this command in private channels.",
@@ -12,7 +14,8 @@
     "voteRequiredCommand": "To use this command you need to vote for the bot: $VOTELINK",
     "nsfwCommand": "What are you trying to do?",
     "wrongSyntax": "Use `$PREFIXhelp $COMMANDNAME` to learn how to use this command.",
-    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
+    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server.",
+    "missingPermissions": "You don't have the necessary permissions (`$REQUIRED`). To learn how permissions work use `$PREFIXpermissions`."
   },
   "music": {
     "join": "Hi! o/",
@@ -188,7 +191,7 @@
     "cyanidehappiness": {
       "syntax": "cyanidehappiness",
       "description": "Random Cyanide and Happiness comic.",
-      "from": "from"
+      "from": "from `$LINK`"
     },
     "httpdog": {
       "syntax": "httpdog",
@@ -202,16 +205,94 @@
     "encrypt": {
       "syntax": "encrypt [message]",
       "description": "Encrypt a message. (AES)",
-      "specificKey": "Do you want me to use a specific key ? If you do reply with the key within ``10`` seconds.",
+      "specificKey": "Do you want me to use a specific key ? If you do reply with the key within `10` seconds.",
       "encrypted": "Your encrypted message: `$MESSAGE`. Key: `$KEY`."
     },
     "decrypt": {
       "syntax": "decrypt [message]",
-      "description": "decrypt a message",
-      "keyRequest": "Do you happen to know the key ? Reply with the key to decrypt this message within ``10`` seconds.",
+      "description": "Decrypt a message.",
+      "keyRequest": "Do you happen to know the key ? Reply with the key to decrypt this message within `20` seconds.",
       "unknownKey": "If you don't know the key I can't decrypt this message.",
       "wrongKey": "This doesn't seem to be the right key to decrypt this message.",
       "decrypted": "I successfully decrypted this message: `$MESSAGE`."
+    },
+    "userinfo": {
+      "syntax": "userinfo (member = you)",
+      "description": "Info about a user. (case sensitive)",
+      "member": "Member",
+      "displayName": "Display name",
+      "tag": "Discord tag",
+      "id": "Unique ID",
+      "roles": "`$NB` role(s)",
+      "highestRole": "Highest role",
+      "connectedTo": "Connected to",
+      "joinedAt": "Joined at",
+      "admin": "Is admin?",
+      "bot": "Is bot?",
+      "online": "Online",
+      "offline": "Offline",
+      "idle": "AFK",
+      "dnd": "Do not disturb",
+      "status": "Status",
+      "currentlyPlaying": "Currently playing",
+      "avatarURL": "Avatar URL",
+      "defaultRole": "everyone (default role)",
+      "noUser": "This user doesn't exist."
+    },
+    "serverinfo": {
+      "syntax": "serverinfo",
+      "description": "Info about this server.",
+      "name": "Server name",
+      "id": "Unique ID",
+      "owner": "Owner",
+      "emojis": "Custom emoji(s)",
+      "roles": "`$NB` role(s)",
+      "textChannels": "`$NB` text channel(s)",
+      "voiceChannels": "`$NB` voice channel(s)",
+      "createdAt": "Created at",
+      "region": "Region",
+      "members": "`$NB` members",
+      "connected": "`$NB` connected",
+      "connectedDisabled": "Disabled above 250 users",
+      "iconURL": "Icon URL"
+    },
+    "channelinfo": {
+      "syntax": "channelinfo (channel)",
+      "description": "Info about a channel. (case sensitive)",
+      "name": "Channel name",
+      "id": "Unique ID",
+      "type": "Type",
+      "createdAt": "Created at",
+      "noChannel": "This channel doesn't exist."
+    },
+    "roleinfo": {
+      "syntax": "roleinfo (role = your highest role)",
+      "description": "Info about a role. (case sensitive)",
+      "name": "Channel name",
+      "id": "Unique ID",
+      "color": "Color",
+      "createdAt": "Created at",
+      "admin": "Is admin?",
+      "mentionable": "Is mentionable?",
+      "external": "External service?",
+      "noRole": "This role doesn't exist."
+    },
+    "about": {
+      "syntax": "about",
+      "description": "Info about the bot.",
+      "uptime": "Uptime: `$UPTIME`",
+      "servers": "`$NB` servers",
+      "channels": "`$NB` channels (`$NBTEXT` text, `$NBVOICE` voice)",
+      "users": "`$NB` users",
+      "tag": "Discord tag",
+      "author": "Author",
+      "version": "Version",
+      "library": "Library",
+      "desc": "Description",
+      "stats": "Stats",
+      "homepage": "Homepage",
+      "invite": "Invite link",
+      "dblPage": "Discordbots.org page"
     }
   }
 }

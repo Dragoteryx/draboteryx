@@ -3,6 +3,8 @@
   "name": "Français",
   "author": "Dragoteryx#0407",
   "test": "Ceci est un test.",
+  "yes": "Oui",
+  "no": "Non",
   "noResults": "Désolé mais je n'ai rien trouvé.",
   "errors": {
     "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
@@ -183,6 +185,112 @@
       "bots": "les bots n'ont pas le droit de jouer à ce jeu. C'est de la triche !",
       "slow": "Vous êtes lents.",
       "wellPlayed": "Bien joué `$WINNER` !"
+    },
+    "cyanidehappiness": {
+      "syntax": "cyanidehappiness",
+      "description": "Comic Cyanide and Happiness aléatoire.",
+      "from": "depuis `$LINK`"
+    },
+    "httpdog": {
+      "syntax": "httpdog",
+      "description": "HTTP, et des chiens."
+    },
+    "waifu": {
+      "syntax": "waifu",
+      "description": "Pour savoir qui est ta waifu.",
+      "theTruth": "ta waifu n'existe pas et si elle existait elle ne t'aimerait pas."
+    },
+    "encrypt": {
+      "syntax": "encrypt [message]",
+      "description": "Chiffrer un message. (AES)",
+      "specificKey": "Tu veux utiliser une clé particulière ? Si oui répond moi d'ici `10` secondes.",
+      "encrypted": "Ton message chiffré : `$MESSAGE`. Clé: `$KEY`."
+    },
+    "decrypt": {
+      "syntax": "decrypt [message]",
+      "description": "Déchiffrer un message.",
+      "keyRequest": "Tu connais la clé ? Si oui répond moi d'ici `20` secondes.",
+      "unknownKey": "Si tu ne connais pas la clé je ne peux pas déchiffrer ce message.",
+      "wrongKey": "Ça n'a pas l'air d'être la bonne clé.",
+      "decrypted": "J'ai réussi à déchiffrer le message : `$MESSAGE`."
+    },
+    "userinfo": {
+      "syntax": "userinfo (membre = toi)",
+      "description": "Infos sur un membre. (sensible à la casse)",
+      "member": "Membre",
+      "displayName": "Nom",
+      "tag": "Tag Discord",
+      "id": "ID unique",
+      "roles": "`$NB` rôle(s)",
+      "highestRole": "Rôle le plus élevé",
+      "connectedTo": "Connecté sur",
+      "joinedAt": "A rejoint le",
+      "admin": "Admin ?",
+      "bot": "Bot ?",
+      "online": "Connecté",
+      "offline": "Déconnecté",
+      "idle": "AFK",
+      "dnd": "Ne pas déranger",
+      "status": "Status",
+      "currentlyPlaying": "En train de jouer à",
+      "avatarURL": "URL de l'avatar",
+      "defaultRole": "everyone (rôle par défaut)",
+      "noUser": "Cet utilisateur n'existe pas."
+    },
+    "serverinfo": {
+      "syntax": "serverinfo",
+      "description": "Infos sur le serveur.",
+      "name": "Nom du serveur",
+      "id": "ID unique",
+      "owner": "Owner",
+      "emojis": "Emoji(s) personnalisé(s)",
+      "roles": "`$NB` rôle(s)",
+      "textChannels": "`$NB` channels textuel",
+      "voiceChannels": "`$NB` channels vocaux",
+      "createdAt": "Créé le",
+      "region": "Région",
+      "members": "`$NB` membres",
+      "connected": "`$NB` connectés",
+      "connectedDisabled": "Désactivé à partir de 250 membres",
+      "iconURL": "URL de l'icône"
+    },
+    "channelinfo": {
+      "syntax": "channelinfo (channel)",
+      "description": "Infos sur un channel. (sensible à la casse)",
+      "name": "Nom du channel",
+      "id": "ID unique",
+      "type": "Type",
+      "createdAt": "Créé le",
+      "noChannel": "Ce channel n'existe pas."
+    },
+    "roleinfo": {
+      "syntax": "roleinfo (role = your highest role)",
+      "description": "Infos sur un rôle. (sensible à la casse)",
+      "name": "Nom du rôle",
+      "id": "ID unique",
+      "color": "Couleur",
+      "createdAt": "Créé le",
+      "admin": "Admin ?",
+      "mentionable": "Mentionnable ?",
+      "external": "Service externe ?",
+      "noRole": "Ce rôle n'existe pas."
+    },
+    "about": {
+      "syntax": "about",
+      "description": "Infos sur le bot.",
+      "uptime": "Actif depuis : `$UPTIME`",
+      "servers": "`$NB` serveurs",
+      "channels": "`$NB` channels (`$NBTEXT` textes, `$NBVOICE` vocaux)",
+      "users": "`$NB` utilisateurs",
+      "tag": "Tag Discord",
+      "author": "Auteur",
+      "version": "Version",
+      "library": "Librairie",
+      "desc": "Description",
+      "stats": "Stats",
+      "homepage": "Page d'accueil",
+      "invite": "Lien d'invitation",
+      "dblPage": "Page Discordbots.org"
     }
   }
 }
