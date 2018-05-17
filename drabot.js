@@ -318,7 +318,7 @@ commands.set("join", async msg => {
 	if (msg.guild.busy) return;
 	music.join(msg.member).then(() => {
 		msg.guild.busy = true;
-    member.guild.leaveTimeout = null;
+    msg.guild.leaveTimeout = null;
 		if (tools.getDate() == "1/4") {
 			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
 				msg.channel.send("Happy April Fools' !");
@@ -334,7 +334,7 @@ commands.set("join", async msg => {
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
 		msg.guild.busy = false;
-    member.guild.leaveTimeout = null;
+    msg.guild.leaveTimeout = null;
 		musicChannels.delete(msg.guild.id);
 		msg.channel.send(msg.lang.music.leave());
 	}).catch(err => {
