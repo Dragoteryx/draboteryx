@@ -70,11 +70,10 @@ client.on("message", async msg => {
   }
 
   // replace tag with prefix
-  let pure = true;
   for (let alias of pfAliases) {
-    if (msg.content.startsWith(alias) && pure) {
+    if (msg.content.startsWith(alias) && !msg.usedPrefixAlias) {
       msg.content = msg.content.replace(alias, msg.prefix);
-      pure = false;
+      msg.usedPrefixAlias = true;
     }
   }
 
