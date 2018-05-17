@@ -68,8 +68,8 @@ client.on("message", async msg => {
   }
 
   // replace tag with prefix
-  if (msg.content.startsWith("<@" + client.user.id + "> "))
-    msg.content = msg.content.replace("<@" + client.user.id + "> ", msg.prefix);
+  if (msg.content.startsWith("<@" + client.user.id + "> ") || msg.content.startsWith("<@!" + client.user.id + "> "))
+    msg.content = msg.content.replace("<@" + client.user.id + "> ", msg.prefix).replace("<@!" + client.user.id + "> ", msg.prefix);
 
   // COMMANDS
 	commands.check(msg, {prefix: msg.prefix}).then(res => {
