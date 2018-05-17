@@ -35,11 +35,13 @@ if (process.env.HEROKU) {
   // other stuff
 }
 
+
 // GLOBALS
 const musicChannels = new Map();
 const onMessageCallbacks = new Map();
 let connected = false;
 let debug = false;
+let pfAliases = null;
 
 // EXPORTS
 exports.client = client;
@@ -68,8 +70,13 @@ client.on("message", async msg => {
   }
 
   // replace tag with prefix
-  if (msg.content.startsWith("<@" + client.user.id + "> ") || msg.content.startsWith("<@!" + client.user.id + "> "))
-    msg.content = msg.content.replace("<@" + client.user.id + "> ", msg.prefix).replace("<@!" + client.user.id + "> ", msg.prefix);
+  let pure = true;
+  for (let alias of pfAliases) {
+    if (msg.content.startsWith(alias) && pure) {
+      msg.content = msg.content.replace(alias, msg.prefix);
+      pure = false;
+    }
+  }
 
   // COMMANDS
 	commands.check(msg, {prefix: msg.prefix}).then(res => {
@@ -114,6 +121,7 @@ process.on("unhandledRejection", err => {
 });
 client.on("ready", async () => {
 	if (!connected) {
+    pfAliases = ["<@" + client.user.id + "> ", "<@!" + client.user.id + "> "];
     let owner = (await client.fetchApplication()).owner;
 		connected = true;
 		console.log("[DRABOT] Connected!");
