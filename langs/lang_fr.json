@@ -41,7 +41,7 @@
   	"invalidVolume": "Le volume doit être supérieur à `0`.",
     "nowPlaying": "Musique suivante : `$TITLE` par `$AUTHOR`. (ajoutée par `$MEMBER`)",
     "nowPlayingFile": "Musique suivante : `$TITLE`. (ajoutée par `$MEMBER`)",
-    "clientMoved": "Je me suis déplacé dans $CHANNEL.",
+    "clientMoved": "Je me suis déplacé dans `$CHANNEL`.",
     "memberJoined": "Quelqu'un est arrivé, je vais rester encore un peu.",
     "leaveInactivity": "Il n'y a plus personne, je m'en vais dans `une minute`.",
     "invalidYoutubePlaylistLink": "Ce lien de playlist n'est pas valide.",
@@ -68,7 +68,8 @@
     "fileName": "Nom du fichier",
     "playingDisplay": "Musique actuelle :",
     "playlistDisplay": "Voici la playlist :",
-    "playlistDisplayCurrent": "Utilise `$PREFIXcurrent` pour obtenir les infos sur la musique en cours."
+    "playlistDisplayCurrent": "Utilise `$PREFIXcurrent` pour obtenir les infos sur la musique en cours.",
+    "oneResult": "Je n'ai trouvé qu'une seule vidéo donc je vais l'ajouter à la playlist."
   },
   "types": {
     "utility": "Commandes utilitaires",

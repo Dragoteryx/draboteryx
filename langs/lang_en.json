@@ -43,7 +43,7 @@
   	"invalidVolume": "The volume must be above `0`.",
     "nowPlaying": "Now playing: `$TITLE` by `$AUTHOR`. (requested by `$MEMBER`)",
     "nowPlayingFile": "Now playing: `$TITLE`. (requested by `$MEMBER`)",
-    "clientMoved": "I moved to $CHANNEL.",
+    "clientMoved": "I moved to `$CHANNEL`.",
     "memberJoined": "Someone joined, staying for a little longer.",
     "leaveInactivity": "The voice channel is empty, I will leave in `one minute`.",
     "invalidYoutubePlaylistLink": "This playlist link is not valid.",
@@ -70,7 +70,8 @@
     "fileName": "File name",
     "playingDisplay": "Playing:",
     "playlistDisplay": "Here's the playlist:",
-    "playlistDisplayCurrent": "Use `$PREFIXcurrent` to have information about the current music."
+    "playlistDisplayCurrent": "Use `$PREFIXcurrent` to have information about the current music.",
+    "oneResult": "I only found one video so I'll play this one."
   },
   "types": {
     "utility": "Utility commands",

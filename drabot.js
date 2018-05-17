@@ -365,28 +365,31 @@ commands.set("query", async msg => {
 		let query = msg.content.replace(msg.prefix + "query ", "");
 		let msg2 = await msg.channel.send(msg.lang.music.searchingOnYoutube("$QUERY", query));
 		let videos = await MusicHandler.queryYoutube(query, 5);
+    let choice;
 		if (videos.length == 0) {
 			msg2.edit(msg.lang.noResults());
 			return;
-		}
-		let embed = tools.defaultEmbed();
-		for (let i = 0; i < videos.length; i++) {
-			embed.addField((i+1) + " - " + videos[i].title + " " + msg.lang.music.by() + " " + videos[i].authorName + " (" + tools.parseTimestamp(videos[i].length).timer + ")", videos[i].link);
-		}
-		msg2.edit(msg.lang.music.queryChoice(), embed);
-		let msg3 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => {
-			let choice = Number(msg3.content);
-			if (msg3.author.id != msg.author.id || isNaN(choice)) return false;
-			else if (!tools.range(1, videos.length).includes(choice)) {
-				msg.channel.send(msg.lang.music.queryNumber("$NBVIDEOS", videos.length));
-				return false;
-			} else return true;
-		}});
-		let choice;
-		if (msg3 === null) {
-			msg.channel.send(msg.lang.music.noResFirstOne());
-			choice = 0;
-		} else choice = Number(msg3.content) - 1;
+		} else if (videos.length > 1) {
+      let embed = tools.defaultEmbed();
+  		for (let i = 0; i < videos.length; i++)
+  			embed.addField((i+1) + " - " + videos[i].title + " " + msg.lang.music.by() + " " + videos[i].authorName + " (" + tools.parseTimestamp(videos[i].length).timer + ")", videos[i].link);
+  		msg2.edit(msg.lang.music.queryChoice(), embed);
+  		let msg3 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => {
+  			choice = Number(msg3.content);
+  			if (msg3.author.id != msg.author.id || isNaN(choice)) return false;
+  			else if (!tools.range(1, videos.length).includes(choice)) {
+  				msg.channel.send(msg.lang.music.queryNumber("$NBVIDEOS", videos.length));
+  				return false;
+  			} else return true;
+  		}});
+  		if (msg3 === null) {
+  			msg.channel.send(msg.lang.music.noResFirstOne());
+  			choice = 0;
+  		} else choice = Number(msg3.content) - 1;
+    } else {
+      msg2.edit(msg.lang.music.oneResult());
+      choice = 0;
+    }
 		let added = await music.add(videos[choice].link, msg.member, {passes: 10});
 		msg.channel.send(msg.lang.music.addedToPlaylist("$TITLE", added.title, "$AUTHOR", added.author.name));
 	} catch(err) {
