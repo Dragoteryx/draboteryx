@@ -123,7 +123,7 @@ client.on("ready", async () => {
     if (!pfAliases.ready) {
       pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
       pfAliases.ready = true;
-    }    
+    }
     let owner = (await client.fetchApplication()).owner;
 		connected = true;
 		console.log("[DRABOT] Connected!");
@@ -161,7 +161,7 @@ music.on("empty", playlist => {
 	musicChannels.get(playlist.guild.id).send(playlist.guild.lang.music.emptyPlaylist());
 });
 music.on("clientMove", (oldChannel, newChannel) => {
-	musicChannels.get(newChannel.guild.id).send(newChannel.lang.music.clientMoved("$CHANNEL", newChannel));
+	musicChannels.get(newChannel.guild.id).send(newChannel.lang.music.clientMoved("$CHANNEL", newChannel.name));
 });
 music.on("memberJoin", (member, channel) => {
 	if (member.guild.leaveTimeout) {
@@ -738,7 +738,7 @@ Object.defineProperty(discord.Channel.prototype, "waitResponse", {
 function login() {
 	console.log("[DRABOT] Trying to connect to Discord servers.");
 	client.login(process.env.DISCORDTOKEN).catch(async () => {
-		console.log("[DRABOT] Connection failed. Retry in 60 seconds.");
+		console.log("[DRABOT] Connection failed. Retrying in 60 seconds.");
 		await tools.sleep(60000);
 		login();
 	});
