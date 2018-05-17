@@ -6,6 +6,13 @@
   "yes": "Oui",
   "no": "Non",
   "noResults": "Désolé mais je n'ai rien trouvé.",
+  "permissions": {
+    "info": "Les permissions sont données en fonction de l'attribution de 3 rôles:\nAdmin => avoir la permission `Admin` ou le rôle `drb-admin`\nModérateur => rôle `drb-mod`\nDJ => rôle `drb-dj` (pour que tout le monde ai les permissions DJ il suffit de ne pas créer ce rôle)",
+    "error": "tu n'as pas les permissions nécessaires (`$REQUIRED`). Pour apprendre comment fonctionnent les permissions utilise `$PREFIXpermissions`.",
+    "admin": "Admin",
+    "mod": "Modérateur",
+    "dj": "DJ"
+  },
   "errors": {
     "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
     "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
@@ -92,6 +99,14 @@
       "embedcontent2": "Type",
       "embedcontent3": "Description",
       "embedcontent4": "Syntaxe"
+    },
+    "permissions": {
+      "syntax": "permissions",
+      "description": "Explication sur les permissions."
+    },
+    "reset": {
+      "syntax": "reset",
+      "description": "Rétablir les paramètres par défaut du bot. (langue et préfixe)"
     },
     "prefix": {
       "syntax": "prefix (nouveau préfixe)",

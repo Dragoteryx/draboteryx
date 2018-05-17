@@ -51,7 +51,7 @@ client.on("message", async msg => {
 
   // set prefix and lang
   if (msg.guild) {
-    if (!msg.guild.fetched && data.ok) {
+    if (!msg.guild.fetched) {
       try {
         let res = await msg.guild.fetchData();
         if (res.lang) msg.guild._lang = res.lang;
@@ -131,12 +131,12 @@ client.on("error", err => {
 	connected = false;
 	login();
 });
-/*client.on("guildCreate", guild => {
-
+client.on("guildCreate", guild => {
+  null;
 });
 client.on("guildDelete", guild => {
-
-});*/
+  guild.clearData();
+});
 music.on("next", (playlist, next) => {
 	if (!next.file)
 		musicChannels.get(playlist.guild.id).send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
@@ -242,19 +242,42 @@ commands.set("about", async msg => {
   msg.channel.send("", await funcs.showInfo(msg));
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
+commands.set("permissions", async msg => {
+  msg.channel.send(msg.lang.permissions.info());
+}, {maxargs: 0, info: {show: true, type: "bot"}});
+
+commands.set("reset", async msg => {
+  if (msg.guild) {
+    if (!msg.member.admin) {
+      let admin = msg.lang.permissions.admin();
+      msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
+      return;
+    }
+    delete msg.guild._lang;
+    delete msg.guild._prefix;
+    await msg.guild.clearData();
+  } else {
+    delete msg.channel._lang;
+    delete msg.channel._prefix;
+  } msg.channel.send("I've been reset to default values.\nLang: `English`\nPrefix: `/`");
+}, {maxargs: 0, info: {show: true, type: "bot"}});
+
 commands.set("prefix", async msg => {
   let args = msg.content.split(" ");
-  if (args.length == 1) {
+  if (args.length == 1)
     msg.reply(msg.lang.commands.prefix.current("$PREFIX", msg.prefix));
-  } else if (msg.guild) {
+  else if (msg.guild) {
+    if (!msg.member.admin) {
+      let admin = msg.lang.permissions.admin();
+      msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
+      return;
+    }
     let prefix = args[1];
-    let data = await msg.guild.fetchData();
-    data.prefix = prefix;
     msg.guild._prefix = prefix;
-    msg.guild.sendData(data);
+    msg.guild.sendData({prefix: prefix});
     msg.channel.send(msg.lang.commands.prefix.set("$PREFIX", msg.prefix));
   } else msg.reply(msg.lang.commands.prefix.guildonly());
-}, {maxargs: 0, info: {show: true, type: "bot"}});
+}, {maxargs: 1, info: {show: true, type: "bot"}});
 
 commands.set("lang", async msg => {
   let args = msg.content.split(" ");
@@ -264,17 +287,20 @@ commands.set("lang", async msg => {
       str += "\n- " + lang.name() + "(`" + lang.id() + "`)";
     msg.reply(msg.lang.commands.lang.list() + str);
   } else if (msg.guild) {
+    if (!msg.member.admin) {
+      let admin = msg.lang.permissions.admin();
+      msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
+      return;
+    }
     let lang = args[1];
     if (Object.keys(langs).includes(lang)) {
-      let data = await msg.guild.fetchData();
-      data.lang = lang;
       msg.guild._lang = lang;
-      msg.guild.sendData(data);
-      let name = msg.lang.name()
+      msg.guild.sendData({lang: lang});
+      let name = msg.lang.name();
       msg.channel.send(msg.lang.commands.lang.set("$LANG", name));
     } else msg.reply(msg.lang.commands.lang.unknown());
   } else msg.reply(msg.lang.commands.lang.guildonly());
-}, {maxargs: 0, info: {show: true, type: "bot"}});
+}, {maxargs: 1, info: {show: true, type: "bot"}});
 
 // UTILS
 commands.set("serverinfo", async msg => {
