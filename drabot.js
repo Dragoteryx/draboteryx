@@ -38,10 +38,10 @@ if (process.env.HEROKU) {
 
 // GLOBALS
 const musicChannels = new Map();
+const pfAliases = [];
 const onMessageCallbacks = new Map();
 let connected = false;
 let debug = false;
-let pfAliases = null;
 
 // EXPORTS
 exports.client = client;
@@ -120,7 +120,10 @@ process.on("unhandledRejection", err => {
 });
 client.on("ready", async () => {
 	if (!connected) {
-    pfAliases = ["<@" + client.user.id + "> ", "<@!" + client.user.id + "> "];
+    if (!pfAliases.ready) {
+      pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
+      pfAliases.ready = true;
+    }    
     let owner = (await client.fetchApplication()).owner;
 		connected = true;
 		console.log("[DRABOT] Connected!");
