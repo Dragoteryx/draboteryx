@@ -158,10 +158,11 @@ music.on("memberJoin", (member, channel) => {
 });
 music.on("memberLeave", (member, channel) => {
 	if (channel.members.size == 1) {
-		musicChannels.get(member.guild.id).send(channel.lang.leaveInactivity());
+		musicChannels.get(member.guild.id).send(channel.lang.music.leaveInactivity());
 		member.guild.leaveTimeout = client.setTimeout(() => {
 			member.guild.playlist.leave().then(() => {
 				member.guild.busy = false;
+        member.guild.leaveTimeout = null;
 				musicChannels.get(member.guild.id).send(msg.lang.leave());
 				musicChannels.delete(member.guild.id);
 				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
@@ -317,6 +318,7 @@ commands.set("join", async msg => {
 	if (msg.guild.busy) return;
 	music.join(msg.member).then(() => {
 		msg.guild.busy = true;
+    member.guild.leaveTimeout = null;
 		if (tools.getDate() == "1/4") {
 			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
 				msg.channel.send("Happy April Fools' !");
@@ -332,6 +334,7 @@ commands.set("join", async msg => {
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
 		msg.guild.busy = false;
+    member.guild.leaveTimeout = null;
 		musicChannels.delete(msg.guild.id);
 		msg.channel.send(msg.lang.music.leave());
 	}).catch(err => {
