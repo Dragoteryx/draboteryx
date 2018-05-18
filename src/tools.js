@@ -14,24 +14,16 @@ exports.coloredEmbed = color => new discord.RichEmbed().setColor(color);
 exports.defaultEmbed = () => exports.coloredEmbed("#808000");
 exports.discordEmbed = () => exports.coloredEmbed("#7289DA");
 
-exports.stringToMembers = (str, guild) => {
-	return new Promise(async (resolve, reject) => {
-		try {
-			let member;
-			let guildFetched = await guild.fetchMembers();
-			if (str.startsWith("<@") && str.endsWith(">")) {
-				member = await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""));
-				if (member === undefined)
-					member = [];
-				else
-					member = [member];
-			} else
-				member = guildFetched.members.findAll("displayName",str);
-			resolve(member);
-		} catch(err) {
-			reject(err);
-		}
-	});
+exports.stringToMembers = async (str, guild) => {
+	let member;
+	let guildFetched = await guild.fetchMembers();
+	if (str.startsWith("<@") && str.endsWith(">")) {
+		member = await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""));
+		if (member === undefined)
+			member = [];
+		else
+			member = [member];
+	} else member = guildFetched.members.findAll("displayName",str);
 }
 
 exports.stringToChannels = (str, guild) => {

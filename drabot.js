@@ -29,16 +29,11 @@ const langs = {
   fr: new Lang("fr")
 }
 const commandTypes = ["utility", "game", "fun", "misc", "music", "nsfw", "bot"];
-let dbl = null;
-if (process.env.HEROKU) {
-  dbl = new DBL(process.env.DBLAPITOKEN, client);
-  // other stuff
-}
+const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
+const pfAliases = [];
 
 
 // GLOBALS
-const musicChannels = new Map();
-const pfAliases = [];
 const onMessageCallbacks = new Map();
 let connected = false;
 let debug = false;
@@ -152,34 +147,29 @@ client.on("guildDelete", guild => {
   guild.clearData();
 });
 music.on("next", (playlist, next) => {
-	if (!next.file)
-		musicChannels.get(playlist.guild.id).send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
-	else
-		musicChannels.get(playlist.guild.id).send(playlist.guild.lang.music.nowPlayingFile("$TITLE", next.title, "$MEMBER", next.member.displayName));
+	if (!next.file) playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
+	else playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlayingFile("$TITLE", next.title, "$MEMBER", next.member.displayName));
 });
 music.on("empty", playlist => {
-	musicChannels.get(playlist.guild.id).send(playlist.guild.lang.music.emptyPlaylist());
+	playlist.guild.musicChannel.send(playlist.guild.lang.music.emptyPlaylist());
 });
 music.on("clientMove", (oldChannel, newChannel) => {
-	musicChannels.get(newChannel.guild.id).send(newChannel.lang.music.clientMoved("$CHANNEL", newChannel.name));
+  newChannel.guild.musicChannel.send(newChannel.lang.music.clientMoved("$CHANNEL", newChannel.name));
 });
 music.on("memberJoin", (member, channel) => {
 	if (member.guild.leaveTimeout) {
 		client.clearTimeout(member.guild.leaveTimeout);
 		member.guild.leaveTimeout = null;
-		musicChannels.get(member.guild.id).send(channel.lang.music.memberJoined());
+		member.guild.musicChannel.send(channel.lang.music.memberJoined());
 	}
 });
 music.on("memberLeave", (member, channel) => {
 	if (channel.members.size == 1) {
-		musicChannels.get(member.guild.id).send(channel.lang.music.leaveInactivity());
+		member.guild.musicChannel.send(channel.lang.music.leaveInactivity());
 		member.guild.leaveTimeout = client.setTimeout(() => {
 			member.guild.playlist.leave().then(() => {
-				member.guild.busy = false;
         member.guild.leaveTimeout = null;
-				musicChannels.get(member.guild.id).send(msg.lang.leave());
-				musicChannels.delete(member.guild.id);
-				console.log("[MUSICBOT] Leaved guild " + member.guild.name + " (" + member.guild.id + ")");
+				member.guild.musicChannel.send(channel.lang.music.leave());
 			}).catch(funcs.logError);
 		}, 60000);
   }
@@ -355,16 +345,9 @@ commands.set("roleinfo", msg => {
 
 // MUSIC
 commands.set("join", async msg => {
-	if (msg.guild.busy) return;
 	music.join(msg.member).then(() => {
-		msg.guild.busy = true;
     msg.guild.leaveTimeout = null;
-		if (tools.getDate() == "1/4") {
-			music.add(process.env.APRIL_1ST_MUSIC, msg.guild.me, {passes: 10}).then(() => {
-				msg.channel.send("Happy April Fools' !");
-			});
-		}
-		musicChannels.set(msg.guild.id, msg.channel);
+		msg.guild.musicChannel = msg.channel;
 		msg.channel.send(msg.lang.music.join());
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
@@ -373,9 +356,8 @@ commands.set("join", async msg => {
 
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
-		msg.guild.busy = false;
     msg.guild.leaveTimeout = null;
-		musicChannels.delete(msg.guild.id);
+		msg.guild.musicChannel = null;
 		msg.channel.send(msg.lang.music.leave());
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
@@ -654,23 +636,17 @@ commands.set("fbw", msg => {
   });
 }, {guildonly: true, guilds: [config.guilds.patate]});
 
-commands.set("cyanidehappiness", msg => {
+commands.set("cyanidehappiness", async msg => {
   let link = "http://explosm.net/rcg";
-	snekfetch.get(link).then(res => {
-		msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
-	}).catch(err => {
-		funcs.logError(msg, err);
-	});
+	let res = await snekfetch.get(link);
+	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("httpdog", msg => {
-	snekfetch.get("https://httpstatusdogs.com").then(res => {
-		let img = res.text.split('src="img/').random().split('" alt="')[0];
-		let link = "https://httpstatusdogs.com/img/" + img;
-		msg.channel.send("", {files: [link]});
-	}).catch(err => {
-		funcs.logError(msg, err);
-	});
+commands.set("httpdog", async msg => {
+	let res = await snekfetch.get("https://httpstatusdogs.com");
+	let img = res.text.split('src="img/').random().split('" alt="').shift();
+	let link = "https://httpstatusdogs.com/img/" + img;
+	msg.channel.send("", {files: [link]});
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("waifu", msg => {

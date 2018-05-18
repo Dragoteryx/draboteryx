@@ -1,6 +1,6 @@
 {
   "name": "draboteryx",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short.",
   "main": "drabot.js",
   "engines": {
