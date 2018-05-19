@@ -32,7 +32,6 @@ const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "
 const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 
-
 // GLOBALS
 const onMessageCallbacks = new Map();
 let connected = false;
@@ -164,7 +163,7 @@ music.on("memberJoin", (member, channel) => {
 	}
 });
 music.on("memberLeave", (member, channel) => {
-	if (channel.members.size == 1) {
+	if (channel.members.size == 1 && !channel.guild.musicStay) {
 		member.guild.musicChannel.send(channel.lang.music.leaveInactivity());
 		member.guild.leaveTimeout = client.setTimeout(() => {
 			member.guild.playlist.leave().then(() => {
@@ -231,7 +230,7 @@ commands.set("help", msg => {
 				.addField(msg.lang.commands.help.embedcontent1(), command.name, true)
 				.addField(msg.lang.commands.help.embedcontent2(), msg.lang.types()[command.options.info.type], true)
 				.addField(msg.lang.commands.help.embedcontent3(), msg.lang.commands[command.name].description())
-				.addField(msg.lang.commands.help.embedcontent4(), "```" + msg.prefix + msg.lang.commands[command.name].syntax() + "```");
+				.addField(msg.lang.commands.help.embedcontent4(), "```" + msg.lang.commands[command.name].syntax("$PREFIX", msg.prefix) + "```");
 				msg.author.send("", embed);
 				if (msg.channel.type != "dm")
 					msg.reply(msg.lang.commands.help.takeALook());
@@ -360,17 +359,21 @@ commands.set("roleinfo", msg => {
 
 // MUSIC
 commands.set("join", async msg => {
+  let args = msg.content.split(" ");
 	music.join(msg.member).then(() => {
+    if (args.length == 2 && args[1] == "stay")
+      msg.guild.musicStay = true;
     msg.guild.leaveTimeout = null;
 		msg.guild.musicChannel = msg.channel;
 		msg.channel.send(msg.lang.music.join());
 	}).catch(err => {
 		funcs.musicErrors(msg, err);
 	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+}, {guildonly: true, maxargs: 1, info: {show: true, type: "music"}});
 
 commands.set("leave", msg => {
 	music.leave(msg.guild).then(() => {
+    msg.guild.musicStay = false;
     msg.guild.leaveTimeout = null;
 		msg.guild.musicChannel = null;
 		msg.channel.send(msg.lang.music.leave());

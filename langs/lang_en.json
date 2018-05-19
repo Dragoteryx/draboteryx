@@ -92,7 +92,7 @@
   },
   "commands": {
     "help": {
-      "syntax": "help (command)",
+      "syntax": "$PREFIXhelp (command)",
       "description": "You probably know what this command does or else you wouldn't be reading this.",
       "takeALook": "take a look at your private messages!",
       "unknownCommand": "This command doesn't seem to exist. Use `$PREFIXhelp` to get a list of all commands.",
@@ -103,22 +103,22 @@
       "embedcontent4": "Syntax"
     },
     "permissions": {
-      "syntax": "permissions",
+      "syntax": "$PREFIXpermissions",
       "description": "Explain how permissions work."
     },
     "reset": {
-      "syntax": "reset",
+      "syntax": "$PREFIXreset",
       "description": "Reset the bot to its default values. (language and prefix)"
     },
     "prefix": {
-      "syntax": "prefix (new prefix)",
+      "syntax": "$PREFIXprefix (new prefix)",
       "description": "Show the current prefix, or set a new one.",
       "current": "my current prefix is `$PREFIX`.",
       "set": "My prefix has been set to `$PREFIX`.",
       "guildonly": "you can't set a new prefix here."
     },
     "lang": {
-      "syntax": "lang (langage)",
+      "syntax": "$PREFIXlang (langage)",
       "description": "Show the list of languages available, or set a new one.",
       "list": "you can choose between one of those languages:",
       "set": "Language set to `$LANG`.",
@@ -126,77 +126,77 @@
       "unknown": "this language doesn't exist or the bot doesn't support it."
     },
     "join": {
-      "syntax": "join",
-      "description": "Join a voice channel."
+      "syntax": "$PREFIXjoin || $PREFIXjoin stay",
+      "description": "Join a voice channel. The `stay` option makes the bot not leave the voice channel when it is empty."
     },
     "leave": {
-      "syntax": "leave",
+      "syntax": "$PREFIXleave",
       "description": "Leave a voice channel."
     },
     "request": {
-      "syntax": "request [Youtube link]",
+      "syntax": "$PREFIXrequest [Youtube link]",
       "description": "Request a Youtube video using a link."
     },
     "query": {
-      "syntax": "query [Youtube query]",
+      "syntax": "$PREFIXquery [Youtube query]",
       "description": "Search for a Youtube video."
     },
     "ytbplaylist": {
-      "syntax": "ytbplaylist [Youtube playlist link]",
+      "syntax": "$PREFIXytbplaylist [Youtube playlist link]",
       "description": "Request a Youtube playlist."
     },
     "plremove": {
-      "syntax": "plremove [id]",
+      "syntax": "$PREFIXplremove [id]",
       "description": "Remove a music from the playlist."
     },
     "skip": {
-      "syntax": "skip",
+      "syntax": "$PREFIXskip",
       "description": "Skip the current music."
     },
     "plclear": {
-      "syntax": "plclear",
+      "syntax": "$PREFIXplclear",
       "description": "Clear the playlist."
     },
     "plshuffle": {
-      "syntax": "plshuffle",
+      "syntax": "$PREFIXplshuffle",
       "description": "Shuffle the playlist."
     },
     "loop": {
-      "syntax": "loop",
+      "syntax": "$PREFIXloop",
       "description": "Loop the current music."
     },
     "plloop": {
-      "syntax": "plloop",
+      "syntax": "$PREFIXplloop",
       "description": "Loop the playlist."
     },
     "toggle": {
-      "syntax": "toggle",
+      "syntax": "$PREFIXtoggle",
       "description": "Pause/resume the music."
     },
     "volume": {
-      "syntax": "volume [value]",
+      "syntax": "$PREFIXvolume [value]",
       "description": "Set the volume of the music."
     },
     "current": {
-      "syntax": "current",
+      "syntax": "$PREFIXcurrent",
       "description": "Info about the current music."
     },
     "playlist": {
-      "syntax": "playlist",
+      "syntax": "$PREFIXplaylist",
       "description": "Info about the playlist."
     },
     "fact": {
-      "syntax": "fact (query)",
+      "syntax": "$PREFIXfact (query)",
       "description": "Generates a random stupid fact.",
       "noResults": "I did not find any interesting fact sorry.",
       "offline": "I'm not in the mood for this right now. Try again later. :grimacing:"
     },
     "roll": {
-      "syntax": "roll (size = 6)",
+      "syntax": "$PREFIXroll (size = 6)",
       "description": "Roll a dice, invalid dice sizes will roll a 6."
     },
     "reflex": {
-      "syntax": "reflex",
+      "syntax": "$PREFIXreflex",
       "description": "The first user to react wins.",
       "rules": "I will post a message, the first to respond with the correct number wins!",
       "msg": "The fastest one wins! `$RANDOM`",
@@ -205,27 +205,27 @@
       "wellPlayed": "Well played `$WINNER`!"
     },
     "cyanidehappiness": {
-      "syntax": "cyanidehappiness",
+      "syntax": "$PREFIXcyanidehappiness",
       "description": "Random Cyanide and Happiness comic.",
       "from": "from `$LINK`"
     },
     "httpdog": {
-      "syntax": "httpdog",
+      "syntax": "$PREFIXhttpdog",
       "description": "HTTP, and dogs."
     },
     "waifu": {
-      "syntax": "waifu",
+      "syntax": "$PREFIXwaifu",
       "description": "Get to know who your waifu is.",
       "theTruth": "your waifu doesn't exist and if she did she wouldn't like you."
     },
     "encrypt": {
-      "syntax": "encrypt [message]",
+      "syntax": "$PREFIXencrypt [message]",
       "description": "Encrypt a message. (AES)",
       "specificKey": "Do you want me to use a specific key ? If you do reply with the key within `10` seconds.",
       "encrypted": "Your encrypted message: `$MESSAGE`. Key: `$KEY`."
     },
     "decrypt": {
-      "syntax": "decrypt [message]",
+      "syntax": "$PREFIXdecrypt [message]",
       "description": "Decrypt a message.",
       "keyRequest": "Do you happen to know the key ? Reply with the key to decrypt this message within `20` seconds.",
       "unknownKey": "If you don't know the key I can't decrypt this message.",
@@ -233,7 +233,7 @@
       "decrypted": "I successfully decrypted this message: `$MESSAGE`."
     },
     "userinfo": {
-      "syntax": "userinfo (member = you)",
+      "syntax": "$PREFIXuserinfo (member = you)",
       "description": "Info about a user. (case sensitive)",
       "member": "Member",
       "displayName": "Display name",
@@ -256,7 +256,7 @@
       "noUser": "This user doesn't exist."
     },
     "serverinfo": {
-      "syntax": "serverinfo",
+      "syntax": "$PREFIXserverinfo",
       "description": "Info about this server.",
       "name": "Server name",
       "id": "Unique ID",
@@ -273,7 +273,7 @@
       "iconURL": "Icon URL"
     },
     "channelinfo": {
-      "syntax": "channelinfo (channel)",
+      "syntax": "$PREFIXchannelinfo (channel)",
       "description": "Info about a channel. (case sensitive)",
       "name": "Channel name",
       "id": "Unique ID",
@@ -282,7 +282,7 @@
       "noChannel": "This channel doesn't exist."
     },
     "roleinfo": {
-      "syntax": "roleinfo (role = your highest role)",
+      "syntax": "$PREFIXroleinfo (role = your highest role)",
       "description": "Info about a role. (case sensitive)",
       "name": "Channel name",
       "id": "Unique ID",
@@ -294,7 +294,7 @@
       "noRole": "This role doesn't exist."
     },
     "about": {
-      "syntax": "about",
+      "syntax": "$PREFIXabout",
       "description": "Info about the bot.",
       "uptime": "Uptime: `$UPTIME`",
       "servers": "`$NB` servers",

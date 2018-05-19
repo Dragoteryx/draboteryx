@@ -91,7 +91,7 @@
   },
   "commands": {
     "help": {
-      "syntax": "help (commande)",
+      "syntax": "$PREFIXhelp (commande)",
       "description": "Tu sais probablement déjà ce que fais cette commande ou tu ne serais pas en train de lire ça.",
       "takeALook": "jette un coup d'oeil à tes messages privés !",
       "unknownCommand": "Cette commande n'existe pas. Utilise `$PREFIXhelp` pour obtenir une liste de toutes les commandes.",
@@ -102,22 +102,22 @@
       "embedcontent4": "Syntaxe"
     },
     "permissions": {
-      "syntax": "permissions",
+      "syntax": "$PREFIXpermissions",
       "description": "Explication sur les permissions."
     },
     "reset": {
-      "syntax": "reset",
+      "syntax": "$PREFIXreset",
       "description": "Rétablir les paramètres par défaut du bot. (langue et préfixe)"
     },
     "prefix": {
-      "syntax": "prefix (nouveau préfixe)",
+      "syntax": "$PREFIXprefix (nouveau préfixe)",
       "description": "Montrer le préfixe actuel, ou en choisir un nouveau.",
       "current": "mon préfixe actuel est `$PREFIX`.",
       "set": "Mon nouveau préfixe est `$PREFIX`.",
       "guildonly": "tu ne peux pas changer mon préfixe ici."
     },
     "lang": {
-      "syntax": "lang (langue)",
+      "syntax": "$PREFIXlang (langue)",
       "description": "Montrer la liste des langues disponibles, ou en choisir une nouvelle.",
       "list": "voilà la liste des langues disponibles :",
       "set": "La langue a été réglée sur `$LANG`.",
@@ -125,77 +125,77 @@
       "unknown": "cette langue n'existe pas ou le bot ne la supporte pas."
     },
     "join": {
-      "syntax": "join",
-      "description": "Rejoindre un channel vocal."
+      "syntax": "$PREFIXjoin || $PREFIXjoin stay",
+      "description": "Rejoindre un channel vocal. L'option `stay` empêche le bot de quitter le channel vocal lorsqu'il est vide."
     },
     "leave": {
-      "syntax": "leave",
+      "syntax": "$PREFIXleave",
       "description": "Quitter un channel vocal."
     },
     "request": {
-      "syntax": "request [lien Youtube]",
+      "syntax": "$PREFIXrequest [lien Youtube]",
       "description": "Ajouter une vidéo Youtube à partir d'un lien."
     },
     "query": {
-      "syntax": "query [recherche Youtube]",
+      "syntax": "$PREFIXquery [recherche Youtube]",
       "description": "Rechercher une vidéo sur Youtube."
     },
     "ytbplaylist": {
-      "syntax": "ytbplaylist [lien playlist Youtube]",
+      "syntax": "$PREFIXytbplaylist [lien playlist Youtube]",
       "description": "Ajouter une playlist Youtube."
     },
     "plremove": {
-      "syntax": "plremove [id]",
+      "syntax": "$PREFIXplremove [id]",
       "description": "Retirer une musique de la playlist."
     },
     "skip": {
-      "syntax": "skip",
+      "syntax": "$PREFIXskip",
       "description": "Passer la musique actuelle."
     },
     "plclear": {
-      "syntax": "plclear",
+      "syntax": "$PREFIXplclear",
       "description": "Vider la playlist."
     },
     "plshuffle": {
-      "syntax": "plshuffle",
+      "syntax": "$PREFIXplshuffle",
       "description": "Mélanger la playlist."
     },
     "loop": {
-      "syntax": "loop",
+      "syntax": "$PREFIXloop",
       "description": "Jouer la musique actuelle en boucle."
     },
     "plloop": {
-      "syntax": "plloop",
+      "syntax": "$PREFIXplloop",
       "description": "Jouer la playlist en boucle."
     },
     "toggle": {
-      "syntax": "toggle",
+      "syntax": "$PREFIXtoggle",
       "description": "Pauser/reprendre la musique."
     },
     "volume": {
-      "syntax": "volume [valeur]",
+      "syntax": "$PREFIXvolume [valeur]",
       "description": "Définir le volume de la musique."
     },
     "current": {
-      "syntax": "current",
+      "syntax": "$PREFIXcurrent",
       "description": "Infos sur la musique en cours."
     },
     "playlist": {
-      "syntax": "playlist",
+      "syntax": "$PREFIXplaylist",
       "description": "Infos sur la playlist."
     },
     "fact": {
-      "syntax": "fact (requête)",
+      "syntax": "$PREFIXfact (requête)",
       "description": "Génère un fait aléatoire stupide. (en anglais)",
       "noResults": "Je n'ai trouvé aucun fait intéressant.",
       "offline": "Je ne suis pas d'humeur. Essaye plus tard. :grimacing:"
     },
     "roll": {
-      "syntax": "roll (taille = 6)",
+      "syntax": "$PREFIXroll (taille = 6)",
       "description": "Lancer un dé, une taille de dé invalide correspond à un 6."
     },
     "reflex": {
-      "syntax": "reflex",
+      "syntax": "$PREFIXreflex",
       "description": "La première personne a réagir gagne.",
       "rules": "Je vais poster un message, le premier à répondre avec le bon nombre gagne !",
       "msg": "Que le meilleur gagne ! `$RANDOM`",
@@ -204,27 +204,27 @@
       "wellPlayed": "Bien joué `$WINNER` !"
     },
     "cyanidehappiness": {
-      "syntax": "cyanidehappiness",
+      "syntax": "$PREFIXcyanidehappiness",
       "description": "Comic Cyanide and Happiness aléatoire.",
       "from": "depuis `$LINK`"
     },
     "httpdog": {
-      "syntax": "httpdog",
+      "syntax": "$PREFIXhttpdog",
       "description": "HTTP, et des chiens."
     },
     "waifu": {
-      "syntax": "waifu",
+      "syntax": "$PREFIXwaifu",
       "description": "Pour savoir qui est ta waifu.",
       "theTruth": "ta waifu n'existe pas et si elle existait elle ne t'aimerait pas."
     },
     "encrypt": {
-      "syntax": "encrypt [message]",
+      "syntax": "$PREFIXencrypt [message]",
       "description": "Chiffrer un message. (AES)",
       "specificKey": "Tu veux utiliser une clé particulière ? Si oui répond moi d'ici `10` secondes.",
       "encrypted": "Ton message chiffré : `$MESSAGE`. Clé: `$KEY`."
     },
     "decrypt": {
-      "syntax": "decrypt [message]",
+      "syntax": "$PREFIXdecrypt [message]",
       "description": "Déchiffrer un message.",
       "keyRequest": "Tu connais la clé ? Si oui répond moi d'ici `20` secondes.",
       "unknownKey": "Si tu ne connais pas la clé je ne peux pas déchiffrer ce message.",
@@ -232,7 +232,7 @@
       "decrypted": "J'ai réussi à déchiffrer le message : `$MESSAGE`."
     },
     "userinfo": {
-      "syntax": "userinfo (membre = toi)",
+      "syntax": "$PREFIXuserinfo (membre = toi)",
       "description": "Infos sur un membre. (sensible à la casse)",
       "member": "Membre",
       "displayName": "Nom",
@@ -255,7 +255,7 @@
       "noUser": "Cet utilisateur n'existe pas."
     },
     "serverinfo": {
-      "syntax": "serverinfo",
+      "syntax": "$PREFIXserverinfo",
       "description": "Infos sur le serveur.",
       "name": "Nom du serveur",
       "id": "ID unique",
@@ -272,7 +272,7 @@
       "iconURL": "URL de l'icône"
     },
     "channelinfo": {
-      "syntax": "channelinfo (channel)",
+      "syntax": "$PREFIXchannelinfo (channel)",
       "description": "Infos sur un channel. (sensible à la casse)",
       "name": "Nom du channel",
       "id": "ID unique",
@@ -281,7 +281,7 @@
       "noChannel": "Ce channel n'existe pas."
     },
     "roleinfo": {
-      "syntax": "roleinfo (role = your highest role)",
+      "syntax": "$PREFIXroleinfo (role = your highest role)",
       "description": "Infos sur un rôle. (sensible à la casse)",
       "name": "Nom du rôle",
       "id": "ID unique",
@@ -293,7 +293,7 @@
       "noRole": "Ce rôle n'existe pas."
     },
     "about": {
-      "syntax": "about",
+      "syntax": "$PREFIXabout",
       "description": "Infos sur le bot.",
       "uptime": "Actif depuis : `$UPTIME`",
       "servers": "`$NB` serveurs",
