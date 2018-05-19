@@ -20,5 +20,5 @@ module.exports = {
   prefix : "/",
   users: users,
   guilds: guilds,
-  owners : [users.drago]
+  owners: [users.drago]
 }

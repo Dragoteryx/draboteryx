@@ -109,6 +109,12 @@ Object.defineProperty(discord.Guild.prototype, "nbCon", {
 	}
 });
 
+Object.defineProperty(discord.User.prototype, "owner", {
+	get: function() {
+		return config.owners.includes(this.id);
+	}
+});
+
 Object.defineProperty(discord.GuildMember.prototype, "admin", {
 	get: function() {
 		return this.roles.some(role => role.name.toLowerCase() == "drb-admin") || this.hasPermission("ADMINISTRATOR");
@@ -153,8 +159,8 @@ Object.defineProperty(discord.GuildMember.prototype, "embedInfo", {
 		if (this.voiceChannel !== undefined)
 			info.addField(this.guild.lang.commands.userinfo.connectedTo(), this.voiceChannel.name, true);
 		info.addField(this.guild.lang.commands.userinfo.joinedAt(), this.joinedAt.toUTCString())
-		.addField(this.guild.lang.commands.userinfo.admin(), this.admin ? this.guild.lang.yes() : this.guild.lang.no(), true)
-		.addField(this.guild.lang.commands.userinfo.bot(), this.user.bot ? this.guild.lang.yes() : this.guild.lang.no(), true);
+		.addField(this.guild.lang.commands.userinfo.admin(), this.admin ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true)
+		.addField(this.guild.lang.commands.userinfo.bot(), this.user.bot ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true);
 		let stts = "";
 		if (this.presence.status == "online") stts += this.guild.lang.commands.userinfo.online();
 		else if (this.presence.status == "offline") stts += this.guild.lang.commands.userinfo.offline();
@@ -232,9 +238,9 @@ Object.defineProperty(discord.Role.prototype, "embedInfo", {
 		.addField(this.guild.lang.commands.roleinfo.id(), this.id, true)
 		.addField(this.guild.lang.commands.roleinfo.color(), this.hexColor)
 		.addField(this.guild.lang.commands.roleinfo.createdAt(), this.createdAt.toUTCString())
-		.addField(this.guild.lang.commands.roleinfo.admin(), this.hasPermission("ADMINISTRATOR") ? this.guild.lang.yes() : this.guild.lang.no(), true)
-		.addField(this.guild.lang.commands.roleinfo.mentionable(), this.mentionable ? this.guild.lang.yes() : this.guild.lang.no(), true)
-		.addField(this.guild.lang.commands.roleinfo.external(), this.managed ? this.guild.lang.yes() : this.guild.lang.no(), true);
+		.addField(this.guild.lang.commands.roleinfo.admin(), this.hasPermission("ADMINISTRATOR") ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true)
+		.addField(this.guild.lang.commands.roleinfo.mentionable(), this.mentionable ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true)
+		.addField(this.guild.lang.commands.roleinfo.external(), this.managed ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true);
 		return info;
 	}
 });
@@ -254,5 +260,43 @@ Object.defineProperty(discord.Guild.prototype, "modRole", {
 Object.defineProperty(discord.Guild.prototype, "djRole", {
 	get: function() {
 		return this.roles.find(role => role.name.toLowerCase() == "drb-dj");
+	}
+});
+
+Object.defineProperty(discord.Channel.prototype, "onMsgCallbacks", {
+	get: function() {
+		if (this._onMsgCallbacks === undefined)
+			this._onMsgCallbacks = new Map();
+		return this._onMsgCallbacks;
+	}
+});
+
+Object.defineProperty(discord.Channel.prototype, "waitResponse", {
+	value: async function(options = {}) {
+		return new Promise(resolve => {
+			if (options.delay === undefined)
+				options.delay = -1;
+			if (options.filter === undefined)
+				options.filter = () => true;
+			let random;
+			do {
+				random = tools.random(0, 255);
+			} while (this.onMsgCallbacks.has(this.id + "/" + random));
+			let delay;
+			if (options.delay >= 0) {
+				delay = setTimeout(() => {
+					this.onMsgCallbacks.delete(this.id + "/" + random);
+					resolve(null);
+				}, options.delay);
+			}
+			this.onMsgCallbacks.set(this.id + "/" + random, msg => {
+				if (msg.channel.id != this.id) return;
+				if (!options.filter(msg)) return;
+				this.onMsgCallbacks.delete(this.id + "/" + random);
+				if (options.delay >= 0)
+					clearTimeout(delay);
+				resolve(msg);
+			});
+		});
 	}
 });

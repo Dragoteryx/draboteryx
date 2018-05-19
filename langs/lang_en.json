@@ -2,25 +2,21 @@
   "id": "en",
   "name": "English",
   "author": "Dragoteryx#0407",
-  "test": "This is a test.",
-  "test2": "This is only available in english",
-  "yes": "Yes",
-  "no": "No",
-  "noResults": "Sorry but I did not find anything.",
-  "permissions": {
-    "info": "Permissions are given following the attribution of 3 roles:\nAdmin => have `Admin` permission or role `drb-admin`\nModerator => role `drb-mod`\nDJ => role `drb-dj` (if you want everyone to have DJ permissions don't create this role)",
-    "error": "you don't have the necessary permissions (`$REQUIRED`). To learn how permissions work use `$PREFIXpermissions`.",
-    "admin": "Admin",
-    "mod": "Moderator",
-    "dj": "DJ"
+  "misc": {
+    "test": "This is a test.",
+    "test2": "This is only available in english",
+    "yes": "Yes",
+    "no": "No",
+    "noResults": "Sorry but I did not find anything."
   },
   "errors": {
     "guildOnlyCommand": "You can't use this command in private channels.",
     "ownerOnlyCommand": "This is an owner only command.",
-    "missingPermissionsCommand": "You don't have the necessary permissions.",
-    "voteRequiredCommand": "To use this command you need to vote for the bot: $VOTELINK",
+    "adminOnlyCommand": "This is an admin only command.",
+    "modOnlyCommand": "This is a moderator only command.",
+    "djOnlyCommand": "This is a DJ only command.",
     "nsfwCommand": "What are you trying to do?",
-    "wrongSyntax": "Use `$PREFIXhelp $COMMANDNAME` to learn how to use this command.",
+    "wrongSyntax": "Use `$PREFIXhelp $COMMAND` to learn how to use this command.",
     "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
   },
   "music": {
@@ -104,7 +100,8 @@
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",
-      "description": "Explain how permissions work."
+      "description": "Explain how permissions work.",
+      "info": "Permissions are given following the attribution of 3 roles:\nAdmin => have `Admin` permission or role `drb-admin`\nModerator => role `drb-mod`\nDJ => role `drb-dj` (if you want everyone to have DJ permissions don't create this role)"
     },
     "reset": {
       "syntax": "$PREFIXreset",

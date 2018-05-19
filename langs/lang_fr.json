@@ -2,24 +2,20 @@
   "id": "fr",
   "name": "Français",
   "author": "Dragoteryx#0407",
-  "test": "Ceci est un test.",
-  "yes": "Oui",
-  "no": "Non",
-  "noResults": "Désolé mais je n'ai rien trouvé.",
-  "permissions": {
-    "info": "Les permissions sont données en fonction de l'attribution de 3 rôles:\nAdmin => avoir la permission `Admin` ou le rôle `drb-admin`\nModérateur => rôle `drb-mod`\nDJ => rôle `drb-dj` (pour que tout le monde ai les permissions DJ il suffit de ne pas créer ce rôle)",
-    "error": "tu n'as pas les permissions nécessaires (`$REQUIRED`). Pour apprendre comment fonctionnent les permissions utilise `$PREFIXpermissions`.",
-    "admin": "Admin",
-    "mod": "Modérateur",
-    "dj": "DJ"
+  "misc": {
+    "test": "Ceci est un test.",
+    "yes": "Oui",
+    "no": "Non",
+    "noResults": "Désolé mais je n'ai rien trouvé."
   },
   "errors": {
     "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
     "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
-    "missingPermissionsCommand": "Vous n'avez pas les permissions nécessaires.",
-    "voteRequiredCommand": "Afin d'utiliser cette commande il est nécessaire de voter pour le bot : $VOTELINK",
+    "adminOnlyCommand": "Cette commande est réservée aux admins.",
+    "modOnlyCommand": "Cette commande est réservée aux modérateurs.",
+    "djOnlyCommand": "Cette commande est réservée aux DJs.",
     "nsfwCommand": "T'essayes de faire quoi là en fait ?",
-    "wrongSyntax": "Utilise `$PREFIXhelp $COMMANDNAME` pour apprendre à utiliser cette commande.",
+    "wrongSyntax": "Utilise `$PREFIXhelp $COMMAND` pour apprendre à utiliser cette commande.",
     "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test."
   },
   "music": {
@@ -103,7 +99,8 @@
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",
-      "description": "Explication sur les permissions."
+      "description": "Explications sur les permissions.",
+      "info": "Les permissions sont données en fonction de l'attribution de 3 rôles:\nAdmin => avoir la permission `Admin` ou le rôle `drb-admin`\nModérateur => rôle `drb-mod`\nDJ => rôle `drb-dj` (pour que tout le monde ai les permissions DJ il suffit de ne pas créer ce rôle)"
     },
     "reset": {
       "syntax": "$PREFIXreset",

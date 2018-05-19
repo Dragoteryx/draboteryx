@@ -14,7 +14,7 @@ const tools = require("./src/tools.js");
 const funcs = require("./src/funcs.js");
 const data = require("./src/data.js");
 const crypt = require("./src/crypt.js");
-const CommandHandler = require("./src/commands.js");
+const CommandHandler = require("./src/commands2.js");
 const MusicHandler = require("./src/music.js");
 const Lang = require("./langs/langs.js");
 MusicHandler.setYoutubeApiKey(process.env.YOUTUBEAPIKEY);
@@ -33,7 +33,6 @@ const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null
 const pfAliases = [];
 
 // GLOBALS
-const onMessageCallbacks = new Map();
 let connected = false;
 let debug = false;
 
@@ -72,10 +71,10 @@ client.on("message", async msg => {
   }
 
   // on message callbacks
-  onMessageCallbacks.forEach(func => func(msg));
+  msg.channel.onMsgCallbacks.forEach(func => func(msg));
 
   // commands
-	commands.check(msg, {prefix: msg.prefix}).then(res => {
+	commands.check(msg).then(res => {
 		if (debug) {
 			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
 			console.log("[DEBUG] " + msg.content);
@@ -88,14 +87,16 @@ client.on("message", async msg => {
 				msg.channel.send(msg.lang.errors.guildOnlyCommand());
 			else if (res.result.reasons.includes("owner only command"))
 				msg.channel.send(msg.lang.errors.ownerOnlyCommand());
-			else if (res.result.reasons.includes("missing permissions"))
-				msg.channel.send(msg.lang.errors.missingPermissionsCommand("$PREFIX", msg.prefix));
-			else if (res.result.reasons.includes("vote required"))
-				msg.channel.send(msg.lang.errors.voteRequiredCommand("$VOTELINK", "https://discordbots.org/bot/273576577512767488/vote"));
+      else if (res.result.reasons.includes("admin only command"))
+				msg.channel.send(msg.lang.errors.adminOnlyCommand());
+      else if (res.result.reasons.includes("mod only command"))
+				msg.channel.send(msg.lang.errors.modOnlyCommand());
+      else if (res.result.reasons.includes("dj only command"))
+				msg.channel.send(msg.lang.errors.djOnlyCommand());
 			else if (res.result.reasons.includes("nsfw"))
 				msg.channel.send(msg.lang.errors.nsfwCommand());
 			else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
-				msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMANDNAME", res.command.name));
+				msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", res.command.name));
 		}
 	}).catch(err => {
 		console.error(err);
@@ -178,7 +179,7 @@ music.on("memberLeave", (member, channel) => {
 
 // BOT
 commands.set("test", msg => {
-  msg.channel.send(msg.lang.test() + " (" + msg.lang.name() + ")");
+  msg.channel.send(msg.lang.misc.test() + " (" + msg.lang.name() + ")");
 }, {owner: true, maxargs: 0});
 
 commands.set("exec", async msg => {
@@ -246,14 +247,13 @@ commands.set("about", async msg => {
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
 commands.set("permissions", async msg => {
-  msg.channel.send(msg.lang.permissions.info());
+  msg.channel.send(msg.lang.commands.permissions.info());
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
 commands.set("reset", async msg => {
   if (msg.guild) {
     if (!msg.member.admin) {
-      let admin = msg.lang.permissions.admin();
-      msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
+      msg.reply(msg.lang.errors.adminOnlyCommand());
       return;
     }
     delete msg.guild._lang;
@@ -272,10 +272,9 @@ commands.set("prefix", async msg => {
   else {
     let prefix = args[1];
     if (msg.guild) {
-      if (!msg.member.admin) {
-        let admin = msg.lang.permissions.admin();
-        msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
-      } else {
+      if (!msg.member.admin)
+        msg.reply(msg.lang.errors.adminOnlyCommand());
+      else {
         msg.guild._prefix = prefix;
         msg.guild.sendData({prefix: prefix});
       }
@@ -297,10 +296,9 @@ commands.set("lang", async msg => {
       msg.reply(msg.lang.commands.lang.unknown());
     else {
       if (msg.guild) {
-        if (!msg.member.admin) {
-          let admin = msg.lang.permissions.admin();
-          msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
-        } else {
+        if (!msg.member.admin)
+          msg.reply(msg.lang.errors.adminOnlyCommand());
+        else {
           msg.guild._lang = lang;
           msg.guild.sendData({lang: lang});
         }
@@ -314,11 +312,11 @@ commands.set("lang", async msg => {
 // MODERATION
 commands.set("promote", async msg => {
   null;
-}, {guildonly: true, info: {show: true, type: "moderation"}});
+}, {admin: true, guildonly: true, info: {show: true, type: "moderation"}});
 
 commands.set("demote", async msg => {
   null;
-}, {guildonly: true, info: {show: true, type: "moderation"}});
+}, {admin: true, guildonly: true, info: {show: true, type: "moderation"}});
 
 // UTILS
 commands.set("serverinfo", async msg => {
@@ -407,7 +405,7 @@ commands.set("query", async msg => {
 		let videos = await MusicHandler.queryYoutube(query, 5);
     let choice;
 		if (videos.length == 0) {
-			msg2.edit(msg.lang.noResults());
+			msg2.edit(msg.lang.misc.noResults());
 			return;
 		} else if (videos.length > 1) {
       let embed = tools.defaultEmbed();
@@ -620,7 +618,7 @@ commands.set("fact", msg => {
 	snekfetch.get(link).then(res => {
 		let parsed = JSON.parse(res.text);
 		if (!parsed.found)
-			msg.channel.send(msg.lang.commands.fact.noResults());
+			msg.channel.send(msg.lang.commands.fact.misc.noResults());
 		else
 			msg.channel.send(parsed.fact);
 	}).catch(err => {
@@ -696,37 +694,6 @@ commands.set("decrypt", async msg => {
 		else msg.channel.send(msg.lang.commands.decrypt.decrypted("$MESSAGE", message));
 	}
 }, {minargs: 1, info: {show: true, type: "misc"}});
-
-// PROTOTYPES
-Object.defineProperty(discord.Channel.prototype, "waitResponse", {
-	value: function(options = {}) {
-		return new Promise(resolve => {
-			if (options.delay === undefined)
-				options.delay = -1;
-			if (options.filter === undefined)
-				options.filter = () => true;
-			let random;
-			do {
-				random = tools.random(0, 10000);
-			} while (onMessageCallbacks.has(this.id + "/" + random));
-			let delay;
-			if (options.delay >= 0) {
-				delay = setTimeout(() => {
-					onMessageCallbacks.delete(this.id + "/" + random);
-					resolve(null);
-				}, options.delay);
-			}
-			onMessageCallbacks.set(this.id + "/" + random, msg => {
-				if (msg.channel.id != this.id) return;
-				if (!options.filter(msg)) return;
-				onMessageCallbacks.delete(this.id + "/" + random);
-				if (options.delay >= 0)
-					clearTimeout(delay);
-				resolve(msg);
-			});
-		});
-	}
-});
 
 // FUNCTIONS
 function login() {

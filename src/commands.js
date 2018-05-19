@@ -38,6 +38,12 @@ class CommandsHandler {
 			options.guildonly = false;
 		if (options.owner === undefined)
 			options.owner = false;
+		if (options.admin === undefined)
+			options.admin = false;
+		if (options.mod === undefined)
+			options.mod = false;
+		if (options.dj === undefined)
+			options.dj = false;
 		if (options.guilds === undefined)
 			options.guilds = [];
 		if (options.channels === undefined)
@@ -46,14 +52,10 @@ class CommandsHandler {
 			options.users = [];
 		if (options.permissions === undefined)
 			options.permissions = [];
-		if (options.rolenames === undefined)
-			options.rolenames = [];
 		if (options.nsfw === undefined)
 			options.nsfw = false;
 		if (options.bots === undefined)
 			options.bots = false;
-		if (options.vote === undefined)
-			options.vote = false;
 		if (options.minargs === undefined)
 			options.minargs = -1;
 		if (options.maxargs === undefined)
@@ -69,21 +71,22 @@ class CommandsHandler {
 		let command = new Command(name, callback, Object.seal({
 			guildonly: options.guildonly,
 			owner: options.owner,
+			admin: options.admin,
+			mod: options.mod,
+			dj: options.dj,
 			guilds: options.guilds,
 			channels: options.channels,
 			users: options.users,
 			permissions: options.permissions,
-			rolenames: options.rolenames,
 			nsfw: options.nsfw,
 			bots: options.bots,
-			vote: options.vote,
 			minargs: Math.round(Number(options.minargs)),
 			maxargs: Math.round(Number(options.maxargs)),
 			uses: Math.round(Number(options.uses)),
 			info: options.info,
 			delay: options.delay,
 			function: options.function,
-			override: options.override,
+			override: options.override
 		}), this);
 		that.commands.set(name, Object.seal(command));
 		return this;
@@ -241,14 +244,6 @@ class Command {
 							check.reasons.push("missing permissions");
 						}
 					}
-					if (msg.channel.type == "text" && this.options.rolenames.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
-						if (!player.rolenames.some(role => this.options.rolenames.includes(role.name.toLowerCase()))) {
-							check.valid = false;
-							if (check.reasons === undefined)
-								check.reasons = [];
-							check.reasons.push("missing role");
-						}
-					}
 					if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {
 						check.valid = false;
 						if (check.reasons === undefined)
@@ -261,12 +256,6 @@ class Command {
 							check.reasons = [];
 						check.reasons.push("bot user");
 					}
-					/*if (!(await msg.author.voted()) && this.options.vote) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("vote required");
-					}*/
 					if (this.options.minargs > 0 && nbargs < this.options.minargs) {
 						check.valid = false;
 						if (check.reasons === undefined)
