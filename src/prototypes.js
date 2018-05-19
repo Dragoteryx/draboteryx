@@ -80,6 +80,12 @@ Object.defineProperty(discord.Guild.prototype, "prefix", {
   }
 });
 
+Object.defineProperty(discord.Guild.prototype, "logsChannel", {
+	get: function() {
+		return this.channels.find(channel => channel.name.toLowerCase() == "drb-logs" && channel.type == "text");
+	}
+});
+
 Object.defineProperty(discord.Message.prototype, "reply", {
 	value: function(content, options) {
 		if (this.channel.type == "text")
@@ -118,8 +124,8 @@ Object.defineProperty(discord.GuildMember.prototype, "mod", {
 
 Object.defineProperty(discord.GuildMember.prototype, "dj", {
 	get: function() {
-		if (this.admin || this.mod) return true;
-		if (!this.guild.roles.some(role => role.name.toLowerCase() == "drb-dj")) return true;
+		if (this.admin) return true;
+		if (!this.guild.djRole) return true;
 		return this.roles.some(role => role.name == "drb-dj");
 	}
 });
@@ -230,5 +236,23 @@ Object.defineProperty(discord.Role.prototype, "embedInfo", {
 		.addField(this.guild.lang.commands.roleinfo.mentionable(), this.mentionable ? this.guild.lang.yes() : this.guild.lang.no(), true)
 		.addField(this.guild.lang.commands.roleinfo.external(), this.managed ? this.guild.lang.yes() : this.guild.lang.no(), true);
 		return info;
+	}
+});
+
+Object.defineProperty(discord.Guild.prototype, "adminRole", {
+	get: function() {
+		return this.roles.find(role => role.name.toLowerCase() == "drb-admin");
+	}
+});
+
+Object.defineProperty(discord.Guild.prototype, "modRole", {
+	get: function() {
+		return this.roles.find(role => role.name.toLowerCase() == "drb-mod");
+	}
+});
+
+Object.defineProperty(discord.Guild.prototype, "djRole", {
+	get: function() {
+		return this.roles.find(role => role.name.toLowerCase() == "drb-dj");
 	}
 });

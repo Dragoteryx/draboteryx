@@ -80,6 +80,7 @@
     "oneResult": "I only found one video so I'll play this one."
   },
   "types": {
+    "moderation": "Moderation commands",
     "utility": "Utility commands",
     "fun": "Fun commands",
     "music": "Music commands",
@@ -119,7 +120,7 @@
     "lang": {
       "syntax": "lang (langage)",
       "description": "Show the list of languages available, or set a new one.",
-      "list": "you can choose between any of those languages:",
+      "list": "you can choose between one of those languages:",
       "set": "Language set to `$LANG`.",
       "guildonly": "you can't set the language here.",
       "unknown": "this language doesn't exist or the bot doesn't support it."

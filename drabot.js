@@ -28,7 +28,7 @@ const langs = {
   en: new Lang("en"),
   fr: new Lang("fr")
 }
-const commandTypes = ["utility", "game", "fun", "misc", "music", "nsfw", "bot"];
+const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
 const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 
@@ -72,7 +72,10 @@ client.on("message", async msg => {
     }
   }
 
-  // COMMANDS
+  // on message callbacks
+  onMessageCallbacks.forEach(func => func(msg));
+
+  // commands
 	commands.check(msg, {prefix: msg.prefix}).then(res => {
 		if (debug) {
 			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
@@ -98,9 +101,6 @@ client.on("message", async msg => {
 	}).catch(err => {
 		console.error(err);
 	});
-
-  // ON MESSAGE CALLBACKS
-  onMessageCallbacks.forEach(func => func(msg));
 
 });
 
@@ -270,17 +270,19 @@ commands.set("prefix", async msg => {
   let args = msg.content.split(" ");
   if (args.length == 1)
     msg.reply(msg.lang.commands.prefix.current("$PREFIX", msg.prefix));
-  else if (msg.guild) {
-    if (!msg.member.admin) {
-      let admin = msg.lang.permissions.admin();
-      msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
-      return;
-    }
+  else {
     let prefix = args[1];
-    msg.guild._prefix = prefix;
-    msg.guild.sendData({prefix: prefix});
+    if (msg.guild) {
+      if (!msg.member.admin) {
+        let admin = msg.lang.permissions.admin();
+        msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
+      } else {
+        msg.guild._prefix = prefix;
+        msg.guild.sendData({prefix: prefix});
+      }
+    } else msg.channel._prefix = prefix;
     msg.channel.send(msg.lang.commands.prefix.set("$PREFIX", msg.prefix));
-  } else msg.reply(msg.lang.commands.prefix.guildonly());
+  }
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
 commands.set("lang", async msg => {
@@ -290,21 +292,34 @@ commands.set("lang", async msg => {
     for (let lang of Object.values(langs))
       str += "\n- " + lang.name() + "(`" + lang.id() + "`)";
     msg.reply(msg.lang.commands.lang.list() + str);
-  } else if (msg.guild) {
-    if (!msg.member.admin) {
-      let admin = msg.lang.permissions.admin();
-      msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
-      return;
-    }
+  } else {
     let lang = args[1];
-    if (Object.keys(langs).includes(lang)) {
-      msg.guild._lang = lang;
-      msg.guild.sendData({lang: lang});
+    if (!Object.keys(langs).includes(lang))
+      msg.reply(msg.lang.commands.lang.unknown());
+    else {
+      if (msg.guild) {
+        if (!msg.member.admin) {
+          let admin = msg.lang.permissions.admin();
+          msg.reply(msg.lang.permissions.error("$REQUIRED", admin, "$PREFIX", msg.prefix));
+        } else {
+          msg.guild._lang = lang;
+          msg.guild.sendData({lang: lang});
+        }
+      } else msg.channel._lang = lang;
       let name = msg.lang.name();
       msg.channel.send(msg.lang.commands.lang.set("$LANG", name));
-    } else msg.reply(msg.lang.commands.lang.unknown());
-  } else msg.reply(msg.lang.commands.lang.guildonly());
+    }
+  }
 }, {maxargs: 1, info: {show: true, type: "bot"}});
+
+// MODERATION
+commands.set("promote", async msg => {
+  null;
+}, {guildonly: true, info: {show: true, type: "moderation"}});
+
+commands.set("demote", async msg => {
+  null;
+}, {guildonly: true, info: {show: true, type: "moderation"}});
 
 // UTILS
 commands.set("serverinfo", async msg => {
@@ -426,11 +441,11 @@ commands.set("ytbplaylist", async msg => {
 		return;
 	}
 	if (!link.startsWith("https://www.youtube.com/playlist?list=")) {
-		msg.channel.send(msg.lang.ùusic.invalidYoutubePlaylistLink());
+		msg.channel.send(msg.lang.music.invalidYoutubePlaylistLink());
 		return;
 	}
 	let msg2 = await msg.channel.send(msg.lang.music.fetchingYoutubePlaylist("$LINK", link));
-	DrGMusic2.youtubePlaylist(link).then(async playlist => {
+	MusicHandler.youtubePlaylist(link).then(async playlist => {
 		msg2.edit(msg.lang.music.fetchingYoutubePlaylist2("$TITLE", playlist.title));
 		for (let video of playlist.videos) {
 			try {

@@ -79,6 +79,7 @@
     "oneResult": "Je n'ai trouvé qu'une seule vidéo donc je vais l'ajouter à la playlist."
   },
   "types": {
+    "moderation": "Commands de modération",
     "utility": "Commandes utilitaires",
     "fun": "Commandes fun",
     "music": "Commandes musicales",
