@@ -23,7 +23,8 @@ exports.stringToMembers = async (str, guild) => {
 			member = [];
 		else
 			member = [member];
-	} else member = guildFetched.members.findAll("displayName",str);
+	} else member = guildFetched.members.findAll("displayName", str);
+	return member;
 }
 
 exports.stringToChannels = (str, guild) => {

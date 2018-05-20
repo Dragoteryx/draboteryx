@@ -124,11 +124,11 @@ function getPlaylist(guild, client) {
 	return {pl: pls.get(guild.id), first: bool};
 }
 
-const weakmapPrivates = new WeakMap();
+const privates = new WeakMap();
 function prv(object) {
-	if (!weakmapPrivates.has(object))
-		weakmapPrivates.set(object, {});
-	return weakmapPrivates.get(object);
+	if (!privates.has(object))
+		privates.set(object, {});
+	return privates.get(object);
 }
 
 //CLASSES

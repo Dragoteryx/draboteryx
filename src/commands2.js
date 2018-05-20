@@ -1,9 +1,9 @@
 const discord = require("discord.js");
-const weakmapPrivates = new WeakMap();
+const privates = new WeakMap();
 function prv(object) {
-	if (!weakmapPrivates.has(object))
-		weakmapPrivates.set(object, {});
-	return weakmapPrivates.get(object);
+	if (!privates.has(object))
+		privates.set(object, {});
+	return privates.get(object);
 }
 
 class CommandsHandler extends Map {
@@ -16,6 +16,7 @@ class CommandsHandler extends Map {
     let command = this.get(oldName);
     if (!command) return false;
     this.delete(oldName);
+		prv(command).name = newName;
     super.set(newName, command);
     return true;
   }
@@ -29,6 +30,9 @@ class CommandsHandler extends Map {
     let result = await command.check(msg);
     return {command: command, result: result};
   }
+	get array() {
+		return Array.from(this.values());
+	}
 }
 
 class Command {
@@ -40,8 +44,8 @@ class Command {
   get name() {
     return prv(this).name;
   }
-  set name(newn) {
-    prv(this).handler.rename(that.name, newn)
+  set name(newName) {
+    prv(this).handler.rename(that.name, newName);
   }
   async check(msg) {
     let reasons = [];

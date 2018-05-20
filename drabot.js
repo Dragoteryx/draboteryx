@@ -208,7 +208,7 @@ commands.set("help", msg => {
 	if (args.length == 0) {
 		let coms = [];
 		for (let command of commands.array)
-			if (command.options.info.show) coms.push({name: command.name, type: command.options.info.type});
+			if (command.options.info && command.options.info.show) coms.push({name: command.name, type: command.options.info.type});
 		let embed = tools.defaultEmbed();
 		embed.addField("Drabot " + msg.prefix + "help", msg.lang.commands.help.info("$PREFIX", msg.prefix));
 		for (let type of commandTypes) {
@@ -252,10 +252,6 @@ commands.set("permissions", async msg => {
 
 commands.set("reset", async msg => {
   if (msg.guild) {
-    if (!msg.member.admin) {
-      msg.reply(msg.lang.errors.adminOnlyCommand());
-      return;
-    }
     delete msg.guild._lang;
     delete msg.guild._prefix;
     await msg.guild.clearData();
@@ -263,7 +259,7 @@ commands.set("reset", async msg => {
     delete msg.channel._lang;
     delete msg.channel._prefix;
   } msg.channel.send("I've been reset to default values.\nLang: `English`\nPrefix: `/`");
-}, {maxargs: 0, info: {show: true, type: "bot"}});
+}, {admin: true, maxargs: 0, info: {show: true, type: "bot"}});
 
 commands.set("prefix", async msg => {
   let args = msg.content.split(" ");
@@ -312,11 +308,11 @@ commands.set("lang", async msg => {
 // MODERATION
 commands.set("promote", async msg => {
   null;
-}, {admin: true, guildonly: true, info: {show: true, type: "moderation"}});
+}, {admin: true, guildonly: true, info: {show: false, type: "moderation"}});
 
 commands.set("demote", async msg => {
   null;
-}, {admin: true, guildonly: true, info: {show: true, type: "moderation"}});
+}, {admin: true, guildonly: true, info: {show: false, type: "moderation"}});
 
 // UTILS
 commands.set("serverinfo", async msg => {
