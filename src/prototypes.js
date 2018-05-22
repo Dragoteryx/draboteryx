@@ -159,7 +159,8 @@ Object.defineProperty(discord.GuildMember.prototype, "embedInfo", {
 		if (this.voiceChannel !== undefined)
 			info.addField(this.guild.lang.commands.userinfo.connectedTo(), this.voiceChannel.name, true);
 		info.addField(this.guild.lang.commands.userinfo.joinedAt(), this.joinedAt.toUTCString())
-		.addField(this.guild.lang.commands.userinfo.admin(), this.admin ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true)
+		.addField(this.guild.lang.commands.userinfo.drabotPerms(), this.drabotPerms.join(" / "))
+		.addField(this.guild.lang.commands.userinfo.admin(), this.hasPermission("ADMINISTRATOR") ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true)
 		.addField(this.guild.lang.commands.userinfo.bot(), this.user.bot ? this.guild.lang.misc.yes() : this.guild.lang.misc.no(), true);
 		let stts = "";
 		if (this.presence.status == "online") stts += this.guild.lang.commands.userinfo.online();
@@ -300,3 +301,15 @@ Object.defineProperty(discord.Channel.prototype, "waitResponse", {
 		});
 	}
 });
+
+Object.defineProperty(discord.GuildMember.prototype, "drabotPerms", {
+	get: function() {
+		let perms = [];
+		if (this.user.owner) perms.push(this.guild.lang.misc.owner());
+		if (this.admin) perms.push(this.guild.lang.misc.admin());
+		if (this.mod) perms.push(this.guild.lang.misc.mod());
+		if (this.dj) perms.push(this.guild.lang.misc.dj());
+		if (this.admin) perms = perms.filter(perm => ![this.guild.lang.misc.mod(), this.guild.lang.misc.dj()].includes(perm));
+		return perms;
+	}
+})

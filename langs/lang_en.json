@@ -7,7 +7,11 @@
     "test2": "This is only available in english",
     "yes": "Yes",
     "no": "No",
-    "noResults": "Sorry but I did not find anything."
+    "noResults": "Sorry but I did not find anything.",
+    "owner": "Owner",
+    "admin": "Admin",
+    "mod": "Moderator",
+    "dj": "DJ"
   },
   "errors": {
     "guildOnlyCommand": "You can't use this command in private channels.",
@@ -250,6 +254,7 @@
       "currentlyPlaying": "Currently playing",
       "avatarURL": "Avatar URL",
       "defaultRole": "everyone (default role)",
+      "drabotPerms": "Bot permissions",
       "noUser": "This user doesn't exist."
     },
     "serverinfo": {
@@ -306,6 +311,10 @@
       "homepage": "Homepage",
       "invite": "Invite link",
       "dblPage": "Discordbots.org page"
+    },
+    "rand": {
+      "syntax": "$PREFIXrand [min] [max]",
+      "description": "Obtain a random number between `min` and `max`."
     }
   }
 }

@@ -36,7 +36,7 @@ class CommandsHandler extends Map {
 }
 
 class Command {
-  constructor(name, callback, options) {
+  constructor(name, callback = msg => console.dir(msg, {colors: true}), options = {}) {
     prv(this).name = name;
     this.callback = callback;
     this.options = options;
@@ -45,10 +45,11 @@ class Command {
     return prv(this).name;
   }
   set name(newName) {
-    prv(this).handler.rename(that.name, newName);
+    prv(this).handler.rename(prv(this).name, newName);
   }
   async check(msg) {
     let reasons = [];
+		let returned = null;
     let options = this.options;
     let args = msg.content.split(" ").slice(1).length;
     if (options.owner && !msg.author.owner)
@@ -82,9 +83,9 @@ class Command {
     let valid = reasons.length == 0;
     if (valid) {
       options.uses -= options.uses > 0 ? 1 : 0;
-      await this.callback(msg);
+      returned = await this.callback(msg);
     }
-    return {valid: valid, reasons: reasons};
+    return {valid: valid, reasons: reasons, returned: returned};
   }
   static get defaultOptions() {
     return {

@@ -6,7 +6,11 @@
     "test": "Ceci est un test.",
     "yes": "Oui",
     "no": "Non",
-    "noResults": "Désolé mais je n'ai rien trouvé."
+    "noResults": "Désolé mais je n'ai rien trouvé.",
+    "owner": "Owner",
+    "admin": "Admin",
+    "mod": "Modérateur",
+    "dj": "DJ"
   },
   "errors": {
     "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
@@ -249,6 +253,7 @@
       "currentlyPlaying": "En train de jouer à",
       "avatarURL": "URL de l'avatar",
       "defaultRole": "everyone (rôle par défaut)",
+      "drabotPerms": "Permissions du bot",
       "noUser": "Cet utilisateur n'existe pas."
     },
     "serverinfo": {
@@ -305,6 +310,10 @@
       "homepage": "Page d'accueil",
       "invite": "Lien d'invitation",
       "dblPage": "Page Discordbots.org"
+    },
+    "rand": {
+      "syntax": "$PREFIXrand [min] [max]",
+      "description": "Obtenir un nombre random entre `min` et `max`."
     }
   }
 }

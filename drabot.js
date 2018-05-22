@@ -31,7 +31,7 @@ const langs = {
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
 const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
-
+const vars = {};
 // GLOBALS
 let connected = false;
 let debug = false;
@@ -40,6 +40,7 @@ let debug = false;
 exports.client = client;
 exports.commands = commands;
 exports.langs = langs;
+exports.vars = vars;
 
 // LISTEN TO MESSAGES
 client.on("message", async msg => {
@@ -690,6 +691,14 @@ commands.set("decrypt", async msg => {
 		else msg.channel.send(msg.lang.commands.decrypt.decrypted("$MESSAGE", message));
 	}
 }, {minargs: 1, info: {show: true, type: "misc"}});
+
+commands.set("rand", msg => {
+  let args = msg.content.split(" ");
+  let min = Number(args[1]);
+  let max = Number(args[2]);
+  let diff = max - min;
+  msg.reply("`" + Math.floor(Math.random()*diff)+min + "`");
+}, {minargs: 2, maxargs: 2, info: {show: true, type: "misc"}});
 
 // FUNCTIONS
 function login() {
