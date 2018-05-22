@@ -30,8 +30,10 @@ class CommandsHandler extends Map {
     let result = await command.check(msg);
     return {command: command, result: result};
   }
-	get array() {
-		return Array.from(this.values());
+	*[Symbol.iterator]() {
+		let commands = Array.from(this.values());
+		for (let command of commands)
+			yield command;
 	}
 }
 

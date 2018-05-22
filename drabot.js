@@ -208,7 +208,7 @@ commands.set("help", msg => {
 	let args = msg.content.split(" ").slice(1);
 	if (args.length == 0) {
 		let coms = [];
-		for (let command of commands.array)
+		for (let command of commands)
 			if (command.options.info && command.options.info.show) coms.push({name: command.name, type: command.options.info.type});
 		let embed = tools.defaultEmbed();
 		embed.addField("Drabot " + msg.prefix + "help", msg.lang.commands.help.info("$PREFIX", msg.prefix));
