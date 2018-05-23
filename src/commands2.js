@@ -9,7 +9,7 @@ function prv(object) {
 class CommandsHandler extends Map {
   set(name, callback, options = {}) {
     options = Object.assign(Command.defaultOptions, options);
-    let command = new Command(name, callback, options);
+    let command = new Command(name, callback, options, this);
     return super.set(name, command);
   }
   rename(oldName, newName) {
@@ -22,11 +22,11 @@ class CommandsHandler extends Map {
   }
   async check(msg) {
     if (!msg.content.startsWith(msg.prefix))
-      return {command: null, result: {valid: false, reasons: ["no prefix"]}};
+      return {command: null, result: {valid: false, reasons: ["no prefix"], returned: null}};
     let name = msg.content.split(" ").shift().replace(msg.prefix, "");
-    if (!this.has(name))
-      return {command: null, result: {valid: false, reasons: ["unknown command"]}};
-    let command = this.get(name);
+		let command = this.get(name);
+    if (!command)
+      return {command: null, result: {valid: false, reasons: ["unknown command"], returned: null}};
     let result = await command.check(msg);
     return {command: command, result: result};
   }
@@ -38,8 +38,9 @@ class CommandsHandler extends Map {
 }
 
 class Command {
-  constructor(name, callback = msg => console.dir(msg, {colors: true}), options = {}) {
+  constructor(name, callback = msg => console.dir(msg, {colors: true}), options = {}, handler) {
     prv(this).name = name;
+		prv(this).handler = handler;
     this.callback = callback;
     this.options = options;
   }

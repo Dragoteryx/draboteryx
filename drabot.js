@@ -44,65 +44,61 @@ exports.vars = vars;
 
 // LISTEN TO MESSAGES
 client.on("message", async msg => {
+  try {
 
-  // set prefix and lang
-  if (msg.guild) {
-    if (!msg.guild.fetched) {
-      try {
-        let res = await msg.guild.fetchData();
-        if (res.lang) msg.guild._lang = res.lang;
-        if (res.prefix) msg.guild._prefix = res.prefix;
-        msg.guild.fetched = true;
-      } catch(err) {}
+    // set prefix and lang
+    if (msg.guild) {
+      if (!msg.guild.fetched) {
+        try {
+          let res = await msg.guild.fetchData();
+          if (res.lang) msg.guild._lang = res.lang;
+          if (res.prefix) msg.guild._prefix = res.prefix;
+          msg.guild.fetched = true;
+        } catch(err) {}
+      }
+      if (!msg.author.bot) {
+        if (!msg.author.dmChannel)
+          await msg.author.createDM();
+        msg.author.dmChannel._lang = msg.lang.id();
+        msg.author.dmChannel._prefix = msg.prefix;
+      }
     }
-    if (!msg.author.bot) {
-      if (!msg.author.dmChannel)
-        await msg.author.createDM();
-      msg.author.dmChannel._lang = msg.lang.id();
-      msg.author.dmChannel._prefix = msg.prefix;
+
+    // replace tag with prefix
+    for (let alias of pfAliases) {
+      if (msg.content.startsWith(alias) && !msg.usedPrefixAlias) {
+        msg.content = msg.content.replace(alias, msg.prefix);
+        msg.usedPrefixAlias = true;
+      }
     }
-  }
 
-  // replace tag with prefix
-  for (let alias of pfAliases) {
-    if (msg.content.startsWith(alias) && !msg.usedPrefixAlias) {
-      msg.content = msg.content.replace(alias, msg.prefix);
-      msg.usedPrefixAlias = true;
-    }
-  }
+    // on message callbacks
+    msg.channel.onMsgCallbacks.forEach(func => func(msg));
 
-  // on message callbacks
-  msg.channel.onMsgCallbacks.forEach(func => func(msg));
-
-  // commands
-	commands.check(msg).then(res => {
-		if (debug) {
-			if (res.result.reasons !== undefined && (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))) return;
-			console.log("[DEBUG] " + msg.content);
-			console.log(res);
-		}
-		if (!res.result.valid) {
-			if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
-				return;
-			else if (res.result.reasons.includes("guild only command"))
-				msg.channel.send(msg.lang.errors.guildOnlyCommand());
-			else if (res.result.reasons.includes("owner only command"))
-				msg.channel.send(msg.lang.errors.ownerOnlyCommand());
+    // commands
+  	let res = await commands.check(msg);
+  	if (!res.result.valid) {
+  		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
+  			return;
+  		else if (res.result.reasons.includes("guild only command"))
+  			msg.channel.send(msg.lang.errors.guildOnlyCommand());
+  		else if (res.result.reasons.includes("owner only command"))
+  			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
       else if (res.result.reasons.includes("admin only command"))
-				msg.channel.send(msg.lang.errors.adminOnlyCommand());
+  			msg.channel.send(msg.lang.errors.adminOnlyCommand());
       else if (res.result.reasons.includes("mod only command"))
-				msg.channel.send(msg.lang.errors.modOnlyCommand());
+  			msg.channel.send(msg.lang.errors.modOnlyCommand());
       else if (res.result.reasons.includes("dj only command"))
-				msg.channel.send(msg.lang.errors.djOnlyCommand());
-			else if (res.result.reasons.includes("nsfw"))
-				msg.channel.send(msg.lang.errors.nsfwCommand());
-			else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
-				msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", res.command.name));
-		}
-	}).catch(err => {
-		console.error(err);
-	});
+  			msg.channel.send(msg.lang.errors.djOnlyCommand());
+  		else if (res.result.reasons.includes("nsfw"))
+  			msg.channel.send(msg.lang.errors.nsfwCommand());
+  		else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
+  			msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", res.command.name));
+  	}
 
+  } catch(err) {
+    funcs.logError(msg, err);
+  }
 });
 
 // EVENTS
@@ -122,13 +118,13 @@ client.on("ready", async () => {
     }
     let owner = (await client.fetchApplication()).owner;
 		connected = true;
-		console.log("[DRABOT] Connected!");
+		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
 		if (process.env.HEROKU) {
-			console.log("(Heroku launch)");
+			if (!client.shard) console.log("(Heroku launch)");
       if (owner.presence.status == "online")
 			  owner.send("Heroku launch complete.");
 		} else {
-			console.log("(local launch)");
+			if (!client.shard) console.log("(local launch)");
       if (owner.presence.status == "online")
 			  owner.send("Local launch complete.");
 		}
@@ -136,8 +132,7 @@ client.on("ready", async () => {
 	}
 });
 client.on("error", err => {
-	console.log("[DRABOT] Error.");
-	console.error(err);
+	console.error("[ERROR]\n", err);
 	connected = false;
 	login();
 });
@@ -191,11 +186,11 @@ commands.set("exec", async msg => {
 			val = await val;
 			str = "Executed (Promise):\n";
 		}
-		if (process.env.HEROKU !== undefined)
-			console.dir(val);
-		else
-			console.dir(val, {colors: true});
-		let tosend = val instanceof Function ? val : tools.stringifyObject(val);
+		if (!process.env.HEROKU) {
+      console.log("[EXEC]");
+      console.dir(val, {colors: true});
+    }
+		let tosend = tools.stringifyObject(val);
 		msg.channel.send(str + tosend);
 		msg.react("✅");
 	} catch(err) {
@@ -702,9 +697,9 @@ commands.set("rand", msg => {
 
 // FUNCTIONS
 function login() {
-	console.log("[DRABOT] Trying to connect to Discord servers.");
+	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connecting." : "[INFO] Connecting.");
 	client.login(process.env.DISCORDTOKEN).catch(async () => {
-		console.log("[DRABOT] Connection failed. Retrying in 60 seconds.");
+		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connection failed." : "[INFO] Connection failed.");
 		await tools.sleep(60000);
 		login();
 	});

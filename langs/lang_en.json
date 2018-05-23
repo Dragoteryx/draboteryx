@@ -300,7 +300,7 @@
       "description": "Info about the bot.",
       "uptime": "Uptime: `$UPTIME`",
       "servers": "`$NB` servers",
-      "channels": "`$NB` channels (`$NBTEXT` text, `$NBVOICE` voice)",
+      "channels": "`$NB` channels",
       "users": "`$NB` users",
       "tag": "Discord tag",
       "author": "Author",
@@ -310,7 +310,8 @@
       "stats": "Stats",
       "homepage": "Homepage",
       "invite": "Invite link",
-      "dblPage": "Discordbots.org page"
+      "dblPage": "Discordbots.org page",
+      "sharding": "`$NB` shards (shard `$ID`)"
     },
     "rand": {
       "syntax": "$PREFIXrand [min] [max]",

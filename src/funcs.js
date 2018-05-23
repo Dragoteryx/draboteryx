@@ -8,8 +8,7 @@ exports.logError = (msg, err) => {
 	drabot.client.fetchApplication().then(async app => {
 		let str = msg.lang.errors.unknown("$OWNERTAG", app.owner.tag, "$PREFIX", msg.prefix) + "```\n" + err.stack;
 		msg.channel.send(str.substring(0, 1995) + "\n```");
-		console.log("[ERROR]");
-		console.error(err);
+		console.error("[ERROR] msg => '" + msg.content + "'\n", err);
 	}).catch(console.error);
 }
 
@@ -30,15 +29,20 @@ exports.musicErrors = (msg, err) => {
 
 exports.showInfo = async msg => {
 	let stats = "";
+	let guilds = drabot.client.shard ?
+	(await drabot.client.shard.fetchClientValues("guilds.size")).reduce((acc, val) => acc += val, 0)
+	: drabot.client.guilds.size;
+	let channels = drabot.client.shard ?
+	(await drabot.client.shard.fetchClientValues("channels.size")).reduce((acc, val) => acc += val, 0)
+	: drabot.client.channels.size;
+	let users = drabot.client.shard ?
+	(await drabot.client.shard.fetchClientValues("users.size")).reduce((acc, val) => acc += val, 0)
+	: drabot.client.users.size;
 	stats += msg.lang.commands.about.uptime("$UPTIME", tools.parseTimestamp(drabot.client.uptime).simple) + "\n";
-	stats += msg.lang.commands.about.servers("$NB", Array.from(drabot.client.guilds.keys()).length) + "\n";
-	let channels = Array.from(drabot.client.channels.values());
-	let nbv = 0;
-	for (let channel of channels)
-		if (channel.type == "voice")
-			nbv++;
-	stats += msg.lang.commands.about.channels("$NBTEXT", channels.length - nbv, "$NBVOICE", nbv, "$NB", channels.length) + "\n";
-	stats += msg.lang.commands.about.users("$NB", Array.from(drabot.client.users.keys()).length);
+	stats += msg.lang.commands.about.servers("$NB", guilds) + "\n";
+	stats += msg.lang.commands.about.channels("$NB", channels) + "\n";
+	stats += msg.lang.commands.about.users("$NB", users);
+	if (drabot.client.shard) stats += "\n" + msg.lang.commands.about.sharding("$NB", drabot.client.shard.count, "$ID", drabot.client.shard.id);
 	let info = tools.defaultEmbed()
 	.setThumbnail(drabot.client.user.avatarURL)
 	.addField(msg.lang.commands.about.tag(), drabot.client.user.tag, true);

@@ -57,7 +57,8 @@ exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 exports.stringifyObject = object => {
-	return "```js\n" + util.inspect(object, {depth: 0, breakLength: 0}).substring(0, 1950) + "\n```";
+	if (object instanceof Function) return "```js\n" + object.toString().substring(0, 1950) + "\n```";
+	else return "```js\n" + util.inspect(object, {depth: 0, breakLength: 0}).substring(0, 1950) + "\n```";
 }
 
 exports.parseTimestamp = timestamp => {
