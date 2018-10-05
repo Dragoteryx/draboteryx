@@ -1,302 +1,115 @@
-"use strict";
-
 const discord = require("discord.js");
-
-const weakmapPrivates = new WeakMap();
+const privates = new WeakMap();
 function prv(object) {
-	if (!weakmapPrivates.has(object))
-		weakmapPrivates.set(object, {});
-	return weakmapPrivates.get(object);
+	if (!privates.has(object))
+		privates.set(object, {});
+	return privates.get(object);
 }
 
-const skey = Math.random();
-
-class CommandsHandler {
-	constructor() {
-		prv(this).commands = new Map();
-		this.defaultPrefix;
-		this.owners = [];
-	}
-	set(name, callback, opts, key) {
-		let that = prv(this);
-		if (name === undefined)
-			throw new Error("parameter 'names' is undefined");
-		if (callback === undefined)
-			throw new Error("parameter 'callback' is undefined");
-		if (callback instanceof Command && callback.name == name && key == skey) {
-			that.commands.set(name, callback);
-			return;
-		}
-		if (typeof name != "string")
-			throw new TypeError("'name' must be a String");
-		if (!(callback instanceof Function))
-			throw new TypeError("'callback' must be a Function");
-		let options = opts !== undefined ? opts : {};
-		if (options.override === undefined)
-			options.override = false;
-		if (options.guildonly === undefined)
-			options.guildonly = false;
-		if (options.owner === undefined)
-			options.owner = false;
-		if (options.admin === undefined)
-			options.admin = false;
-		if (options.mod === undefined)
-			options.mod = false;
-		if (options.dj === undefined)
-			options.dj = false;
-		if (options.guilds === undefined)
-			options.guilds = [];
-		if (options.channels === undefined)
-			options.channels = [];
-		if (options.users === undefined)
-			options.users = [];
-		if (options.permissions === undefined)
-			options.permissions = [];
-		if (options.nsfw === undefined)
-			options.nsfw = false;
-		if (options.bots === undefined)
-			options.bots = false;
-		if (options.minargs === undefined)
-			options.minargs = -1;
-		if (options.maxargs === undefined)
-			options.maxargs = -1;
-		if (options.uses === undefined)
-			options.uses = -1;
-		if (options.info === undefined)
-			options.info = {};
-		if (options.delay === undefined)
-			options.delay = 0;
-		if (options.function === undefined)
-			options.function = () => true;
-		let command = new Command(name, callback, Object.seal({
-			guildonly: options.guildonly,
-			owner: options.owner,
-			admin: options.admin,
-			mod: options.mod,
-			dj: options.dj,
-			guilds: options.guilds,
-			channels: options.channels,
-			users: options.users,
-			permissions: options.permissions,
-			nsfw: options.nsfw,
-			bots: options.bots,
-			minargs: Math.round(Number(options.minargs)),
-			maxargs: Math.round(Number(options.maxargs)),
-			uses: Math.round(Number(options.uses)),
-			info: options.info,
-			delay: options.delay,
-			function: options.function,
-			override: options.override
-		}), this);
-		that.commands.set(name, Object.seal(command));
-		return this;
-	}
-	has(name) {
-		if (name === undefined)
-			throw new Error("parameter 'command' is undefined");
-		if (name instanceof Command)
-			name = name.name;
-		if (typeof name != "string")
-			throw new TypeError("'command' must be a String or a Command");
-		return prv(this).commands.has(name);
-	}
-	get(name) {
-		if (name instanceof Command)
-			name = name.name;
+class CommandsHandler extends Map {
+  set(name, callback, options = {}) {
+    options = Object.assign(Command.defaultOptions, options);
+    let command = new Command(name, callback, options, this);
+    return super.set(name, command);
+  }
+  rename(oldName, newName) {
+    let command = this.get(oldName);
+    if (!command) return false;
+    this.delete(oldName);
+		prv(command).name = newName;
+    super.set(newName, command);
+    return true;
+  }
+  async check(msg) {
+    if (!msg.content.startsWith(msg.prefix))
+      return {command: null, result: {valid: false, reasons: ["no prefix"], returned: null}};
+    let name = msg.content.split(" ").shift().replace(msg.prefix, "");
 		if (!this.has(name))
-			throw new Error("unknown command");
-		return prv(this).commands.get(name);
-	}
-	remove(name) {
-		if (name instanceof Command)
-			name = name.name;
-		if (!this.has(name))
-			throw new Error("unknown command");
-		prv(this).commands.delete(name);
-		return this;
-	}
-	check(msg, options = {}) {
-		let that = prv(this);
-		return new Promise((resolve, reject) => {
-			if (msg === undefined)
-				throw new Error("parameter 'message' is missing");
-			if (!(msg instanceof discord.Message))
-				throw new TypeError("'message' must be a Discord Message");
-			if (options.exec === undefined)
-				options.exec = true;
-			if (options.prefix === undefined)
-				options.prefix = this.defaultPrefix;
-			let name = msg.content.split(" ").shift().replace(options.prefix, "");
-			if (!this.has(name))
-				resolve(Object.freeze({command: undefined, result: {valid: false, reasons: ["unknown command"]}}));
-			else {
-				let command = this.get(name);
-				command.check(msg, options).then(res => {
-					resolve({command: command, result: res});
-				}).catch(reject);
-			}
-		});
-	}
-	get array() {
-		return Array.from(prv(this).commands.values());
+      return {command: null, result: {valid: false, reasons: ["unknown command"], returned: null}};
+		let command = this.get(name);
+    let result = await command.check(msg);
+    return {command: command, result: result};
+  }
+	*[Symbol.iterator]() {
+		let commands = Array.from(this.values());
+		for (let command of commands)
+			yield command;
 	}
 }
 
 class Command {
-	constructor(name, callback, options, handler) {
-		this.callback = callback;
-		this.options = options;
-		this.active = true;
-		prv(this).name = name;
+  constructor(name, callback = msg => console.dir(msg, {colors: true}), options = {}, handler) {
+    prv(this).name = name;
 		prv(this).handler = handler;
-	}
-	get name() {
-		return prv(this).name;
-	}
-	set name(newn) {
-		if (newn === undefined)
-			throw new Error("parameter 'newName' is missing");
-		if (typeof newn != "string")
-			throw new TypeError("'newName' must be a String");
-		let that = prv(this);
-		that.handler.deleteCommand(that.name);
-		that.name = newn;
-		that.handler.setCommand(newn, this, {}, skey);
-	}
-	check(msg, options) {
-		let that = prv(this);
-		return new Promise(async (resolve, reject) => {
-			try {
-				if (msg === undefined)
-					reject(Error("parameter 'message' is missing"));
-				else if (!(msg instanceof discord.Message))
-					reject(new TypeError("'message' must be a Message"));
-				else {
-					if (options === undefined)
-						options = {};
-					if (options.exec === undefined)
-						options.exec = true;
-					if (options.prefix === undefined)
-						options.prefix = that.handler.defaultPrefix;
-					let nbargs = msg.content.split(" ").slice(1).length;
-					let check = {valid: true, nbargs: nbargs};
-					if (!msg.content.startsWith(options.prefix)) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("no prefix");
-					}
-					let name = msg.content.replace(options.prefix, "").split(" ")[0];
-					if (that.name != name) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("wrong name");
-					}
-					if (!this.active) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("command disabled");
-					}
-					if (this.options.guildonly && msg.channel.type != "text") {
-						console.log("oui");
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("guild only command");
-					}
-					if (!that.handler.owners.includes(msg.author.id) && this.options.owner) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("owner only command");
-					}
-					if (msg.channel.type == "text" && this.options.guilds.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
-						if (!this.options.guilds.includes(msg.guild.id)) {
-							check.valid = false;
-							if (check.reasons === undefined)
-								check.reasons = [];
-							check.reasons.push("ignored guild");
-						}
-					}
-					if (this.options.channels.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
-						if (!this.options.channels.includes(msg.channel.id)) {
-							check.valid = false;
-							if (check.reasons === undefined)
-								check.reasons = [];
-							check.reasons.push("ignored channel");
-						}
-					}
-					if (this.options.users.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
-						if (!this.options.users.includes(msg.author.id)) {
-							check.valid = false;
-							if (check.reasons === undefined)
-								check.reasons = [];
-							check.reasons.push("ignored user");
-						}
-					}
-					if (msg.channel.type == "text" && this.options.permissions.length != 0 && !(that.handler.owners.includes(msg.author.id) && this.options.override)) {
-						if (!msg.member.hasPermission(this.options.permissions, false, true, true)) {
-							check.valid = false;
-							if (check.reasons === undefined)
-								check.reasons = [];
-							check.reasons.push("missing permissions");
-						}
-					}
-					if (msg.channel.type == "text" && !msg.channel.nsfw && this.options.nsfw) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("nsfw");
-					}
-					if (msg.author.bot && !this.options.bots) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("bot user");
-					}
-					if (this.options.minargs > 0 && nbargs < this.options.minargs) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("min arguments: " + this.options.minargs);
-					}
-					if (this.options.maxargs >= 0 && nbargs > this.options.maxargs) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("max arguments: " + this.options.maxargs);
-					}
-					if (this.options.uses == 0) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("uses");
-					}
-					let funcres = this.options.function(msg);
-					if (funcres instanceof Promise)
-						funcres = await funcres;
-					if (!funcres) {
-						check.valid = false;
-						if (check.reasons === undefined)
-							check.reasons = [];
-						check.reasons.push("boolean function");
-					}
-					if (options.exec && check.valid) {
-						let execute = this.callback(msg, check.reasons);
-						if (execute instanceof Promise)
-							await execute;
-					}
-					resolve(Object.freeze(check));
-				}
-			} catch(err) {
-				reject(err);
-				return;
-			}
-		});
-	}
+    this.callback = callback;
+    this.options = options;
+  }
+  get name() {
+    return prv(this).name;
+  }
+  set name(newName) {
+    prv(this).handler.rename(prv(this).name, newName);
+  }
+  async check(msg) {
+    let reasons = [];
+		let returned = null;
+    let options = this.options;
+    let args = msg.content.split(" ").slice(1);
+		let nbArgs = args.length;
+    if (options.owner && !msg.author.owner)
+      reasons.push("owner only command");
+    if (msg.guild && options.admin && !msg.member.admin)
+      reasons.push("admin only command");
+    if (msg.guild && options.mod && !msg.member.mod)
+      reasons.push("mod only command");
+    if (msg.guild && options.dj && !msg.member.dj)
+      reasons.push("dj only command");
+    if (options.guildonly && !msg.guild)
+      reasons.push("guild only command");
+    if (msg.guild && options.guilds.length != 0 && !options.guilds.includes(msg.guild.id))
+      reasons.push("ignored guild");
+    if (options.channels.length != 0 && !options.channels.includes(msg.channel.id))
+      reasons.push("ignored channel");
+    if (options.users.length != 0 && !options.users.includes(msg.author.id))
+      reasons.push("ignored user");
+    if (msg.guild && options.nsfw && !msg.channel.nsfw)
+      reasons.push("nsfw");
+    if (!options.bot && msg.author.bot)
+      reasons.push("bot");
+    if (nbArgs < options.minargs)
+      reasons.push("min arguments: " + this.options.minargs);
+    if (nbArgs > options.maxargs)
+      reasons.push("max arguments: " + this.options.maxargs);
+    if (options.uses == 0)
+      reasons.push("uses");
+    if (!(await options.function(msg)))
+      reasons.push("boolean function");
+    let valid = reasons.length == 0;
+    if (valid) {
+      options.uses -= options.uses > 0 ? 1 : 0;
+      returned = await this.callback(msg, args);
+    }
+    return {valid: valid, reasons: reasons, returned: returned};
+  }
+  static get defaultOptions() {
+    return {
+      owner: false,
+			admin: false,
+			mod: false,
+			dj: false,
+			guildonly: false,
+			guilds: [],
+			channels: [],
+			users: [],
+			permissions: [],
+			nsfw: false,
+			bots: false,
+			minargs: 0,
+			maxargs: Infinity,
+			uses: -1,
+			function: () => true
+		};
+  }
 }
 
-// EXPORTS
 module.exports = CommandsHandler;

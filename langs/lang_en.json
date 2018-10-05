@@ -11,7 +11,8 @@
     "owner": "Owner",
     "admin": "Admin",
     "mod": "Moderator",
-    "dj": "DJ"
+    "dj": "DJ",
+    "merged": "This command has been merged with the `$PREFIX$COMMAND` command."
   },
   "errors": {
     "guildOnlyCommand": "You can't use this command in private channels.",
@@ -24,60 +25,11 @@
     "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
   },
   "music": {
-    "join": "Hi! o/",
-    "leave": "Bye!",
-    "addingToPlaylist": "Adding `$LINK` to the playlist.",
-    "addedToPlaylist": "`$TITLE` by `$AUTHOR` has been added to the playlist.",
-    "by": "by",
-    "videoUnavailable": "This video is unavailable.",
-    "unexpectedFormat": "This video ID doesn't match the expected format.",
-    "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
-    "queryChoice": "So, which one do you want to listen to?",
-    "queryNumber": "You need to enter an index between `1` and `$NBVIDEOS`.",
-    "noResFirstOne": "You didn't respond in time, so I'll play the first one.",
-    "emptyPlaylist": "The playlist is empty.",
-    "memberNotInVoiceChannel": "You're not in a voice channel.",
-  	"voiceChannelNotJoinable": "I can't join this voice channel.",
-  	"voiceChannelNotSpeakable": "I'm not allowed to speak in this voice channel.",
-  	"voiceChannelFull": "This voice channel is full.",
-  	"guildAlreadyJoined": "I'm already in a voice channel.",
-  	"notConnected": "I am not in a voice channel.",
-    "askToJoin": "You can ask me to join you using `$PREFIXjoin`.",
-  	"notPlaying": "I am not playing any music at the moment.",
-  	"invalidMusicIndex": "There is no music with that index in the playlist.",
-    "unknownWebsite": "Sorry but I don't know this website.",
-  	"invalidVolume": "The volume must be above `0`.",
+    "notConnected": "I am not in a voice channel.",
+    "notPlaying": "I am not playing any music at the moment.",
     "nowPlaying": "Now playing: `$TITLE` by `$AUTHOR`. (requested by `$MEMBER`)",
     "nowPlayingFile": "Now playing: `$TITLE`. (requested by `$MEMBER`)",
-    "clientMoved": "I moved to `$CHANNEL`.",
-    "memberJoined": "Someone joined, staying for a little longer.",
-    "leaveInactivity": "The voice channel is empty, I will leave in `one minute`.",
-    "invalidYoutubePlaylistLink": "This playlist link is not valid.",
-    "fetchingYoutubePlaylist": "Fetching the playlist `$LINK` from Youtube.",
-    "fetchingYoutubePlaylist2": "Fetching the playlist `$TITLE` from Youtube.",
-    "youtubePlaylistFetched": "The playlist `$TITLE` has been added to the current playlist.",
-    "removedFromPlaylist": "`$TITLE` has been removed from the playlist.",
-    "skipped": "The current music (`$TITLE`) has been skipped.",
-    "clear1": "`1` music has been removed from the playlist.",
-    "clearMore": "`$NB` musics have been removed from the playlist.",
-    "shuffled": "The playlist has been shuffled.",
-    "loopingOn": "The current music (`$TITLE`) is now looping.",
-    "loopingOff": "The current music is no longer looping.",
-    "playlistLoopingOn": "The playlist is now looping.",
-    "playlistLoopingOff": "The playlist is no longer looping.",
-    "paused": "The music has been paused.",
-    "resumed": "The music has been resumed.",
-    "volumeSet": "The volume has been set to `$VOLUME%`.",
-    "title": "Title",
-    "author": "Author",
-    "description": "Description",
-    "link": "Link",
-    "requestedBy": "Requested by",
-    "fileName": "File name",
-    "playingDisplay": "Playing:",
-    "playlistDisplay": "Here's the playlist:",
-    "playlistDisplayCurrent": "Use `$PREFIXcurrent` to have information about the current music.",
-    "oneResult": "I only found one video so I'll play this one."
+    "emptyPlaylist": "The playlist is empty."
   },
   "types": {
     "moderation": "Moderation commands",
@@ -127,64 +79,103 @@
       "unknown": "this language doesn't exist or the bot doesn't support it."
     },
     "join": {
-      "syntax": "$PREFIXjoin || $PREFIXjoin stay",
-      "description": "Join a voice channel. The `stay` option makes the bot not leave the voice channel when it is empty."
+      "syntax": "$PREFIXjoin",
+      "description": "Join a voice channel.",
+      "notInVoiceChannel": "You're not in a voice channel.",
+      "notJoinable": "I can't join this voice channel.",
+      "notSpeakable": "I'm not allowed to speak in this voice channel.",
+      "already": "I'm already in this voice channel.",
+      "hello": "Hi! o/"
     },
     "leave": {
       "syntax": "$PREFIXleave",
-      "description": "Leave a voice channel."
+      "description": "Leave a voice channel.",
+      "bye": "Bye!",
+      "inactivity": "Everyone left and the playlist is empty, bye!"
     },
     "request": {
-      "syntax": "$PREFIXrequest [Youtube link]",
-      "description": "Request a Youtube video using a link."
-    },
-    "query": {
-      "syntax": "$PREFIXquery [Youtube query]",
-      "description": "Search for a Youtube video."
-    },
-    "ytbplaylist": {
-      "syntax": "$PREFIXytbplaylist [Youtube playlist link]",
-      "description": "Request a Youtube playlist."
-    },
-    "plremove": {
-      "syntax": "$PREFIXplremove [id]",
-      "description": "Remove a music from the playlist."
+      "syntax": "$PREFIXrequest [Youtube video link || Youtube playlist link || Youtube query]",
+      "description": "Request a Youtube video using a link or a query.",
+      "adding": "Adding `$LINK` to the playlist.",
+      "added": "`$TITLE` by `$AUTHOR` has been added to the playlist.",
+      "unexpectedFormat": "This video ID doesn't match the expected format.",
+      "videoUnavailable": "This video is unavailable.",
+      "notSupported": "Sorry but this website is not supported.",
+      "fetchingYoutubePlaylist": "Fetching the playlist `$LINK` from Youtube.",
+      "fetchingYoutubePlaylistTitle": "Fetching the playlist `$TITLE` from Youtube.",
+      "youtubePlaylistFetchError": "Something went wrong when fetching the playlist.\nIt's either unavailable or doesn't exist.",
+      "youtubePlaylistFetched": "The playlist `$TITLE` has been added to the current playlist. `$NB` videos couldn't be added.",
+      "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
+      "queryError": "Something went wrong while searching on Youtube."
     },
     "skip": {
       "syntax": "$PREFIXskip",
-      "description": "Skip the current music."
+      "description": "Skip the current music.",
+      "skipped": "The current music (`$TITLE`) has been skipped."
+    },
+    "plremove": {
+      "syntax": "$PREFIXplremove [id]",
+      "description": "Remove a music from the playlist.",
+      "done": "`$TITLE` has been removed from the playlist.",
+      "invalidIndex": "There is no music with that index in the playlist."
     },
     "plclear": {
       "syntax": "$PREFIXplclear",
-      "description": "Clear the playlist."
+      "description": "Clear the playlist.",
+      "done": "`$NB` musics have been removed from the playlist."
     },
     "plshuffle": {
       "syntax": "$PREFIXplshuffle",
-      "description": "Shuffle the playlist."
+      "description": "Shuffle the playlist.",
+      "done": "The playlist has been shuffled."
     },
     "loop": {
       "syntax": "$PREFIXloop",
-      "description": "Loop the current music."
+      "description": "Loop the current music.",
+      "on": "The current music (`$TITLE`) is now looping.",
+      "off": "The current music is no longer looping."
     },
     "plloop": {
       "syntax": "$PREFIXplloop",
-      "description": "Loop the playlist."
+      "description": "Loop the playlist.",
+      "on": "The playlist is now looping.",
+      "off": "The playlist is no longer looping."
     },
-    "toggle": {
-      "syntax": "$PREFIXtoggle",
-      "description": "Pause/resume the music."
+    "pause": {
+      "syntax": "$PREFIXpause",
+      "description": "Pause the music.",
+      "done": "The music has been paused."
+    },
+    "resume": {
+      "syntax": "$PREFIXresume",
+      "description": "Resume the music.",
+      "done": "The music has been resumed."
     },
     "volume": {
       "syntax": "$PREFIXvolume [value]",
-      "description": "Set the volume of the music."
+      "description": "Set the volume of the music.",
+      "volumeSet": "The volume has been set to `$VOLUME%`."
     },
     "current": {
       "syntax": "$PREFIXcurrent",
-      "description": "Info about the current music."
+      "description": "Info about the current music.",
+      "display": "Playing: `$TIMER`",
+      "title": "Title",
+      "author": "Author",
+      "description": "Description",
+      "link": "Link",
+      "requestedBy": "Requested by",
+      "fileName": "File name"
     },
     "playlist": {
       "syntax": "$PREFIXplaylist",
-      "description": "Info about the playlist."
+      "description": "Info about the playlist.",
+      "display": "Here's the playlist:",
+      "displayCurrent": "Use `$PREFIXcurrent` to have information about the current music.",
+      "displayMore": "... and `$NB` more.",
+      "info": "`$ID` - $TITLE by `$AUTHOR` (`$DURATION`)",
+      "infoFile": "`$ID` - $TITLE (`$DURATION`)",
+      "requestedBy": "Requested by $MEMBER"
     },
     "fact": {
       "syntax": "$PREFIXfact (query)",
@@ -316,6 +307,13 @@
     "rand": {
       "syntax": "$PREFIXrand [min] [max]",
       "description": "Obtain a random number between `min` and `max`."
+    },
+    "prune": {
+      "syntax": "$PREFIXprune (number of messages)",
+      "description": "Delete messages newer than 2 weeks in bulk. (maximum 100)",
+      "done": "I deleted `$NB` messages.",
+      "error": "Something went wrong when I tried to delete messages.",
+      "limit": "I can't delete more than `100` messages at a time."
     }
   }
 }

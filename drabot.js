@@ -5,7 +5,6 @@ require("./src/prototypes.js");
 // IMPORTS
 const discord = require("discord.js");
 const snekfetch = require("snekfetch");
-const mc = require("minecraft-protocol");
 const DBL = require("dblapi.js");
 
 // FILES
@@ -14,19 +13,17 @@ const tools = require("./src/tools.js");
 const funcs = require("./src/funcs.js");
 const data = require("./src/data.js");
 const crypt = require("./src/crypt.js");
-const CommandHandler = require("./src/commands2.js");
-const MusicHandler = require("./src/music.js");
+const CommandHandler = require("./src/commands.js");
+const music = require("./src/music.js");
 const Lang = require("./langs/langs.js");
-MusicHandler.setYoutubeApiKey(process.env.YOUTUBEAPIKEY);
 
 // CONSTS
 const client = new discord.Client();
 const commands = new CommandHandler();
 commands.owners = config.owners;
-const music = new MusicHandler(client);
 const langs = {
-  en: new Lang("en"),
-  fr: new Lang("fr")
+  en: new Lang(require("./langs/lang_en.json")),
+  fr: new Lang(require("./langs/lang_fr.json"), require("./langs/lang_en.json"))
 }
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
 const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
@@ -142,40 +139,22 @@ client.on("guildCreate", guild => {
 client.on("guildDelete", guild => {
   guild.clearData();
 });
-music.on("next", (playlist, next) => {
+client.on("playlistNext", (playlist, next) => {
 	if (!next.file) playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
 	else playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlayingFile("$TITLE", next.title, "$MEMBER", next.member.displayName));
 });
-music.on("empty", playlist => {
-	playlist.guild.musicChannel.send(playlist.guild.lang.music.emptyPlaylist());
-});
-music.on("clientMove", (oldChannel, newChannel) => {
-  newChannel.guild.musicChannel.send(newChannel.lang.music.clientMoved("$CHANNEL", newChannel.name));
-});
-music.on("memberJoin", (member, channel) => {
-	if (member.guild.leaveTimeout) {
-		client.clearTimeout(member.guild.leaveTimeout);
-		member.guild.leaveTimeout = null;
-		member.guild.musicChannel.send(channel.lang.music.memberJoined());
-	}
-});
-music.on("memberLeave", (member, channel) => {
-	if (channel.members.size == 1 && !channel.guild.musicStay) {
-		member.guild.musicChannel.send(channel.lang.music.leaveInactivity());
-		member.guild.leaveTimeout = client.setTimeout(() => {
-			member.guild.playlist.leave().then(() => {
-        member.guild.leaveTimeout = null;
-				member.guild.musicChannel.send(channel.lang.music.leave());
-			}).catch(funcs.logError);
-		}, 60000);
-  }
+client.on("playlistEmpty", playlist => {
+  if (playlist.connected && playlist.channel.members.size == 1) {
+    playlist.leave();
+    playlist.guild.musicChannel.send(playlist.guild.lang.commands.leave.inactivity());
+  } else playlist.guild.musicChannel.send(playlist.guild.lang.music.emptyPlaylist());
 });
 
 // COMMANDS --------------------------------------------------
 
 // BOT
 commands.set("test", msg => {
-  msg.channel.send(msg.lang.misc.test() + " (" + msg.lang.name() + ")");
+  msg.channel.send("Test1 => " + msg.lang.misc.test() + "\nTest2 => " + msg.lang.misc.test2());
 }, {owner: true, maxargs: 0});
 
 commands.set("exec", async msg => {
@@ -199,8 +178,7 @@ commands.set("exec", async msg => {
 	}
 }, {owner: true, minargs: 1});
 
-commands.set("help", msg => {
-	let args = msg.content.split(" ").slice(1);
+commands.set("help", (msg, args) => {
 	if (args.length == 0) {
 		let coms = [];
 		for (let command of commands)
@@ -257,12 +235,11 @@ commands.set("reset", async msg => {
   } msg.channel.send("I've been reset to default values.\nLang: `English`\nPrefix: `/`");
 }, {admin: true, maxargs: 0, info: {show: true, type: "bot"}});
 
-commands.set("prefix", async msg => {
-  let args = msg.content.split(" ");
-  if (args.length == 1)
+commands.set("prefix", async (msg, args) => {
+  if (args.length == 0)
     msg.reply(msg.lang.commands.prefix.current("$PREFIX", msg.prefix));
   else {
-    let prefix = args[1];
+    let prefix = args[0];
     if (msg.guild) {
       if (!msg.member.admin)
         msg.reply(msg.lang.errors.adminOnlyCommand());
@@ -275,15 +252,14 @@ commands.set("prefix", async msg => {
   }
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
-commands.set("lang", async msg => {
-  let args = msg.content.split(" ");
-  if (args.length == 1) {
+commands.set("lang", async (msg, args) => {
+  if (args.length == 0) {
     let str = "";
     for (let lang of Object.values(langs))
-      str += "\n- " + lang.name() + "(`" + lang.id() + "`)";
+      str += "\n- " + lang.name() + " (`" + lang.id() + "`)";
     msg.reply(msg.lang.commands.lang.list() + str);
   } else {
-    let lang = args[1];
+    let lang = args[0];
     if (!Object.keys(langs).includes(lang))
       msg.reply(msg.lang.commands.lang.unknown());
     else {
@@ -302,13 +278,7 @@ commands.set("lang", async msg => {
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
 // MODERATION
-commands.set("promote", async msg => {
-  null;
-}, {admin: true, guildonly: true, info: {show: false, type: "moderation"}});
 
-commands.set("demote", async msg => {
-  null;
-}, {admin: true, guildonly: true, info: {show: false, type: "moderation"}});
 
 // UTILS
 commands.set("serverinfo", async msg => {
@@ -347,49 +317,109 @@ commands.set("roleinfo", msg => {
 		msg.channel.send("", role.embedInfo());
 }, {guildonly: true, info: {show: true, type: "utility"}});
 
+commands.set("prune", async (msg, args) => {
+  let nb = args.length == 0 ? 100 : Math.floor(Number(args[0]));
+  if (nb > 100) {
+    msg.channel.send(msg.lang.commands.prune.limit());
+  } else {
+    try {
+      let res = await msg.channel.bulkDelete(nb, true);
+      msg.channel.send(msg.lang.commands.prune.done("$NB", res.size)).then(msg2 => msg2.delete(5000));
+    } catch(err) {
+      msg.channel.send(msg.lang.commands.prune.error());
+    }
+  }
+}, {maxargs: 1, guildonly: true, info: {show: true, type: "utility"}});
+
 // MUSIC
 commands.set("join", async msg => {
-  let args = msg.content.split(" ");
-	music.join(msg.member).then(() => {
-    if (args.length == 2 && args[1] == "stay")
-      msg.guild.musicStay = true;
-    msg.guild.leaveTimeout = null;
-		msg.guild.musicChannel = msg.channel;
-		msg.channel.send(msg.lang.music.join());
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 1, info: {show: true, type: "music"}});
+  if (!msg.member.voiceChannelID)
+    msg.channel.send(msg.lang.commands.join.notInVoiceChannel());
+  else if (msg.member.voiceChannelID == msg.guild.me.voiceChannelID)
+    msg.channel.send(msg.lang.commands.join.already());
+  else {
+    let voiceChannel = msg.member.voiceChannel;
+    if (!voiceChannel.joinable)
+      msg.channel.send(msg.lang.commands.join.notJoinable());
+    else if (!voiceChannel.speakable)
+      msg.channel.send(msg.lang.commands.join.notSpeakable());
+    else {
+      msg.guild.musicChannel = msg.channel;
+      await msg.guild.playlist.join(voiceChannel);
+      msg.channel.send(msg.lang.commands.join.hello());
+    }
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
-commands.set("leave", msg => {
-	music.leave(msg.guild).then(() => {
-    msg.guild.musicStay = false;
-    msg.guild.leaveTimeout = null;
-		msg.guild.musicChannel = null;
-		msg.channel.send(msg.lang.music.leave());
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+commands.set("leave", async msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    msg.guild.playlist.leave();
+    msg.channel.send(msg.lang.commands.leave.bye());
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
-commands.set("request", msg => {
-	let link = msg.content.replace(msg.prefix + "request ","");
-	if (!music.isConnected(msg.guild)) {
-		msg.channel.send(msg.lang.music.notConnected() + " " + msg.lang.music.askToJoin("$PREFIX", msg.prefix));
-		return;
-	}
-	msg.channel.send(msg.lang.music.addingToPlaylist("$LINK", link)).then(msg2 => {
-		music.add(link, msg.member, {passes: 10}).then(added => {
-			msg2.edit(msg.lang.music.addedToPlaylist("$TITLE", added.title, "$AUTHOR", added.author.name));
-		}).catch(err => {
-      if (err.message.includes("not supported")) msg2.edit(msg.lang.music.unknownWebsite());
-			else if (err.message.includes("unavailable")) msg2.edit(msg.lang.music.videoUnavailable());
-			else if (err.message.includes("does not match expected format")) msg2.edit(msg.lang.music.unexpectedFormat());
-			else funcs.musicErrors(msg, err);
-		});
-	});
-}, {guildonly: true, minargs: 1, maxargs: 1, info: {show: true, type: "music"}});
+commands.set("request", async (msg, args) => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    if (["https://www.youtube.com/watch?", "https://youtu.be/", "https://youtube.com/watch?"].some(val => args[0].startsWith(val))) {
+      let msg2 = await msg.channel.send(msg.lang.commands.request.adding("$LINK", args[0]));
+      try {
+        let request = await music.youtube.fetchVideo(args[0]);
+        msg2.edit(msg.lang.commands.request.added("$TITLE", request.title, "$AUTHOR", request.author.name));
+        request.member = msg.member;
+        msg.guild.playlist.pending.push(request);
+      } catch(err) {
+        if (err.message.includes("does not match expected format"))
+          msg.channel.send(msg.lang.commands.request.unexpectedFormat())
+        else if (err.message.includes("unavailable"))
+          msg.channel.send(msg.lang.commands.request.videoUnavailable())
+        else throw err;
+      }
+    } else if (["https://www.youtube.com/playlist?", "https://youtube.com/playlist?"].some(val => args[0].startsWith(val))) {
+      let msg2 = await msg.channel.send(msg.lang.commands.request.fetchingYoutubePlaylist("$LINK", args[0]));
+      try {
+        let playlist = await music.youtube.fetchPlaylist(args[0], process.env.YOUTUBEAPIKEY);
+        msg2.edit(msg.lang.commands.request.fetchingYoutubePlaylistTitle("$TITLE", playlist.title));
+        let nb = 0;
+        for (let video of playlist.videos) {
+          try {
+            let res = await music.youtube.fetchVideo(video.link);
+            res.member = msg.member;
+            msg.guild.playlist.pending.push(res);
+          } catch(err) {
+            nb++;
+          }
+        }
+        msg.channel.send(msg.lang.commands.request.youtubePlaylistFetched("$TITLE", playlist.title, "$NB", nb));
+      } catch(err) {
+        msg2.edit(msg.lang.commands.request.youtubePlaylistFetchError());
+      }
+    } else if (["https://", "http://"].some(val => args[0].startsWith(val))) {
+      msg.channel.send(msg.lang.commands.request.notSupported());
+    } else {
+      let query = args.join(" ");
+      let msg2 = await msg.channel.send(msg.lang.commands.request.searchingOnYoutube("$QUERY", query));
+      try {
+        let videos = await music.youtube.query(query, process.env.YOUTUBEAPIKEY, 1);
+        if (videos.length == 1) {
+          let request = await music.youtube.fetchVideo(videos[0].link);
+          msg2.edit(msg.lang.commands.request.added("$TITLE", request.title, "$AUTHOR", request.author.name));
+          request.member = msg.member;
+          msg.guild.playlist.pending.push(request);
+        } else msg2.edit(msg.lang.misc.noResults());
+      } catch(err) {
+        msg2.edit(msg.lang.commands.request.queryError());
+      }
+    }
+  }
+}, {minargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
+/*
 commands.set("query", async msg => {
 	try {
 		let query = msg.content.replace(msg.prefix + "query ", "");
@@ -416,166 +446,179 @@ commands.set("query", async msg => {
   			msg.channel.send(msg.lang.music.noResFirstOne());
   			choice = 0;
   		} else choice = Number(msg3.content) - 1;
-    } else {
-      msg2.edit(msg.lang.music.oneResult());
-      choice = 0;
-    }
-		let added = await music.add(videos[choice].link, msg.member, {passes: 10});
-		msg.channel.send(msg.lang.music.addedToPlaylist("$TITLE", added.title, "$AUTHOR", added.author.name));
-	} catch(err) {
-		funcs.musicErrors(msg, err);
-	}
-}, {guildonly: true, minargs: 1, info: {show: true, type: "music"}});
+*/
 
-commands.set("ytbplaylist", async msg => {
-	let link = msg.content.replace(msg.prefix + "ytbplaylist ","");
-	if (!music.isConnected(msg.guild)) {
-		msg.channel.send(msg.lang.music.notConnected() + " " + msg.lang.music.askToJoin("$PREFIX", msg.prefix));
-		return;
-	}
-	if (!link.startsWith("https://www.youtube.com/playlist?list=")) {
-		msg.channel.send(msg.lang.music.invalidYoutubePlaylistLink());
-		return;
-	}
-	let msg2 = await msg.channel.send(msg.lang.music.fetchingYoutubePlaylist("$LINK", link));
-	MusicHandler.youtubePlaylist(link).then(async playlist => {
-		msg2.edit(msg.lang.music.fetchingYoutubePlaylist2("$TITLE", playlist.title));
-		for (let video of playlist.videos) {
-			try {
-				await music.add(video.link, msg.member, {passes: 10});
-			} catch(err){}
-		}
-		msg.channel.send(msg.lang.music.youtubePlaylistFetched("$TITLE", playlist.title));
-	}).catch(err => {
-		funcs.logError(msg, err);
-	});
-}, {guildonly: true, minargs: 1, maxargs: 1, info: {show: true, type: "music"}});
+commands.set("query", msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else msg.channel.send(msg.lang.misc.merged("$PREFIX", msg.prefix, "$COMMAND", "request"));
+}, {guildonly: true});
 
-commands.set("plremove", msg => {
-	let id = Math.floor(Number(msg.content.split(" ").pop()))-1;
-	if (isNaN(id)) {
-		msg.channel.send(msg.lang.music.invalidMusicIndex());
-		return;
-	}
-	music.remove(msg.guild, id).then(removed => {
-		msg.channel.send(msg.lang.music.removedFromPlaylist("$TITLE", removed.title));
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, minargs: 1, maxargs: 1, info: {show: true, type: "music"}})
+commands.set("ytbplaylist", msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else msg.channel.send(msg.lang.misc.merged("$PREFIX", msg.prefix, "$COMMAND", "request"));
+}, {guildonly: true});
+
+commands.set("pause", msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing)
+    msg.channel.send(msg.lang.music.notPlaying())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    msg.guild.playlist.paused = true;
+    msg.channel.send(msg.lang.commands.pause.done());
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+
+commands.set("resume", msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing)
+    msg.channel.send(msg.lang.music.notPlaying())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    msg.guild.playlist.paused = false;
+    msg.channel.send(msg.lang.commands.resume.done());
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("skip", msg => {
-	music.playNext(msg.guild).then(current => {
-		msg.channel.send(msg.lang.music.skipped("$TITLE", current.title));
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing)
+    msg.channel.send(msg.lang.music.notPlaying())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    let current = msg.guild.playlist.current;
+    msg.guild.playlist.next();
+    msg.channel.send(msg.lang.commands.skip.skipped("$TITLE", current.title));
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+
+commands.set("plremove", (msg, args) => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (msg.guild.playlist.pending.length == 0)
+    msg.channel.send(msg.lang.music.emptyPlaylist())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    let id = Math.floor(Number(args[0]));
+    if (id < 1 || id > msg.guild.playlist.pending.length)
+      msg.channel.send(msg.lang.commands.plremove.invalidIndex());
+    else {
+      let removed = msg.guild.playlist.pending.splice(id-1, 1)[0];
+      msg.channel.send(msg.lang.commands.plremove.done("$TITLE", removed.title));
+    }
+  }
+}, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("plclear", msg => {
-	music.clear(msg.guild).then(nb => {
-		if (nb == 1)
-			msg.channel.send(msg.lang.music.clear1());
-		else
-			msg.channel.send(msg.lang.music.clearMore("$NB", nb));
-	}).catch(err => {
-		funcs.musicErrors(msg, err)
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    let nb = msg.guild.playlist.pending.clear();
+    msg.channel.send(msg.lang.commands.plclear.done("$NB", nb));
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("plshuffle", msg => {
-	music.shuffle(msg.guild).then(() => {
-		msg.channel.send(msg.lang.music.shuffled());
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    msg.guild.playlist.pending.shuffle();
+    msg.channel.send(msg.lang.commands.plshuffle.done());
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
-commands.set("loop", msg => {
-	music.toggleLooping(msg.guild).then(looping => {
-		let current = music.currentInfo(msg.guild);
-			if (looping)
-				msg.channel.send(msg.lang.music.loopingOn("$TITLE", current.title));
-			else
-				msg.channel.send(msg.lang.music.loopingOff("$TITLE", current.title));
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
-
-commands.set("plloop", msg => {
-	music.togglePlaylistLooping(msg.guild).then(looping => {
-		if (looping)
-			msg.channel.send(msg.lang.music.playlistLoopingOn());
-		else
-			msg.channel.send(msg.lang.music.playlistLoopingOff());
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
-
-commands.set("toggle", msg => {
-	music.togglePaused(msg.guild).then(paused => {
-		if (paused)
-			msg.channel.send(msg.lang.music.paused());
-		else
-			msg.channel.send(msg.lang.music.resumed());
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});;
-
-commands.set("volume", msg => {
-	let volume = Number(msg.content.split(" ").pop());
-	if (isNaN(volume))
-		return;
-	music.setVolume(msg.guild, volume).then(() => {
-		msg.channel.send(msg.lang.music.volumeSet("$VOLUME", volume));
-	}).catch(err => {
-		funcs.musicErrors(msg, err);
-	});
+commands.set("volume", (msg, args) => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    let volume = Number(args);
+    msg.guild.playlist.volume = volume/100;
+    if (volume < 0) volume = 0;
+    if (volume/100 > msg.guild.playlist.maxVolume) volume = msg.guild.playlist.maxVolume*100;
+    msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
+  }
 }, {guildonly: true, minargs: 1, maxargs: 1, info: {show: true, type: "music"}});
 
+commands.set("loop", msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing)
+    msg.channel.send(msg.lang.music.notPlaying())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    msg.guild.playlist.looping = !msg.guild.playlist.looping;
+    if (msg.guild.playlist.looping) msg.channel.send(msg.lang.commands.loop.on("$TITLE", msg.guild.playlist.current.title));
+    else msg.channel.send(msg.lang.commands.loop.off());
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+
+commands.set("plloop", msg => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing)
+    msg.channel.send(msg.lang.music.notPlaying())
+  else {
+    msg.guild.musicChannel = msg.channel;
+    msg.guild.playlist.playlistLooping = !msg.guild.playlist.playlistLooping;
+    if (msg.guild.playlist.playlistLooping) msg.channel.send(msg.lang.commands.plloop.on());
+    else msg.channel.send(msg.lang.commands.plloop.off());
+  }
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+
 commands.set("current", msg => {
-	let current = music.currentInfo(msg.guild);
-	if (current === undefined) {
-		msg.channel.send(msg.lang.music.notPlaying());
-		return;
-	}
-	let info = tools.defaultEmbed();
-	if (!current.file) {
-		info.setThumbnail(current.thumbnailURL)
-		.addField(msg.lang.music.title(), current.title, true)
-		.addField(msg.lang.music.author(), current.author.name + " (" + current.author.channelURL + ")", true)
-		.addField(msg.lang.music.description(), current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
-		.addField(msg.lang.music.link(), current.link, true)
-	} else
-		info.addField(msg.lang.music.fileName(), current.title, true);
-  info.addField(msg.lang.music.requestedBy(), current.member, true);
-	msg.channel.send(msg.lang.music.playingDisplay() + " ``" + tools.parseTimestamp(current.time).timer + " / " + tools.parseTimestamp(current.length).timer + " ("+ Math.floor((current.time / current.length)*100) + "%)``", info);
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing)
+    msg.channel.send(msg.lang.music.notPlaying())
+  else {
+    let current = msg.guild.playlist.current;
+    let time = msg.guild.playlist.time;
+  	let info = tools.defaultEmbed();
+  	if (!current.file) {
+  		info.setThumbnail(current.thumbnailURL)
+  		.addField(msg.lang.commands.current.title(), current.title, true)
+  		.addField(msg.lang.commands.current.author(), current.author.name + " (" + current.author.channelURL + ")", true)
+  		.addField(msg.lang.commands.current.description(), current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
+  		.addField(msg.lang.commands.current.link(), current.link, true)
+  	} else
+  		info.addField(msg.lang.commands.current.fileName(), current.title, true);
+    info.addField(msg.lang.commands.current.requestedBy(), current.member, true);
+  	msg.channel.send(msg.lang.commands.current.display("$TIMER", tools.parseTimestamp(time).timer + " / " + tools.parseTimestamp(current.length).timer + " ("+ Math.floor((time / current.length)*100) + "%)"), info);
+  }
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
 
 commands.set("playlist", msg => {
-	let playlist = music.playlistInfo(msg.guild);
-	if (playlist === undefined) {
-		msg.channel.send(msg.lang.music.notConnected());
-		return;
-	}
-	let info = tools.defaultEmbed();
-	let i = 1;
-	for (let music of playlist) {
-		if (!music.file) {
-			info.addField(i + " - " + music.title + " " + msg.lang.music.by() + " " + music.author.name + " (``" + tools.parseTimestamp(music.length).timer + "``)", msg.lang.music.requestedBy() + " " + music.member);
-		}	else
-			info.addField(i + " - " + music.title + " (``" + tools.parseTimestamp(music.length).timer + "``)", msg.lang.music.requestedBy() + " " + music.member);
-		i++;
-	}
-	if (playlist.length > 0) {
-		msg.channel.send(msg.lang.music.playlistDisplay(), info);
-		msg.channel.send(msg.lang.music.playlistDisplayCurrent("$PREFIX", msg.prefix));
-	} else msg.channel.send(msg.lang.music.emptyPlaylist() + " " + msg.lang.music.playlistDisplayCurrent("$PREFIX", msg.prefix));
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else {
+    let playlist = msg.guild.playlist.pending;
+  	let info = tools.defaultEmbed();
+  	let i = 1;
+  	for (let music of playlist) {
+  		if (!music.file)
+        info.addField(msg.lang.commands.playlist.info("$ID", i, "$TITLE", music.title, "$AUTHOR", music.author.name, "$DURATION", tools.parseTimestamp(music.length).timer),
+        msg.lang.commands.playlist.requestedBy("$MEMBER", music.member));
+  		else
+        info.addField(msg.lang.commands.playlist.info("$ID", i, "$TITLE", music.title, "$DURATION", tools.parseTimestamp(music.length).timer),
+        msg.lang.commands.playlist.requestedBy("$MEMBER", music.member));
+  		i++;
+      if (i == 21) break;
+  	}
+  	if (playlist.length > 0) {
+  		msg.channel.send(msg.lang.commands.playlist.display(), info);
+      if (playlist.length <= 20) msg.channel.send(msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
+      else msg.channel.send(msg.lang.commands.playlist.displayMore("$NB", playlist.length - 20) + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
+  	} else msg.channel.send(msg.lang.music.emptyPlaylist() + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
+  }
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
-
 
 // ELSE
 commands.set("say", msg => {
@@ -590,17 +633,15 @@ commands.set("ttsay", msg => {
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.set("roll", msg => {
-	let args = msg.content.split(" ").slice(1);
+commands.set("roll", (msg, args) => {
 	let max = 6;
 	if (args.length == 1 && !isNaN(Number(args[0])) && Number(args[0]) > 0)
 		max = Number(args[0]);
 	let res = tools.random(1, max);
 	msg.reply(res + "/" + max + " (:game_die:)");
-}, {info: {show: true, type: "fun"}});
+}, {maxargs: 1, info: {show: true, type: "fun"}});
 
-commands.set("fact", msg => {
-	let args = msg.content.split(" ").slice(1);
+commands.set("fact", (msg, args) => {
 	let link = "https://factgenerator.herokuapp.com/generate/";
 	if (args.length > 0) {
 		for (let arg of args)
@@ -636,13 +677,6 @@ commands.set("reflex", async msg => {
 	else msg.channel.send(msg.lang.commands.reflex.wellPlayed("$WINNER", msg2.member.displayName));
 	msg.channel.reflex = false;
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "game"}});
-
-commands.set("fbw", msg => {
-	mc.ping({host: "play.fantabobworld.com"}, (err, res) => {
-    if (err) funcs.logError(msg, err);
-    else msg.reply("il y a actuellement ``" + res.players.online + "`` joueurs sur le FantaBobWorld.");
-  });
-}, {guildonly: true, guilds: [config.guilds.patate]});
 
 commands.set("cyanidehappiness", async msg => {
   let link = "http://explosm.net/rcg";
@@ -686,14 +720,6 @@ commands.set("decrypt", async msg => {
 		else msg.channel.send(msg.lang.commands.decrypt.decrypted("$MESSAGE", message));
 	}
 }, {minargs: 1, info: {show: true, type: "misc"}});
-
-commands.set("rand", msg => {
-  let args = msg.content.split(" ");
-  let min = Number(args[1]);
-  let max = Number(args[2]);
-  let diff = max - min;
-  msg.reply("`" + Math.floor(Math.random()*diff)+min + "`");
-}, {minargs: 2, maxargs: 2, info: {show: true, type: "misc"}});
 
 // FUNCTIONS
 function login() {

@@ -10,7 +10,8 @@
     "owner": "Owner",
     "admin": "Admin",
     "mod": "Modérateur",
-    "dj": "DJ"
+    "dj": "DJ",
+    "merged": "Cette commande a été ajoutée à la commande `$PREFIX$COMMAND`."
   },
   "errors": {
     "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
@@ -23,60 +24,11 @@
     "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test."
   },
   "music": {
-    "join": "Salut ! o/",
-    "leave": "À plus !",
-    "addingToPlaylist": "J'ajoute `$LINK` à la playlist.",
-    "addedToPlaylist": "`$TITLE` par `$AUTHOR` a été ajoutée à la playlist.",
-    "by": "par",
-    "videoUnavailable": "Cette vidéo n'est pas disponible.",
-    "unexpectedFormat": "L'ID de cette vidéo ne correspond pas au format attendu.",
-    "searchingOnYoutube": "Je recherche `$QUERY` sur Youtube.",
-    "queryChoice": "Donc, laquelle veux-tu écouter ?",
-    "queryNumber": "Tu dois faire un choix compris entre `1` et `$NBVIDEOS`.",
-    "noResFirstOne": "Tu n'as pas répondu dans le délai requis, je vais donc jouer la première.",
-    "emptyPlaylist": "La playlist est vide.",
-    "memberNotInVoiceChannel": "Vous n'êtes pas dans un channel vocal.",
-  	"voiceChannelNotJoinable": "Je ne peux pas vous rejoindre.",
-  	"voiceChannelNotSpeakable": "Je ne suis pas autorisé à parler dans ce channel.",
-  	"voiceChannelFull": "Ce channel vocal est plain.",
-  	"guildAlreadyJoined": "Je suis déjà connecté dans un channel.",
-  	"notConnected": "Je ne suis pas connecté dans un channel vocal.",
-    "askToJoin": "Tu peux me demander de te rejoindre avec `$PREFIXjoin`.",
-  	"notPlaying": "Je ne suis pas en train de jouer de musique.",
-  	"invalidMusicIndex": "Il n'y a aucune musique avec ce numéro dans la playlist.",
-    "unknownWebsite": "Désolé mais je ne connais pas ce site web.",
-  	"invalidVolume": "Le volume doit être supérieur à `0`.",
-    "nowPlaying": "Musique suivante : `$TITLE` par `$AUTHOR`. (ajoutée par `$MEMBER`)",
-    "nowPlayingFile": "Musique suivante : `$TITLE`. (ajoutée par `$MEMBER`)",
-    "clientMoved": "Je me suis déplacé dans `$CHANNEL`.",
-    "memberJoined": "Quelqu'un est arrivé, je vais rester encore un peu.",
-    "leaveInactivity": "Il n'y a plus personne, je m'en vais dans `une minute`.",
-    "invalidYoutubePlaylistLink": "Ce lien de playlist n'est pas valide.",
-    "fetchingYoutubePlaylist": "Je récupère la playlist `$LINK` depuis Youtube.",
-    "fetchingYoutubePlaylist2": "Je récupère la playlist `$TITLE` depuis Youtube.",
-    "youtubePlaylistFetched": "La playlist `$TITLE` a été ajoutée à la playlist actuelle.",
-    "removedFromPlaylist": "`$TITLE` a été retirée de la playlist.",
-    "skipped": "La musique actuelle (`$TITLE`) a été passée.",
-    "clear1": "`1` musique a été retirée de la playlist.",
-    "clearMore": "`$NB` musiques ont été retirées de la playlist.",
-    "shuffled": "La playlist a été mélangée.",
-    "loopingOn": "La musique actuelle (`$TITLE`) tourne en boucle.",
-    "loopingOff": "La musique actuelle ne tourne plus en boucle.",
-    "playlistLoopingOn": "La playlist tourne en boucle.",
-    "playlistLoopingOff": "La playlist ne tourne plus en boucle",
-    "paused": "La musique a été mise en pause.",
-    "resumed": "La musique n'est plus en pause.",
-    "volumeSet": "Le volume a été réglé sur `$VOLUME%`.",
-    "title": "Titre",
-    "author": "Auteur",
-    "description": "Description",
-    "link": "Lien",
-    "requestedBy": "Ajoutée par",
-    "fileName": "Nom du fichier",
-    "playingDisplay": "Musique actuelle :",
-    "playlistDisplay": "Voici la playlist :",
-    "playlistDisplayCurrent": "Utilise `$PREFIXcurrent` pour obtenir les infos sur la musique en cours.",
-    "oneResult": "Je n'ai trouvé qu'une seule vidéo donc je vais l'ajouter à la playlist."
+  	"notConnected": "Je ne suis pas connecté.",
+    "notPlaying": "Je ne joue aucune musique actuellement.",
+    "nowPlaying": "Musique suivante: `$TITLE` par `$AUTHOR`. (ajoutée par `$MEMBER`)",
+    "nowPlayingFile": "Musique suivante: `$TITLE`. (ajoutée par `$MEMBER`)",
+    "emptyPlaylist": "La playlist est vide."
   },
   "types": {
     "moderation": "Commands de modération",
@@ -126,64 +78,103 @@
       "unknown": "cette langue n'existe pas ou le bot ne la supporte pas."
     },
     "join": {
-      "syntax": "$PREFIXjoin || $PREFIXjoin stay",
-      "description": "Rejoindre un channel vocal. L'option `stay` empêche le bot de quitter le channel vocal lorsqu'il est vide."
+      "syntax": "$PREFIXjoin",
+      "description": "Rejoindre un channel vocal.",
+      "notInVoiceChannel": "Tu n'es pas dans un channel vocal.",
+      "notJoinable": "Je ne peux pas rejoindre ce channel.",
+      "notSpeakable": "Je n'ai pas la permission de parler dans ce channel.",
+      "already": "Je suis déjà dans ce channel.",
+      "hello": "Salut ! o/"
     },
     "leave": {
       "syntax": "$PREFIXleave",
-      "description": "Quitter un channel vocal."
+      "description": "Quitter un channel vocal.",
+      "bye": "A plus !",
+      "inactivity": "Tout le monde est parti et la playlist est vide, à plus !"
     },
     "request": {
-      "syntax": "$PREFIXrequest [lien Youtube]",
-      "description": "Ajouter une vidéo Youtube à partir d'un lien."
-    },
-    "query": {
-      "syntax": "$PREFIXquery [recherche Youtube]",
-      "description": "Rechercher une vidéo sur Youtube."
-    },
-    "ytbplaylist": {
-      "syntax": "$PREFIXytbplaylist [lien playlist Youtube]",
-      "description": "Ajouter une playlist Youtube."
-    },
-    "plremove": {
-      "syntax": "$PREFIXplremove [id]",
-      "description": "Retirer une musique de la playlist."
+      "syntax": "$PREFIXrequest [Youtube video link || Youtube playlist link || Youtube query]",
+      "description": "Demander une vidéo Youtube en utilisant un lien ou une recherche.",
+      "adding": "Ajout de `$LINK` à la playlist.",
+      "added": "`$TITLE` par `$AUTHOR` a été ajoutée à la playlist.",
+      "unexpectedFormat": "L'ID de cette vidéo ne respecte pas le format attendu.",
+      "videoUnavailable": "Cette vidéo n'est pas disponible.",
+      "notSupported": "Désolé, mais ce site web n'est pas supporté.",
+      "fetchingYoutubePlaylist": "Ajout de la playlist `$LINK` depuis Youtube.",
+      "fetchingYoutubePlaylistTitle": "Ajout de la playlist `$TITLE` depuis Youtube.",
+      "youtubePlaylistFetchError": "Il y a eu un problème pendant l'ajout de la playlist.\nPeut-être qu'elle n'est pas disponible ou qu'elle n'existe pas.",
+      "youtubePlaylistFetched": "La playlist `$TITLE` a été ajoutée. `$NB` vidéos n'ont pas pu être ajoutées.",
+      "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
+      "queryError": "Il y a eu un problème pendant la recherche sur Youtube."
     },
     "skip": {
       "syntax": "$PREFIXskip",
-      "description": "Passer la musique actuelle."
+      "description": "Passer la musique actuelle.",
+      "skipped": "La musique actuelle (`$TITLE`) a été passée."
+    },
+    "plremove": {
+      "syntax": "$PREFIXplremove [id]",
+      "description": "Retirer une musique de la playlist.",
+      "done": "`$TITLE` a été retirée de la playlist.",
+      "invalidIndex": "Il n'y a aucune musique avec cet index dans la playlist."
     },
     "plclear": {
       "syntax": "$PREFIXplclear",
-      "description": "Vider la playlist."
+      "description": "Vider la playlist.",
+      "done": "`$NB` musiques ont été supprimées de la playlist."
     },
     "plshuffle": {
       "syntax": "$PREFIXplshuffle",
-      "description": "Mélanger la playlist."
+      "description": "Mélanger la playlist.",
+      "done": "La playlist a été mélangée."
     },
     "loop": {
       "syntax": "$PREFIXloop",
-      "description": "Jouer la musique actuelle en boucle."
+      "description": "Lire la musique actuelle en boucle.",
+      "on": "La musique actuelle (`$TITLE`) est lue en boucle.",
+      "off": "La musique actuelle n'est plus lue en boucle."
     },
     "plloop": {
       "syntax": "$PREFIXplloop",
-      "description": "Jouer la playlist en boucle."
+      "description": "Lire la playlist en boucle.",
+      "on": "La playlist est lue en boucle.",
+      "off": "La playlist n'est plus lue en boucle."
     },
-    "toggle": {
-      "syntax": "$PREFIXtoggle",
-      "description": "Pauser/reprendre la musique."
+    "pause": {
+      "syntax": "$PREFIXpause",
+      "description": "Pauser la musique.",
+      "done": "La musique a été mise en pause."
+    },
+    "resume": {
+      "syntax": "$PREFIXresume",
+      "description": "Relancer la musique.",
+      "done": "La musique n'est plus en pause."
     },
     "volume": {
-      "syntax": "$PREFIXvolume [valeur]",
-      "description": "Définir le volume de la musique."
+      "syntax": "$PREFIXvolume [value]",
+      "description": "Changer le volume de la musique.",
+      "volumeSet": "Le volume a été réglé sur `$VOLUME%`."
     },
     "current": {
       "syntax": "$PREFIXcurrent",
-      "description": "Infos sur la musique en cours."
+      "description": "Info sur la musique actuelle.",
+      "display": "En cours : `$TIMER`",
+      "title": "Titre",
+      "author": "Auteur",
+      "description": "Description",
+      "link": "Lien",
+      "requestedBy": "Ajoutée par",
+      "fileName": "File name"
     },
     "playlist": {
       "syntax": "$PREFIXplaylist",
-      "description": "Infos sur la playlist."
+      "description": "Info sur la playlist.",
+      "display": "Voilà la playlist :",
+      "displayCurrent": "Utilise `$PREFIXcurrent` pour avoir des infos sur la musique actuelle.",
+      "displayMore": "... et `$NB` autres.",
+      "info": "`$ID` - $TITLE par `$AUTHOR` (`$DURATION`)",
+      "infoFile": "`$ID` - $TITLE (`$DURATION`)",
+      "requestedBy": "Ajoutée par $MEMBER"
     },
     "fact": {
       "syntax": "$PREFIXfact (requête)",

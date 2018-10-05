@@ -1,28 +1,20 @@
-const en = require("./lang_en.json");
-
 class Lang {
-  constructor(lg) {
-    this.json = require("./lang_" + lg + ".json");
-    let json = this.json;
+  constructor(...jsonFiles) {
     let parts = [];
-    var proxy = new Proxy(function (...aliases) {
-      let str = parts.join(".");
+    var proxy = new Proxy(function(...aliases) {
+      let partsJoined = parts.join(".");
       parts = [];
-      let str2;
-      try {
-        str2 = eval("json." + str);
-        if (str2 === undefined) throw new Error();
-      } catch(err) {
+      let str = jsonFiles.reduceRight((acc, jsonFile) => {
         try {
-          str2 = eval("en." + str);
+          let str = eval("jsonFile." + partsJoined);
+          return str !== undefined && str !== null ? str : acc;
         } catch(err) {
-          return str;
-        }
-      }
-      if (str2 === undefined || str2 === null) return str;
-      for (let i = 0; i < aliases.length; i += 2)
-        str2 = str2.replaceAll(aliases[i], aliases[i+1]);      
-      return str2;
+          return acc;
+        }      
+      }, partsJoined);
+      if (str) for (let i = 0; i < aliases.length; i += 2)
+        str = str.replaceAll(aliases[i], aliases[i+1]);
+      return str;
     }, {
       has: () => true,
       get: function(object, name) {
