@@ -28,7 +28,10 @@
     "notPlaying": "Je ne joue aucune musique actuellement.",
     "nowPlaying": "Musique suivante: `$TITLE` par `$AUTHOR`. (ajoutée par `$MEMBER`)",
     "nowPlayingFile": "Musique suivante: `$TITLE`. (ajoutée par `$MEMBER`)",
-    "emptyPlaylist": "La playlist est vide."
+    "emptyPlaylist": "La playlist est vide.",
+    "notPlayingNorStreaming": "I am not playing or streaming any music at the moment.",
+    "noStreaming": "This command is not available while streaming. Use `$PREFIXstream off` to end the stream.",
+    "noPlaying": "You can't stream while there are still musics in the playlist."
   },
   "types": {
     "moderation": "Commands de modération",
@@ -93,7 +96,7 @@
       "inactivity": "Tout le monde est parti et la playlist est vide, à plus !"
     },
     "request": {
-      "syntax": "$PREFIXrequest [Youtube video link || Youtube playlist link || Youtube query]",
+      "syntax": "$PREFIXrequest [Youtube link || Youtube query]",
       "description": "Demander une vidéo Youtube en utilisant un lien ou une recherche.",
       "adding": "Ajout de `$LINK` à la playlist.",
       "added": "`$TITLE` par `$AUTHOR` a été ajoutée à la playlist.",
@@ -106,6 +109,13 @@
       "youtubePlaylistFetched": "La playlist `$TITLE` a été ajoutée. `$NB` vidéos n'ont pas pu être ajoutées.",
       "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
       "queryError": "Il y a eu un problème pendant la recherche sur Youtube."
+    },
+    "stream": {
+      "syntax": "$PREFIXstream [stream]",
+      "description": "Request one of the supported streams/radios:\n- listen.moe/jpop\n- listen.moe/kpop\n- off (to stop the stream)",
+      "nowStreaming": "Now streaming: `$NAME`.",
+      "nowStreamingTitle": "Now streaming: `$NAME`. (title: `$TITLE`)",
+      "stopStreaming": "End of the stream."
     },
     "skip": {
       "syntax": "$PREFIXskip",

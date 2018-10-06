@@ -16,6 +16,7 @@ const crypt = require("./src/crypt.js");
 const CommandHandler = require("./src/commands.js");
 const music = require("./src/music.js");
 const Lang = require("./langs/langs.js");
+const listenmoe = require("./src/listenmoe.js");
 
 // CONSTS
 const client = new discord.Client();
@@ -141,7 +142,7 @@ client.on("guildDelete", guild => {
 });
 client.on("playlistNext", (playlist, next) => {
 	if (!next.file) playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
-	else playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlayingFile("$TITLE", next.title, "$MEMBER", next.member.displayName));
+	else playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlayingFile("$TITLE", next.name, "$MEMBER", next.member.displayName));
 });
 client.on("playlistEmpty", playlist => {
   if (playlist.connected && playlist.channel.members.size == 1) {
@@ -364,7 +365,7 @@ commands.set("leave", async msg => {
 commands.set("request", async (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else {
+  else if (!msg.guild.playlist.streaming) {
     msg.guild.musicChannel = msg.channel;
     if (["https://www.youtube.com/watch?", "https://youtu.be/", "https://youtube.com/watch?"].some(val => args[0].startsWith(val))) {
       let msg2 = await msg.channel.send(msg.lang.commands.request.adding("$LINK", args[0]));
@@ -399,9 +400,9 @@ commands.set("request", async (msg, args) => {
       } catch(err) {
         msg2.edit(msg.lang.commands.request.youtubePlaylistFetchError());
       }
-    } else if (["https://", "http://"].some(val => args[0].startsWith(val))) {
+    } else if (["https://", "http://"].some(val => args[0].startsWith(val)))
       msg.channel.send(msg.lang.commands.request.notSupported());
-    } else {
+    else {
       let query = args.join(" ");
       let msg2 = await msg.channel.send(msg.lang.commands.request.searchingOnYoutube("$QUERY", query));
       try {
@@ -416,37 +417,31 @@ commands.set("request", async (msg, args) => {
         msg2.edit(msg.lang.commands.request.queryError());
       }
     }
-  }
+  } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
 }, {minargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
-/*
-commands.set("query", async msg => {
-	try {
-		let query = msg.content.replace(msg.prefix + "query ", "");
-		let msg2 = await msg.channel.send(msg.lang.music.searchingOnYoutube("$QUERY", query));
-		let videos = await MusicHandler.queryYoutube(query, 5);
-    let choice;
-		if (videos.length == 0) {
-			msg2.edit(msg.lang.misc.noResults());
-			return;
-		} else if (videos.length > 1) {
-      let embed = tools.defaultEmbed();
-  		for (let i = 0; i < videos.length; i++)
-  			embed.addField((i+1) + " - " + videos[i].title + " " + msg.lang.music.by() + " " + videos[i].authorName + " (" + tools.parseTimestamp(videos[i].length).timer + ")", videos[i].link);
-  		msg2.edit(msg.lang.music.queryChoice(), embed);
-  		let msg3 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => {
-  			choice = Number(msg3.content);
-  			if (msg3.author.id != msg.author.id || isNaN(choice)) return false;
-  			else if (!tools.range(1, videos.length).includes(choice)) {
-  				msg.channel.send(msg.lang.music.queryNumber("$NBVIDEOS", videos.length));
-  				return false;
-  			} else return true;
-  		}});
-  		if (msg3 === null) {
-  			msg.channel.send(msg.lang.music.noResFirstOne());
-  			choice = 0;
-  		} else choice = Number(msg3.content) - 1;
-*/
+commands.set("stream", async (msg, args) => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected())
+  else if (!msg.guild.playlist.playing) {
+    msg.guild.musicChannel = msg.channel;
+    let stream;
+    if (args[0] == "listen.moe" || args[0] == "listen.moe/jpop") stream = listenmoe.jpop;
+    else if (args[0] == "listen.moe/kpop") stream = listenmoe.kpop;
+    else if (args[0] == "off") stream = null;
+    else {
+      msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", "stream"));
+      return;
+    }
+    msg.guild.playlist.stream(stream);
+    if (stream) {
+      if (msg.guild.playlist.current.title)
+        msg.channel.send(msg.lang.commands.stream.nowStreamingTitle("$NAME", msg.guild.playlist.current.name, "$TITLE", msg.guild.playlist.current.title));
+      else
+        msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", msg.guild.playlist.current.name));
+    } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
+  } else msg.channel.send(msg.lang.music.noPlaying());
+}, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("query", msg => {
   if (!msg.guild.playlist.connected)
@@ -463,8 +458,8 @@ commands.set("ytbplaylist", msg => {
 commands.set("pause", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else if (!msg.guild.playlist.playing)
-    msg.channel.send(msg.lang.music.notPlaying())
+  else if (!msg.guild.playlist.dispatching)
+    msg.channel.send(msg.lang.music.notPlayingNorStreaming())
   else {
     msg.guild.musicChannel = msg.channel;
     msg.guild.playlist.paused = true;
@@ -475,8 +470,8 @@ commands.set("pause", msg => {
 commands.set("resume", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else if (!msg.guild.playlist.playing)
-    msg.channel.send(msg.lang.music.notPlaying())
+  else if (!msg.guild.playlist.dispatching)
+    msg.channel.send(msg.lang.music.notPlayingNorStreaming())
   else {
     msg.guild.musicChannel = msg.channel;
     msg.guild.playlist.paused = false;
@@ -487,14 +482,14 @@ commands.set("resume", msg => {
 commands.set("skip", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else if (!msg.guild.playlist.playing)
-    msg.channel.send(msg.lang.music.notPlaying())
-  else {
+  else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     let current = msg.guild.playlist.current;
     msg.guild.playlist.next();
     msg.channel.send(msg.lang.commands.skip.skipped("$TITLE", current.title));
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+  else msg.channel.send(msg.lang.music.notPlaying())
 }, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("plremove", (msg, args) => {
@@ -502,7 +497,7 @@ commands.set("plremove", (msg, args) => {
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.pending.length == 0)
     msg.channel.send(msg.lang.music.emptyPlaylist())
-  else {
+  else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     let id = Math.floor(Number(args[0]));
     if (id < 1 || id > msg.guild.playlist.pending.length)
@@ -511,27 +506,33 @@ commands.set("plremove", (msg, args) => {
       let removed = msg.guild.playlist.pending.splice(id-1, 1)[0];
       msg.channel.send(msg.lang.commands.plremove.done("$TITLE", removed.title));
     }
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+  else msg.channel.send(msg.lang.music.notPlaying())
 }, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("plclear", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else {
+  else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     let nb = msg.guild.playlist.pending.clear();
     msg.channel.send(msg.lang.commands.plclear.done("$NB", nb));
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+  else msg.channel.send(msg.lang.music.notPlaying())
 }, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("plshuffle", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else {
+  else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     msg.guild.playlist.pending.shuffle();
     msg.channel.send(msg.lang.commands.plshuffle.done());
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+  else msg.channel.send(msg.lang.music.notPlaying())
 }, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("volume", (msg, args) => {
@@ -550,64 +551,69 @@ commands.set("volume", (msg, args) => {
 commands.set("loop", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else if (!msg.guild.playlist.playing)
-    msg.channel.send(msg.lang.music.notPlaying())
-  else {
+  else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     msg.guild.playlist.looping = !msg.guild.playlist.looping;
     if (msg.guild.playlist.looping) msg.channel.send(msg.lang.commands.loop.on("$TITLE", msg.guild.playlist.current.title));
     else msg.channel.send(msg.lang.commands.loop.off());
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+  else msg.channel.send(msg.lang.music.notPlaying())
 }, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("plloop", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else if (!msg.guild.playlist.playing)
-    msg.channel.send(msg.lang.music.notPlaying())
-  else {
+  else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     msg.guild.playlist.playlistLooping = !msg.guild.playlist.playlistLooping;
     if (msg.guild.playlist.playlistLooping) msg.channel.send(msg.lang.commands.plloop.on());
     else msg.channel.send(msg.lang.commands.plloop.off());
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+  else msg.channel.send(msg.lang.music.notPlaying())
 }, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("current", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else if (!msg.guild.playlist.playing)
-    msg.channel.send(msg.lang.music.notPlaying())
-  else {
+  else if (msg.guild.playlist.playing) {
     let current = msg.guild.playlist.current;
     let time = msg.guild.playlist.time;
   	let info = tools.defaultEmbed();
-  	if (!current.file) {
+  	if (current.type == "youtube") {
   		info.setThumbnail(current.thumbnailURL)
   		.addField(msg.lang.commands.current.title(), current.title, true)
   		.addField(msg.lang.commands.current.author(), current.author.name + " (" + current.author.channelURL + ")", true)
   		.addField(msg.lang.commands.current.description(), current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
   		.addField(msg.lang.commands.current.link(), current.link, true)
-  	} else
-  		info.addField(msg.lang.commands.current.fileName(), current.title, true);
+    } else if (current.type == "file") {
+  		info.addField(msg.lang.commands.current.fileName(), current.name, true);
+    }
     info.addField(msg.lang.commands.current.requestedBy(), current.member, true);
   	msg.channel.send(msg.lang.commands.current.display("$TIMER", tools.parseTimestamp(time).timer + " / " + tools.parseTimestamp(current.length).timer + " ("+ Math.floor((time / current.length)*100) + "%)"), info);
-  }
+  } else if (msg.guild.playlist.streaming) {
+    if (msg.guild.playlist.current.title)
+      msg.channel.send(msg.lang.commands.stream.nowStreamingTitle("$NAME", msg.guild.playlist.current.name, "$TITLE", msg.guild.playlist.current.title));
+    else
+      msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", msg.guild.playlist.current.name));
+  } else
+    msg.channel.send(msg.lang.music.notPlayingNorStreaming())
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
 
 commands.set("playlist", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else {
+  else if (msg.guild.playlist.playing) {
     let playlist = msg.guild.playlist.pending;
   	let info = tools.defaultEmbed();
   	let i = 1;
   	for (let music of playlist) {
-  		if (!music.file)
+  		if (music.type == "youtube")
         info.addField(msg.lang.commands.playlist.info("$ID", i, "$TITLE", music.title, "$AUTHOR", music.author.name, "$DURATION", tools.parseTimestamp(music.length).timer),
         msg.lang.commands.playlist.requestedBy("$MEMBER", music.member));
-  		else
-        info.addField(msg.lang.commands.playlist.info("$ID", i, "$TITLE", music.title, "$DURATION", tools.parseTimestamp(music.length).timer),
+  		else if (music.type == "file")
+        info.addField(msg.lang.commands.playlist.info("$ID", i, "$TITLE", music.name, "$DURATION", tools.parseTimestamp(music.length).timer),
         msg.lang.commands.playlist.requestedBy("$MEMBER", music.member));
   		i++;
       if (i == 21) break;
@@ -617,7 +623,8 @@ commands.set("playlist", msg => {
       if (playlist.length <= 20) msg.channel.send(msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
       else msg.channel.send(msg.lang.commands.playlist.displayMore("$NB", playlist.length - 20) + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
   	} else msg.channel.send(msg.lang.music.emptyPlaylist() + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
-  }
+  } else if (msg.guild.playlist.streaming)
+    msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
 
 // ELSE

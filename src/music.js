@@ -5,10 +5,16 @@ const ytdl = require("ytdl-core");
 const YoutubeAPI = require("simple-youtube-api");
 const fs = require("fs");
 const musicmetadata = require("musicmetadata");
+const snekfetch = require('snekfetch');
 
 const messages = Object.freeze({
   notConnected: "the client is not connected.",
-  notPlaying: "the client is not playing."
+  playing: "the client is playing.",
+  notPlaying: "the client is not playing.",
+  streaming: "the client is streaming",
+  notStreaming: "the client is not streaming.",
+  notPlayingNorStreaming: "the client is not playing or streaming.",
+  notDispatching: "the client is not dispatching."
 });
 
 const privates = new WeakMap();
@@ -50,6 +56,7 @@ class Playlist extends EventEmitter {
     that.looping = false;
     that.pllooping = false;
     that.volume = 1;
+    that.streaming = false;
     this.maxVolume = Infinity;
     this.guild = guild;
     this.client = guild.client;
@@ -75,42 +82,47 @@ class Playlist extends EventEmitter {
       throw new PlaylistError(this, messages.notConnected);
     let that = prv(this);
     let channel = this.guild.me.voiceChannel;
-    this.stopping = true;
+    if (this.dispatching)
+      that.dispatcher.end("stop");
     channel.leave();
-    this.current = undefined;
+    this.current = null;
     this.pending.clear();
     that.playing = false;
     that.dispatcher = null;
     that.looping = false;
     that.pllooping = false;
     that.volume = 1;
+    that.streaming = false;
     return channel;
   }
 
   next() {
-    let that = prv(this);
     if (!this.connected)
       throw new PlaylistError(this, messages.notConnected);
-    else if (!this.dispatching) {
+    if (this.streaming)
+      throw new PlaylistError(this, messages.streaming);
+    let that = prv(this);
+    if (!this.dispatching) {
       this.current = this.looping ? this.current : this.pending.shift();
       if (this.current) {
         that.playing = true;
-        that.dispatcher = this.current.play(this.guild.me.voiceChannel.connection);
+        that.dispatcher = this.current.play(this.channel.connection);
         that.dispatcher.setVolume(that.volume);
         that.dispatcher.on("start", () => {
           this.emit("start", this.current);
           this.client.emit("playlistStart", this, this.current);
         });
-        that.dispatcher.on("end", async () => {
-          if (!this.stopping) {
+        that.dispatcher.on("end", async reason => {
+          if (reason != "stop") {
             await sleep(500);
             this.emit("end", this.current);
             this.client.emit("playlistEnd", this, this.current);
             if (that.pllooping)
               this.pending.push(this.current);
             this.next();
-          } else delete this.stopping;
+          }
         });
+        that.dispatcher.on("error", console.error);
         if (!this.looping) {
           this.emit("next", this.current);
           this.client.emit("playlistNext", this, this.current);
@@ -129,6 +141,31 @@ class Playlist extends EventEmitter {
     } else {
       this.looping = false;
       that.dispatcher.end("skip")
+    }
+  }
+
+  stream(stream) {
+    if (!this.connected)
+      throw new PlaylistError(this, messages.notConnected);
+    if (this.palying)
+      throw new PlaylistError(this, messages.playing);
+    let that = prv(this);
+    if (this.streaming && !stream)
+      that.dispatcher.end("stop");
+    else {
+      if (this.dispatching)
+        that.dispatcher.end("stop");
+      this.current = stream;
+      that.dispatcher = stream.stream(this.channel.connection);
+      that.streaming = true;
+      that.dispatcher.setVolume(this.volume);
+      that.dispatcher.on("start", () => {
+        null;
+      });
+      that.dispatcher.on("end", reason => {
+        that.streaming = false;
+      });
+      that.dispatcher.on("error", console.error);
     }
   }
 
@@ -184,13 +221,11 @@ class Playlist extends EventEmitter {
   set paused(bool) {
     if (!this.connected)
       throw new PlaylistError(this, messages.notConnected);
-    if (!this.playing)
-      throw new PlaylistError(this, messages.notPlaying);
+    if (!this.dispatching)
+      throw new PlaylistError(this, messages.notPlayingNorStreaming);
     let that = prv(this);
-    if (this.dispatching) {
-      if (bool) that.dispatcher.pause();
-      else that.dispatcher.resume();
-    }
+    if (bool) that.dispatcher.pause();
+    else that.dispatcher.resume();
   }
 
   get id() {
@@ -200,8 +235,12 @@ class Playlist extends EventEmitter {
     return this.guild.me.voiceChannelID ? true : false;
   }
   get playing() {
-    if (!this.connected) return undefined;
+    if (!this.connected) return false;
     return prv(this).playing;
+  }
+  get streaming() {
+    if (!this.connected) return false;
+    return prv(this).streaming;
   }
   get dispatching() {
     let that = prv(this);
@@ -212,7 +251,8 @@ class Playlist extends EventEmitter {
   }
   get time() {
     if (!this.dispatching) return undefined;
-    return prv(this).dispatcher.time;
+    if (this.playing) return prv(this).dispatcher.time;
+    else if (this.streaming) return null;
   }
 }
 
@@ -227,7 +267,7 @@ class PlaylistArray extends Array {
   }
   push(...music) {
     super.push(...music);
-    if (!this.playlist.playing && this.length != 0)
+    if (!this.playlist.playing && !this.playlist.streaming && this.length != 0)
       this.playlist.next();
   }
   clear() {
@@ -274,7 +314,8 @@ module.exports = {
     		thumbnailURL: info.thumbnail_url,
     		maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
     		length: Number(info.length_seconds)*1000,
-    		keywords: info.keywords
+    		keywords: info.keywords,
+        type: "youtube"
     	});
     },
     query: async (query, apiKey, nb = 5) => {
@@ -307,8 +348,9 @@ module.exports = {
     			else resolve(new MusicFile({
             path: path,
             name: path.split("/").pop(),
-            length: music.length = Math.round(metadata.duration*1000),
-            metadata: metadata
+            length: Math.round(metadata.duration*1000),
+            metadata: metadata,
+            type: "file"
           }));
     		});
     	});
