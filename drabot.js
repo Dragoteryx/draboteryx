@@ -659,7 +659,7 @@ commands.set("fact", (msg, args) => {
 	}
 	snekfetch.get(link).then(res => {
 		let parsed = JSON.parse(res.text);
-		msg.channel.send(parsed.text);
+		msg.channel.send(parsed.fact);
 	}).catch(err => {
 		msg.channel.send(msg.lang.commands.fact.offline());
 	});
