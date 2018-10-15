@@ -60,8 +60,8 @@ class ListenMoe extends EventEmitter {
 			clearInterval(that.sendHeartbeat);
 		}
 	}
-	stream(voiceConnection) {
-		return voiceConnection.playStream(prv(this).stream);
+	stream(voiceConnection, options) {
+		return voiceConnection.playStream(prv(this).stream, options);
 	}
 }
 

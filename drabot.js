@@ -74,7 +74,7 @@ client.on("message", async msg => {
     msg.channel.onMsgCallbacks.forEach(func => func(msg));
 
     // commands
-  	let res = await commands.check(msg);
+  	let res = await commands.run(msg);
   	if (!res.result.valid) {
   		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
   			return;
@@ -541,10 +541,12 @@ commands.set("volume", (msg, args) => {
   else {
     msg.guild.musicChannel = msg.channel;
     let volume = Number(args);
-    msg.guild.playlist.volume = volume/100;
-    if (volume < 0) volume = 0;
-    if (volume/100 > msg.guild.playlist.maxVolume) volume = msg.guild.playlist.maxVolume*100;
-    msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
+    if (!isNaN(volume)) {
+      msg.guild.playlist.volume = volume/100;
+      if (volume < 0) volume = 0;
+      if (volume/100 > msg.guild.playlist.maxVolume) volume = msg.guild.playlist.maxVolume*100;
+      msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
+    } else msg.channel.send(msg.lang.commands.volume.invalidVolume());
   }
 }, {guildonly: true, minargs: 1, maxargs: 1, info: {show: true, type: "music"}});
 
@@ -601,7 +603,7 @@ commands.set("current", msg => {
     msg.channel.send(msg.lang.music.notPlayingNorStreaming())
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
 
-commands.set("playlist", msg => {
+commands.set("playlist", async msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -619,7 +621,7 @@ commands.set("playlist", msg => {
       if (i == 21) break;
   	}
   	if (playlist.length > 0) {
-  		msg.channel.send(msg.lang.commands.playlist.display(), info);
+  		await msg.channel.send(msg.lang.commands.playlist.display(), info);
       if (playlist.length <= 20) msg.channel.send(msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
       else msg.channel.send(msg.lang.commands.playlist.displayMore("$NB", playlist.length - 20) + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
   	} else msg.channel.send(msg.lang.music.emptyPlaylist() + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
@@ -657,10 +659,7 @@ commands.set("fact", (msg, args) => {
 	}
 	snekfetch.get(link).then(res => {
 		let parsed = JSON.parse(res.text);
-		if (!parsed.found)
-			msg.channel.send(msg.lang.commands.fact.misc.noResults());
-		else
-			msg.channel.send(parsed.fact);
+		msg.channel.send(parsed.text);
 	}).catch(err => {
 		msg.channel.send(msg.lang.commands.fact.offline());
 	});

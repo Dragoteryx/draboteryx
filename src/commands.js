@@ -20,14 +20,14 @@ class CommandsHandler extends Map {
     super.set(newName, command);
     return true;
   }
-  async check(msg) {
+  async run(msg) {
     if (!msg.content.startsWith(msg.prefix))
       return {command: null, result: {valid: false, reasons: ["no prefix"], returned: null}};
     let name = msg.content.split(" ").shift().replace(msg.prefix, "");
 		if (!this.has(name))
       return {command: null, result: {valid: false, reasons: ["unknown command"], returned: null}};
 		let command = this.get(name);
-    let result = await command.check(msg);
+    let result = await command.run(msg);
     return {command: command, result: result};
   }
 	*[Symbol.iterator]() {
@@ -50,7 +50,7 @@ class Command {
   set name(newName) {
     prv(this).handler.rename(prv(this).name, newName);
   }
-  async check(msg) {
+  async run(msg) {
     let reasons = [];
 		let returned = null;
     let options = this.options;

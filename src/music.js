@@ -106,7 +106,7 @@ class Playlist extends EventEmitter {
       this.current = this.looping ? this.current : this.pending.shift();
       if (this.current) {
         that.playing = true;
-        that.dispatcher = this.current.play(this.channel.connection);
+        that.dispatcher = this.current.play(this.channel.connection, {passes: 3});
         that.dispatcher.setVolume(that.volume);
         that.dispatcher.on("start", () => {
           this.emit("start", this.current);
@@ -147,7 +147,7 @@ class Playlist extends EventEmitter {
   stream(stream) {
     if (!this.connected)
       throw new PlaylistError(this, messages.notConnected);
-    if (this.palying)
+    if (this.playing)
       throw new PlaylistError(this, messages.playing);
     let that = prv(this);
     if (this.streaming && !stream)
@@ -156,7 +156,7 @@ class Playlist extends EventEmitter {
       if (this.dispatching)
         that.dispatcher.end("stop");
       this.current = stream;
-      that.dispatcher = stream.stream(this.channel.connection);
+      that.dispatcher = this.current.stream(this.channel.connection, {passes: 3});
       that.streaming = true;
       that.dispatcher.setVolume(this.volume);
       that.dispatcher.on("start", () => {
@@ -284,8 +284,8 @@ class YoutubeVideo {
   constructor(object) {
     Object.assign(this, object);
   }
-  play(voiceConnection) {
-    return voiceConnection.playStream(ytdl(this.link, {filter:"audioonly"}), this.options);
+  play(voiceConnection, options) {
+    return voiceConnection.playStream(ytdl(this.link, {filter:"audioonly"}), options);
   }
 }
 
@@ -293,8 +293,8 @@ class MusicFile {
   constructor(object) {
     Object.assign(this, object);
   }
-  play(voiceConnection) {
-    return voiceConnection.playFile(this.path, this.options);
+  play(voiceConnection, options) {
+    return voiceConnection.playFile(this.path, options);
   }
 }
 

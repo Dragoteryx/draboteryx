@@ -26,7 +26,7 @@
   },
   "music": {
     "notConnected": "I am not in a voice channel.",
-    "notPlaying": "I am not playing any music at the moment.",  
+    "notPlaying": "I am not playing any music at the moment.",
     "nowPlaying": "Now playing: `$TITLE` by `$AUTHOR`. (requested by `$MEMBER`)",
     "nowPlayingFile": "Now playing: `$TITLE`. (requested by `$MEMBER`)",
     "emptyPlaylist": "The playlist is empty.",
@@ -164,7 +164,8 @@
     "volume": {
       "syntax": "$PREFIXvolume [value]",
       "description": "Set the volume of the music.",
-      "volumeSet": "The volume has been set to `$VOLUME%`."
+      "volumeSet": "The volume has been set to `$VOLUME%`.",
+      "invalidVolume": "This volume is invalid."
     },
     "current": {
       "syntax": "$PREFIXcurrent",
@@ -190,7 +191,6 @@
     "fact": {
       "syntax": "$PREFIXfact (query)",
       "description": "Generates a random stupid fact.",
-      "noResults": "I did not find any interesting fact sorry.",
       "offline": "I'm not in the mood for this right now. Try again later. :grimacing:"
     },
     "roll": {

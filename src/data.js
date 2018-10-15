@@ -83,6 +83,7 @@ function sendRedis(path, data) {
 async function fetchData(collection, id) {
 	let client = await connectMongo();
 	let find = await fetchMongo(client, collection, {id: id});
+	client.close();
 	if (find.length == 0) return {id: id};
 	return find.shift();
 }
