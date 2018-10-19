@@ -16,7 +16,7 @@ const crypt = require("./src/crypt.js");
 const CommandHandler = require("./src/commands.js");
 const music = require("./src/music.js");
 const Lang = require("./langs/langs.js");
-const listenmoe = require("./src/listenmoe.js");
+//const listenmoe = require("./src/listenmoe.js");
 
 // CONSTS
 const client = new discord.Client();
@@ -420,7 +420,7 @@ commands.set("request", async (msg, args) => {
   } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
 }, {minargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
-commands.set("stream", async (msg, args) => {
+/*commands.set("stream", async (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.playing) {
@@ -441,7 +441,7 @@ commands.set("stream", async (msg, args) => {
         msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", msg.guild.playlist.current.name));
     } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
   } else msg.channel.send(msg.lang.music.noPlaying());
-}, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
+}, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});*/
 
 commands.set("query", msg => {
   if (!msg.guild.playlist.connected)
