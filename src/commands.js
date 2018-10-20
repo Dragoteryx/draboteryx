@@ -94,7 +94,7 @@ class Command {
     if (valid) {
       options.uses -= options.uses > 0 ? 1 : 0;
       returned = await this.callback(msg, args);
-    } else this.error(res);
+    } else if (this.error) this.error(res);
     return res;
   }
   static get defaultOptions() {
