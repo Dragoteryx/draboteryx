@@ -52,7 +52,7 @@ async function deleteMongo(client, coll, find = {}) {
 }
 
 //REDIS
-const redis = require("redis").createClient(process.env.REDIS_URL);
+/*const redis = require("redis").createClient(process.env.REDIS_URL);
 let redisOK = false;
 redis.on("ready", () => {
 	redisOK = true;
@@ -77,7 +77,7 @@ function fetchRedis(path) {
 function sendRedis(path, data) {
 	if (typeof data == "object") data = JSON.stringify(data);
 	return redis.set(path, data);
-}
+}*/
 
 // PROTOTYPES
 async function fetchData(collection, id) {
@@ -156,15 +156,3 @@ Object.defineProperty(discord.GuildMember.prototype, "clearData", {
 		return this.user.clearData();
   }
 });
-
-module.exports = {
-  fetchRedis: fetchRedis,
-  sendRedis: sendRedis,
-  get redis() {
-		return redisOK;
-	},
-	insertMongo: insertMongo,
-	fetchMongo: fetchMongo,
-	updateMongo: updateMongo,
-	deleteMongo: deleteMongo
-}
