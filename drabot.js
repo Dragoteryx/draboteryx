@@ -6,6 +6,7 @@ require("./src/prototypes.js");
 const discord = require("discord.js");
 const snekfetch = require("snekfetch");
 const DBL = require("dblapi.js");
+const Danbooru = require("danbooru");
 
 // FILES
 const config = require("./config.js");
@@ -30,6 +31,7 @@ const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "
 const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 const vars = {};
+const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
 // GLOBALS
 let connected = false;
 let debug = false;
@@ -78,10 +80,12 @@ client.on("message", async msg => {
   	if (!res.result.valid) {
   		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
   			return;
+      else if (res.result.reasons.includes("owner only command"))
+  			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
+      else if (res.result.reasons.includes("disabled"))
+        msg.channel.send(msg.lang.errors.disabledCommand());
   		else if (res.result.reasons.includes("guild only command"))
   			msg.channel.send(msg.lang.errors.guildOnlyCommand());
-  		else if (res.result.reasons.includes("owner only command"))
-  			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
       else if (res.result.reasons.includes("admin only command"))
   			msg.channel.send(msg.lang.errors.adminOnlyCommand());
       else if (res.result.reasons.includes("mod only command"))
@@ -183,7 +187,7 @@ commands.set("help", (msg, args) => {
 	if (args.length == 0) {
 		let coms = [];
 		for (let command of commands)
-			if (command.options.info && command.options.info.show) coms.push({name: command.name, type: command.options.info.type});
+			if (command.options.info && command.options.info.show && !command.options.disabled) coms.push({name: command.name, type: command.options.info.type});
 		let embed = tools.defaultEmbed();
 		embed.addField("Drabot " + msg.prefix + "help", msg.lang.commands.help.info("$PREFIX", msg.prefix));
 		for (let type of commandTypes) {
@@ -420,7 +424,7 @@ commands.set("request", async (msg, args) => {
   } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
 }, {minargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
-/*commands.set("stream", async (msg, args) => {
+commands.set("stream", async (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.playing) {
@@ -441,7 +445,7 @@ commands.set("request", async (msg, args) => {
         msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", msg.guild.playlist.current.name));
     } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
   } else msg.channel.send(msg.lang.music.noPlaying());
-}, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});*/
+}, {disabled: true, minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
 
 commands.set("query", msg => {
   if (!msg.guild.playlist.connected)
@@ -651,15 +655,10 @@ commands.set("roll", (msg, args) => {
 }, {maxargs: 1, info: {show: true, type: "fun"}});
 
 commands.set("fact", (msg, args) => {
-	let link = "https://factgenerator.herokuapp.com/generate/";
-	if (args.length > 0) {
-		for (let arg of args)
-			link += arg + "_";
-		link = link.substring(0, link.length-1);
-	}
+	let link = "https://factgenerator.herokuapp.com/generate?words=" + args.join("_");
 	snekfetch.get(link).then(res => {
 		let parsed = JSON.parse(res.text);
-		msg.channel.send(parsed.fact);
+		msg.channel.send(parsed.facts[0].text);
 	}).catch(err => {
 		msg.channel.send(msg.lang.commands.fact.offline());
 	});
@@ -685,16 +684,17 @@ commands.set("reflex", async msg => {
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "game"}});
 
 commands.set("cyanidehappiness", async msg => {
-  let link = "http://explosm.net/rcg";
+  let link = "http://explosm.net/rcg/";
 	let res = await snekfetch.get(link);
-	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {file: res.text.split('<meta property="og:image" content="').pop().split('">').shift()});
-}, {maxargs: 0, info: {show: true, type: "fun"}});
+  let img = res.text.match(new RegExp(link + "[a-z]{9}", "i")).shift();
+	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {file: []});
+}, {disabled: true, maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("httpdog", async msg => {
-	let res = await snekfetch.get("https://httpstatusdogs.com");
-	let img = res.text.split('src="img/').random().split('" alt="').shift();
-	let link = "https://httpstatusdogs.com/img/" + img;
-	msg.channel.send("", {files: [link]});
+  let link = "https://httpstatusdogs.com/";
+	let res = await snekfetch.get(link);
+	let imgs = res.text.match(new RegExp("img/[1-5][0-9]{2}.jpg", "g"));
+	msg.channel.send("", {files: [link + imgs.random()]});
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("waifu", msg => {
@@ -726,6 +726,23 @@ commands.set("decrypt", async msg => {
 		else msg.channel.send(msg.lang.commands.decrypt.decrypted("$MESSAGE", message));
 	}
 }, {minargs: 1, info: {show: true, type: "misc"}});
+
+commands.set("danbooru", async (msg, args) => {
+  let tags = args.join(" ");
+  if (msg.guild && !msg.channel.nsfw) tags += " rating:safe";
+  let posts = await booru.posts({limit: 1, random: true, tags: tags});
+  if (posts.length == 0 || !posts[0]) msg.channel.send(msg.lang.misc.noResults());
+  else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
+}, {minargs: 1, maxargs: 2, info: {show: true, type: "nsfw"}});
+
+commands.set("spurriouscorrelations", async msg => {
+  let corrs = null;
+  while (corrs === null) {
+    let res = await snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700));
+    corrs = res.text.match(new RegExp("correlation_images/[a-z0-9_-]+[.]png", "gi"));
+  }
+  msg.channel.send("", {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
+}, {maxargs: 0, info: {show: true, type: "fun"}});
 
 // FUNCTIONS
 function login() {

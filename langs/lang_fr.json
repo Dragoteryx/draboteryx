@@ -21,7 +21,8 @@
     "djOnlyCommand": "Cette commande est réservée aux DJs.",
     "nsfwCommand": "T'essayes de faire quoi là en fait ?",
     "wrongSyntax": "Utilise `$PREFIXhelp $COMMAND` pour apprendre à utiliser cette commande.",
-    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test."
+    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test.",
+    "disabledCommand": "Cette commande a été temporairement désactivée."
   },
   "music": {
   	"notConnected": "Je ne suis pas connecté.",

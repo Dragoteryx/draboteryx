@@ -22,7 +22,8 @@
     "djOnlyCommand": "This is a DJ only command.",
     "nsfwCommand": "What are you trying to do?",
     "wrongSyntax": "Use `$PREFIXhelp $COMMAND` to learn how to use this command.",
-    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
+    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server.",
+    "disabledCommand": "This command has been temporarily disabled."
   },
   "music": {
     "notConnected": "I am not in a voice channel.",
@@ -324,6 +325,15 @@
       "done": "I deleted `$NB` messages.",
       "error": "Something went wrong when I tried to delete messages.",
       "limit": "I can't delete more than `100` messages at a time."
+    },
+    "danbooru": {
+      "syntax": "$PREFIXdanbooru [1-2 tags]",
+      "description": "Search on Danbooru. (only displays NSFW pictures in NSFW channels)",
+      "result": "Tags: `$TAGS`"
+    },
+    "spurriouscorrelations": {
+      "syntax": "$PREFIXspurriouscorrelations",
+      "description": "Spurrios correlations! (from `http://tylervigen.com/spurious-correlations`)"
     }
   }
 }

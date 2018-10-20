@@ -7,9 +7,9 @@ function prv(object) {
 }
 
 class CommandsHandler extends Map {
-  set(name, callback, options = {}) {
+  set(name, callback, options = {}, error) {
     options = Object.assign(Command.defaultOptions, options);
-    let command = new Command(name, callback, options, this);
+    let command = new Command(name, callback, options, error, this);
     return super.set(name, command);
   }
   rename(oldName, newName) {
@@ -38,11 +38,13 @@ class CommandsHandler extends Map {
 }
 
 class Command {
-  constructor(name, callback = msg => console.dir(msg, {colors: true}), options = {}, handler) {
+  constructor(name, callback = msg => console.dir(msg, {colors: true}), options = {}, error, handler) {
     prv(this).name = name;
 		prv(this).handler = handler;
     this.callback = callback;
     this.options = options;
+		this.error = error;
+		this.nb = 0;
   }
   get name() {
     return prv(this).name;
@@ -51,6 +53,7 @@ class Command {
     prv(this).handler.rename(prv(this).name, newName);
   }
   async run(msg) {
+		this.nb++;
     let reasons = [];
 		let returned = null;
     let options = this.options;
@@ -58,6 +61,8 @@ class Command {
 		let nbArgs = args.length;
     if (options.owner && !msg.author.owner)
       reasons.push("owner only command");
+		if (options.disabled && !msg.author.owner)
+			reasons.push("disabled");
     if (msg.guild && options.admin && !msg.member.admin)
       reasons.push("admin only command");
     if (msg.guild && options.mod && !msg.member.mod)
@@ -85,15 +90,17 @@ class Command {
     if (!(await options.function(msg)))
       reasons.push("boolean function");
     let valid = reasons.length == 0;
+		let res = {valid: valid, reasons: reasons, returned: returned};
     if (valid) {
       options.uses -= options.uses > 0 ? 1 : 0;
       returned = await this.callback(msg, args);
-    }
-    return {valid: valid, reasons: reasons, returned: returned};
+    } else this.error(res);
+    return res;
   }
   static get defaultOptions() {
     return {
       owner: false,
+			disabled: false,
 			admin: false,
 			mod: false,
 			dj: false,
