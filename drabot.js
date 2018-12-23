@@ -118,9 +118,10 @@ client.on("ready", async () => {
       pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
       pfAliases.ready = true;
     }
-    let owner = (await client.fetchApplication()).owner;
 		connected = true;
+    client.user.setActivity(config.prefix + "help");
 		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
+    let owner = (await client.fetchApplication()).owner;
 		if (process.env.HEROKU) {
 			if (!client.shard) console.log("(Heroku launch)");
       if (owner.presence.status == "online")
@@ -130,7 +131,6 @@ client.on("ready", async () => {
       if (owner.presence.status == "online")
 			  owner.send("Local launch complete.");
 		}
-		client.user.setActivity(config.prefix + "help");
 	}
 });
 client.on("error", err => {
@@ -281,6 +281,11 @@ commands.set("lang", async (msg, args) => {
     }
   }
 }, {maxargs: 1, info: {show: true, type: "bot"}});
+
+commands.set("ping", async msg => {
+  let delay = Date.now() - msg.createdTimestamp;
+  msg.channel.send("Pong! (" + delay + "ms) :ping_pong:");
+}, {maxargs: 0});//, info: {show: true, type: "bot"}});
 
 // MODERATION
 

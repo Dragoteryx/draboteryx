@@ -133,7 +133,7 @@ exports.parseTimestamp = timestamp => {
 	});
 }
 
-exports.range = function(min = 0, max = 10) {
+exports.range = (min = 0, max = 10) => {
 	if (max < min) {
 		let buffer = min;
 		min = max;

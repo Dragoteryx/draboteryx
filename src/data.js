@@ -1,7 +1,7 @@
 const discord = require("discord.js");
 
 //MONDOGB
-const mongoclient = require('mongodb').MongoClient;
+const mongoclient = require("mongodb").MongoClient;
 function connectMongo() {
 	return new Promise((resolve, reject) => {
 		mongoclient.connect(process.env.MONGODB_URI, {useNewUrlParser: true}, function(err, client) {
@@ -51,41 +51,13 @@ async function deleteMongo(client, coll, find = {}) {
 	})
 }
 
-//REDIS
-/*const redis = require("redis").createClient(process.env.REDIS_URL);
-let redisOK = false;
-redis.on("ready", () => {
-	redisOK = true;
-});
-redis.on("end", () => {
-	redisOK = false;
-});
-redis.on("error", err => {
-	redisOK = false;
-});
-
-function fetchRedis(path) {
-	return new Promise((resolve, reject) => {
-		redis.get(path, (err, data) => {
-			if (err) reject(err);
-			else if (data === null) resolve({});
-			else resolve(JSON.parse(data));
-		});
-	});
-}
-
-function sendRedis(path, data) {
-	if (typeof data == "object") data = JSON.stringify(data);
-	return redis.set(path, data);
-}*/
-
 // PROTOTYPES
 async function fetchData(collection, id) {
 	let client = await connectMongo();
 	let find = await fetchMongo(client, collection, {id: id});
 	client.close();
 	if (find.length == 0) return {id: id};
-	return find.shift();
+	return find[0];
 }
 async function sendData(collection, id, data) {
 	let client = await connectMongo();
@@ -141,18 +113,46 @@ Object.defineProperty(discord.User.prototype, "clearData", {
 
 Object.defineProperty(discord.GuildMember.prototype, "fetchData", {
   value: function() {
-    return this.user.fetchData();
+		return fetchData("guildmembers", this.guild.id + "." + this.user.id);
   }
 });
 
 Object.defineProperty(discord.GuildMember.prototype, "sendData", {
   value: function(data) {
-    return this.user.sendData(data);
+    return sendData("guildmembers", this.guild.id + "." + this.user.id, data);
   }
 });
 
 Object.defineProperty(discord.GuildMember.prototype, "clearData", {
   value: function() {
-		return this.user.clearData();
+		return clearData("guildmembers", this.guild.id + "." + this.user.id);
   }
 });
+
+//REDIS
+/*const redis = require("redis").createClient(process.env.REDIS_URL);
+let redisOK = false;
+redis.on("ready", () => {
+	redisOK = true;
+});
+redis.on("end", () => {
+	redisOK = false;
+});
+redis.on("error", err => {
+	redisOK = false;
+});
+
+function fetchRedis(path) {
+	return new Promise((resolve, reject) => {
+		redis.get(path, (err, data) => {
+			if (err) reject(err);
+			else if (data === null) resolve({});
+			else resolve(JSON.parse(data));
+		});
+	});
+}
+
+function sendRedis(path, data) {
+	if (typeof data == "object") data = JSON.stringify(data);
+	return redis.set(path, data);
+}*/
