@@ -113,14 +113,13 @@ class Playlist extends EventEmitter {
           this.client.emit("playlistStart", this, this.current);
         });
         that.dispatcher.on("end", async reason => {
-          if (reason != "stop") {
-            await sleep(500);
-            this.emit("end", this.current);
-            this.client.emit("playlistEnd", this, this.current);
-            if (that.pllooping)
-              this.pending.push(this.current);
-            this.next();
-          }
+          if (reason == "stop") return;
+          await sleep(500);
+          this.emit("end", this.current);
+          this.client.emit("playlistEnd", this, this.current);
+          if (that.pllooping)
+            this.pending.push(this.current);
+          this.next();
         });
         that.dispatcher.on("error", console.error);
         if (!this.looping) {

@@ -651,7 +651,7 @@ commands.set("roll", (msg, args) => {
 	if (args.length == 1 && !isNaN(Number(args[0])) && Number(args[0]) > 0)
 		max = Number(args[0]);
 	let res = tools.random(1, max);
-	msg.reply(res + "/" + max + " (:game_die:)");
+	msg.reply(res + "/" + max + " :game_die:");
 }, {maxargs: 1, info: {show: true, type: "fun"}});
 
 commands.set("fact", (msg, args) => {
@@ -686,9 +686,10 @@ commands.set("reflex", async msg => {
 commands.set("cyanidehappiness", async msg => {
   let link = "http://explosm.net/rcg/";
 	let res = await snekfetch.get(link);
-  let img = res.text.match(new RegExp(link + "[a-z]{9}", "i")).shift();
-	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {file: []});
-}, {disabled: true, maxargs: 0, info: {show: true, type: "fun"}});
+  let img = res.text.match(new RegExp("http://files.explosm.net/rcg/[a-z]{9}.png", "i")).shift();
+  console.log(img);
+	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {files: [img]});
+}, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("httpdog", async msg => {
   let link = "https://httpstatusdogs.com/";
