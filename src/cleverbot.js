@@ -5,17 +5,25 @@ module.exports = msg => {
     if (msg.author.cleverResponding) return null;
     msg.author.cleverResponding = true;
     clever.setNick(msg.channel.id);
-    clever.create((err, session) => {
-      if (err) {
-        msg.author.cleverResponding = false;
-        reject(err);
-      } else {
-        clever.ask(msg.content, (err, res) => {
+    try {
+      clever.create((err, session) => {
+        if (err) {
           msg.author.cleverResponding = false;
-          if (err) reject(err);
-          else resolve(res);
-        });     
-      }
-    })
+          reject();
+        } else {
+          try {
+            clever.ask(msg.content, (err, res) => {
+              msg.author.cleverResponding = false;
+              if (err) reject();
+              else resolve(res);
+            });
+          } catch(err) {
+            reject(err);
+          }
+        }
+      })
+    } catch(err) {
+      reject(err);
+    }
   });
 }
