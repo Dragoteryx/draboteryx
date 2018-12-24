@@ -16,6 +16,7 @@ const data = require("./src/data.js");
 const crypt = require("./src/crypt.js");
 const CommandHandler = require("./src/commands.js");
 const music = require("./src/music.js");
+const cleverbot = require("./src/cleverbot.js");
 const Lang = require("./langs/langs.js");
 //const listenmoe = require("./src/listenmoe.js");
 
@@ -45,6 +46,7 @@ exports.vars = vars;
 // LISTEN TO MESSAGES
 client.on("message", async msg => {
   try {
+    if (msg.author.id == client.user.id) return;
 
     // set prefix and lang
     if (msg.guild) {
@@ -79,7 +81,7 @@ client.on("message", async msg => {
   	let res = await commands.run(msg);
   	if (!res.result.valid) {
   		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
-  			return;
+        if (msg.channel.name.toLowerCase().includes("cleverbot")) msg.channel.send(await cleverbot(msg));
       else if (res.result.reasons.includes("owner only command"))
   			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
       else if (res.result.reasons.includes("disabled"))
@@ -285,7 +287,7 @@ commands.set("lang", async (msg, args) => {
 commands.set("ping", async msg => {
   let delay = Date.now() - msg.createdTimestamp;
   msg.channel.send("Pong! (" + delay + "ms) :ping_pong:");
-}, {maxargs: 0});//, info: {show: true, type: "bot"}});
+}, {maxargs: 0, info: {show: true, type: "bot"}});
 
 // MODERATION
 
@@ -692,7 +694,6 @@ commands.set("cyanidehappiness", async msg => {
   let link = "http://explosm.net/rcg/";
 	let res = await snekfetch.get(link);
   let img = res.text.match(new RegExp("http://files.explosm.net/rcg/[a-z]{9}.png", "i")).shift();
-  console.log(img);
 	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {files: [img]});
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
@@ -749,6 +750,29 @@ commands.set("spurriouscorrelations", async msg => {
   }
   msg.channel.send("", {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
 }, {maxargs: 0, info: {show: true, type: "fun"}});
+
+/*commands.set("tictactoe", async (msg, args) => {
+  if (msg.channel._ttt) {
+    msg.channel.send(msg.lang.commands.tictactoe.already());
+    return;
+  }
+  msg.channel._ttt = true;
+  let delay = 20;
+  let other = args.length == 0 ? undefined, (await tools.stringToMembers(args[0], msg.guild)).shift();
+  msg.channel.send(msg.lang.commands.tictactoe.wantsToPlay("$PREFIX", msg.prefix, "$PLAYER", msg.member.displayName, "$DELAY", delay));
+  let msg2 = await msg.channel.waitResponse({delay: delay, filter: msg2 => {
+    if (msg.content != msg.prefix + "tttplay") return false;
+    if (msg.author.id == msg2.author.id) return false;
+    else return true;
+  }});
+  if (!msg2) msg.channel.send(msg.lang.commands.tictactoe.noPlayers("$PLAYER", msg.member.displayName));
+  else {
+
+  }
+  let ttt = Math.random() < 0.5 ? new TicTacToe(msg.channel, msg.member, msg2.member) : new TicTacToe(msg.channel, msg2.member, msg.member);
+
+  msg.channel._ttt = false;
+}, {maxargs: 1, info: {show: true, type: "game"}});*/
 
 // FUNCTIONS
 function login() {

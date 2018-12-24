@@ -328,12 +328,20 @@
     },
     "danbooru": {
       "syntax": "$PREFIXdanbooru [1-2 tags]",
-      "description": "Search on Danbooru. (only displays NSFW pictures in NSFW channels)",
+      "description": "Search on Danbooru. (hides NSFW pictures in SFW channels)",
       "result": "Tags: `$TAGS`"
     },
     "spurriouscorrelations": {
       "syntax": "$PREFIXspurriouscorrelations",
-      "description": "Spurrios correlations! (from `http://tylervigen.com/spurious-correlations`)"
+      "description": "Spurrious correlations! (from `http://tylervigen.com/spurious-correlations`)"
+    },
+    "ping": {
+      "syntax": "$PREFIXping",
+      "description": "Pong!"
+    },
+    "tictactoe": {
+      "syntax": "$PREFIXtictactoe (@player)",
+      "description": "Play TicTacToe with me or someone else."
     }
   }
 }

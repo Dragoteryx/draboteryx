@@ -2,7 +2,13 @@
 const discord = require("discord.js");
 const util = require("util");
 
-// valeur random entre min et max
+exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
+exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+exports.assert = (obj, ...tests) => tests.every(test => test(obj));
+exports.validNumber = (nb, min = -Infinity, max = Infinity) => {
+	return exports.assert(Number(nb), nb => !isNaN(nb), nb => nb >= min, nb => nb <= max);
+}
+
 exports.random = function(min, max) {
 	if (max === undefined)
 		return Math.floor(Math.random()*(min+1));
@@ -15,46 +21,25 @@ exports.defaultEmbed = () => exports.coloredEmbed("#808000");
 exports.discordEmbed = () => exports.coloredEmbed("#7289DA");
 
 exports.stringToMembers = async (str, guild) => {
-	let member;
-	let guildFetched = await guild.fetchMembers();
-	if (str.startsWith("<@") && str.endsWith(">")) {
-		member = await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""));
-		if (member === undefined)
-			member = [];
-		else
-			member = [member];
-	} else member = guildFetched.members.findAll("displayName", str);
-	return member;
+	if (str.startsWith("<@") && str.endsWith(">"))
+		return [await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""))];
+	else {
+		let guildFetched = await guild.fetchMembers();
+		return guildFetched.members.findAll("displayName", str);
+	}
 }
 
 exports.stringToChannels = (str, guild) => {
-	let channel;
-	if (str.startsWith("<#") && str.endsWith(">")) {
-		channel = guild.channels.get(str.replace("<#","").replace(">",""));
-		if (channel === undefined)
-			channel = [];
-		else
-			channel = [channel];
-	} else
-		channel = guild.channels.findAll("name", str);
-	return channel;
+	if (str.startsWith("<#") && str.endsWith(">"))
+		return [guild.channels.get(str.replace("<#","").replace(">",""))];
+	else return guild.channels.findAll("name", str);
 }
 
 exports.stringToRoles = (str, guild) => {
-	let role;
-	if (str.startsWith("<@") && str.endsWith(">")) {
-		role = guild.roles.get(str.replace("<@","").replace(">","").replace("&",""));
-		if (role === undefined)
-			role = [];
-		else
-			role = [role];
-	} else
-		role = guild.roles.findAll("name",str);
-	return role;
+	if (str.startsWith("<@") && str.endsWith(">"))
+		return [guild.roles.get(str.replace("<@","").replace(">","").replace("&",""))];
+	else return guild.roles.findAll("name", str);
 }
-
-exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
-exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 exports.stringifyObject = object => {
 	if (object instanceof Function) return "```js\n" + object.toString().substring(0, 1950) + "\n```";
