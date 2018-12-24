@@ -667,10 +667,13 @@ commands.set("roll", (msg, args) => {
 
 commands.set("fact", (msg, args) => {
 	let link = "https://factgenerator.herokuapp.com/generate?words=" + args.join("_");
+  msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
+    msg.channel.stopTyping();
 		let parsed = JSON.parse(res.text);
 		msg.channel.send(parsed.facts[0].text);
 	}).catch(err => {
+    msg.channel.stopTyping();
 		msg.channel.send(msg.lang.commands.fact.offline());
 	});
 }, {info: {show: true, type: "fun"}});
@@ -679,7 +682,9 @@ commands.set("reflex", async msg => {
 	if (msg.channel.reflex) return;
 	msg.channel.reflex = true;
 	msg.channel.send(msg.lang.commands.reflex.rules());
+  msg.channel.startTyping(1);
 	await tools.sleep(tools.random(5000, 15000));
+  msg.channel.stopTyping();
 	let random = tools.random(100, 999);
 	await msg.channel.send(msg.lang.commands.reflex.msg("$RANDOM", random));
 	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => {
@@ -696,16 +701,22 @@ commands.set("reflex", async msg => {
 
 commands.set("cyanidehappiness", async msg => {
   let link = "http://explosm.net/rcg/";
-	let res = await snekfetch.get(link);
-  let img = res.text.match(new RegExp("http://files.explosm.net/rcg/[a-z]{9}.png", "i")).shift();
-	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {files: [img]});
+  msg.channel.startTyping(1);
+	snekfetch.get(link).then(res => {
+    msg.channel.stopTyping()
+    let img = res.text.match(new RegExp("http://files.explosm.net/rcg/[a-z]{9}.png", "i")).shift();
+  	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {files: [img]});
+  }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("httpdog", async msg => {
   let link = "https://httpstatusdogs.com/";
-	let res = await snekfetch.get(link);
-	let imgs = res.text.match(new RegExp("img/[1-5][0-9]{2}.jpg", "g"));
-	msg.channel.send("", {files: [link + imgs.random()]});
+  msg.channel.startTyping(1);
+	snekfetch.get(link).then(res => {
+    msg.channel.stopTyping();
+  	let imgs = res.text.match(new RegExp("img/[1-5][0-9]{2}.jpg", "g"));
+  	msg.channel.send("", {files: [link + imgs.random()]});
+  }).catch(err => msg.channel.stopTyping());  
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("waifu", msg => {
