@@ -4,25 +4,30 @@ module.exports = msg => {
   return new Promise(async (resolve, reject) => {
     if (msg.author.cleverResponding) return null;
     msg.author.cleverResponding = true;
+    msg.channel.startTyping();
     clever.setNick(msg.channel.id);
     try {
       clever.create((err, session) => {
         if (err) {
           msg.author.cleverResponding = false;
-          reject();
+          msg.channel.stopTyping();
+          reject("cleverbot error");
         } else {
           try {
             clever.ask(msg.content, (err, res) => {
               msg.author.cleverResponding = false;
-              if (err) reject();
+              msg.channel.stopTyping();
+              if (err) reject("cleverbot error");
               else resolve(res);
             });
           } catch(err) {
+            msg.channel.stopTyping();
             reject(err);
           }
         }
       })
     } catch(err) {
+      msg.channel.stopTyping();
       reject(err);
     }
   });

@@ -660,6 +660,7 @@ commands.set("roll", (msg, args) => {
 	let max = 6;
 	if (args.length == 1 && !isNaN(Number(args[0])) && Number(args[0]) > 0)
 		max = Number(args[0]);
+  if (max < 1) max = 1;
 	let res = tools.random(1, max);
 	msg.reply(res + "/" + max + " :game_die:");
 }, {maxargs: 1, info: {show: true, type: "fun"}});
