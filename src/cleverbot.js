@@ -10,15 +10,11 @@ module.exports = msg => {
         msg.author.cleverResponding = false;
         reject(err);
       } else {
-        try {
-          clever.ask(msg.content, (err, res) => {
-            msg.author.cleverResponding = false;
-            if (err) reject(err);
-            else resolve(res);
-          });
-        } catch(err) {
-          reject(err);
-        }        
+        clever.ask(msg.content, (err, res) => {
+          msg.author.cleverResponding = false;
+          if (err) reject(err);
+          else resolve(res);
+        });     
       }
     })
   });

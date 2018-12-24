@@ -82,8 +82,10 @@ client.on("message", async msg => {
   	if (!res.result.valid) {
   		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
         if (msg.channel.name.toLowerCase().includes("cleverbot")) {
-          let res = await cleverbot(msg);
-          if (res) msg.channel.send(res);      
+          try {
+            let res = await cleverbot(msg);
+            if (res) msg.channel.send(res);
+          } catch(err) {}        
         }
       else if (res.result.reasons.includes("owner only command"))
   			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
