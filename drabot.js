@@ -21,6 +21,7 @@ const Lang = require("./langs/langs.js");
 //const listenmoe = require("./src/listenmoe.js");
 
 // CONSTS
+const onHeroku = !!process.env.HEROKU;
 const client = new discord.Client();
 const commands = new CommandHandler();
 commands.owners = config.owners;
@@ -29,7 +30,7 @@ const langs = {
   fr: new Lang(require("./langs/lang_fr.json"), require("./langs/lang_en.json"))
 }
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
-const dbl = process.env.HEROKU ? new DBL(process.env.DBLAPITOKEN, client) : null;
+const dbl = onHeroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
@@ -80,7 +81,8 @@ client.on("message", async msg => {
     // commands
   	let res = await commands.run(msg);
   	if (!res.result.valid) {
-  		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command"))
+  		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command")) {
+        // not a command
         if (msg.channel.name.toLowerCase().includes("cleverbot")) {
           let res = await cleverbot(msg);
           if (res) msg.channel.send(res);
@@ -89,7 +91,7 @@ client.on("message", async msg => {
             channel.send("Salut " + msg.member.displayName + "! :)")
           });
         }
-      else if (res.result.reasons.includes("owner only command"))
+      } else if (res.result.reasons.includes("owner only command"))
   			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
       else if (res.result.reasons.includes("disabled"))
         msg.channel.send(msg.lang.errors.disabledCommand());
@@ -114,7 +116,7 @@ client.on("message", async msg => {
 
 // EVENTS
 process.on("unhandledRejection", err => {
-	if (err instanceof discord.DiscordAPIError && process.env.HEROKU)
+	if (err instanceof discord.DiscordAPIError && onHeroku)
 		console.log("[ERROR] Unhandled Promise Rejection:\nDiscordAPIError: " + err.message);
 	else {
 		console.log("[ERROR] Unhandled Promise Rejection:");
@@ -131,7 +133,7 @@ client.on("ready", async () => {
     client.user.setActivity(config.prefix + "help");
 		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
     let owner = (await client.fetchApplication()).owner;
-		if (process.env.HEROKU) {
+		if (onHeroku) {
 			if (!client.shard) console.log("(Heroku launch)");
       if (owner.presence.status == "online")
 			  owner.send("Heroku launch complete.");
@@ -173,18 +175,17 @@ commands.set("test", msg => {
 
 commands.set("exec", async msg => {
 	try {
-		let val = eval(msg.content.replace(msg.prefix + "exec ", ""));
-		let str = "Executed:\n";
-		if (val instanceof Promise) {
-			val = await val;
-			str = "Executed (Promise):\n";
-		}
-		if (!process.env.HEROKU) {
+    let val = eval(msg.content.replace(msg.prefix + "exec ", ""));
+    let promise = false;
+    if (val instanceof Promise) {
+      promise = true;
+      val = await val;
+    }
+    if (!onHeroku) {
       console.log("[EXEC]");
       console.dir(val, {colors: true});
     }
-		let tosend = tools.stringifyObject(val);
-		msg.channel.send(str + tosend);
+    msg.channel.send((promise ? "Executed (Promise):\n" : "Executed:\n") + tools.stringifyObject(val));
 		msg.react("✅");
 	} catch(err) {
 		funcs.logError(msg, err);
