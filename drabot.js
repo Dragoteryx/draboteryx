@@ -683,7 +683,7 @@ commands.set("reflex", async msg => {
 	msg.channel.reflex = true;
 	msg.channel.send(msg.lang.commands.reflex.rules());
   msg.channel.startTyping(1);
-	await tools.sleep(tools.random(5000, 15000));
+	await tools.sleep(tools.random(1000, 10000));
   msg.channel.stopTyping();
 	let random = tools.random(100, 999);
 	await msg.channel.send(msg.lang.commands.reflex.msg("$RANDOM", random));
@@ -699,7 +699,7 @@ commands.set("reflex", async msg => {
 	msg.channel.reflex = false;
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "game"}});
 
-commands.set("cyanidehappiness", async msg => {
+commands.set("cyanidehappiness", msg => {
   let link = "http://explosm.net/rcg/";
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
@@ -709,14 +709,14 @@ commands.set("cyanidehappiness", async msg => {
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("httpdog", async msg => {
+commands.set("httpdog", msg => {
   let link = "https://httpstatusdogs.com/";
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
     msg.channel.stopTyping();
   	let imgs = res.text.match(new RegExp("img/[1-5][0-9]{2}.jpg", "g"));
   	msg.channel.send("", {files: [link + imgs.random()]});
-  }).catch(err => msg.channel.stopTyping());  
+  }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("waifu", msg => {
@@ -757,13 +757,15 @@ commands.set("danbooru", async (msg, args) => {
   else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
 }, {minargs: 1, maxargs: 2, info: {show: true, type: "nsfw"}});
 
-commands.set("spurriouscorrelations", async msg => {
-  let corrs = null;
-  while (corrs === null) {
-    let res = await snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700));
-    corrs = res.text.match(new RegExp("correlation_images/[a-z0-9_-]+[.]png", "gi"));
-  }
-  msg.channel.send("", {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
+commands.set("spurriouscorrelations", msg => {
+  msg.channel.startTyping(1);
+  snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700)).then(res => {
+    msg.channel.stopTyping();
+    let corrs = res.text.match(new RegExp("correlation_images/[a-z0-9_-]+[.]png", "gi"));
+    if (corrs) msg.channel.send("", {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
+  }).catch(err => {
+    msg.channel.stopTyping();
+  });
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 /*commands.set("tictactoe", async (msg, args) => {
