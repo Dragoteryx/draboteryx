@@ -21,7 +21,7 @@ const Lang = require("./langs/langs.js");
 //const listenmoe = require("./src/listenmoe.js");
 
 // CONSTS
-const onHeroku = !!process.env.HEROKU;
+const onHeroku = process.env.HEROKU != undefined;
 const client = new discord.Client();
 const commands = new CommandHandler();
 commands.owners = config.owners;
