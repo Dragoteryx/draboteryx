@@ -10,10 +10,12 @@ exports.validNumber = (nb, min = -Infinity, max = Infinity) => {
 }
 
 exports.random = function(min, max) {
-	if (max === undefined)
-		return Math.floor(Math.random()*(min+1));
-	else
-		return Math.floor(Math.random()*(max-min+1))+min;
+	if (max === undefined) {
+		let buffer = max;
+		max = min;
+		min = 0;
+	}
+	return Math.floor(Math.random()*(max-min+1))+min;
 }
 
 exports.coloredEmbed = color => new discord.RichEmbed().setColor(color);
@@ -21,24 +23,22 @@ exports.defaultEmbed = () => exports.coloredEmbed("#808000");
 exports.discordEmbed = () => exports.coloredEmbed("#7289DA");
 
 exports.stringToMembers = async (str, guild) => {
+	let guildFetched = await guild.fetchMembers();
 	if (str.startsWith("<@") && str.endsWith(">"))
-		return [await guild.fetchMember(str.replace("<@","").replace(">","").replace("!",""))];
-	else {
-		let guildFetched = await guild.fetchMembers();
-		return guildFetched.members.findAll("displayName", str);
-	}
+		return guildFetched.members.filter(member => member.id == str.replace("<@","").replace(">","").replace("!",""));
+	else return guildFetched.members.filter(member => member.displayName.toLowerCase() == str.toLowerCase());
 }
 
 exports.stringToChannels = (str, guild) => {
 	if (str.startsWith("<#") && str.endsWith(">"))
-		return [guild.channels.get(str.replace("<#","").replace(">",""))];
-	else return guild.channels.findAll("name", str);
+		return guild.channels.filter(channel => channel.id == str.replace("<#","").replace(">",""));
+	else return guild.channels.filter(channel => channel.name.toLowerCase() == str.toLowerCase());
 }
 
 exports.stringToRoles = (str, guild) => {
-	if (str.startsWith("<@") && str.endsWith(">"))
-		return [guild.roles.get(str.replace("<@","").replace(">","").replace("&",""))];
-	else return guild.roles.findAll("name", str);
+	if (str.startsWith("<@#") && str.endsWith(">"))
+		return guild.roles.filter(role => role.id == str.replace("<@#","").replace(">",""));
+	else return guild.roles.filter(role => role.name.toLowerCase() == str.toLowerCase());
 }
 
 exports.stringifyObject = object => {

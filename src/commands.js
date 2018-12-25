@@ -93,7 +93,7 @@ class Command {
 		let res = {valid: valid, reasons: reasons, returned: returned};
     if (valid) {
       options.uses -= options.uses > 0 ? 1 : 0;
-      returned = await this.callback(msg, args);
+      returned = await this.callback(msg, args, args.join(" "));
     } else if (this.error) this.error(res);
     return res;
   }

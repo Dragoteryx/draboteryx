@@ -84,6 +84,10 @@ client.on("message", async msg => {
         if (msg.channel.name.toLowerCase().includes("cleverbot")) {
           let res = await cleverbot(msg);
           if (res) msg.channel.send(res);
+        } else if (msg.author.id == config.users.vltclone && msg.content == "je répond au clever") {
+          tools.stringToChannels("cleverbot", msg.guild).forEach(channel => {
+            channel.send("Salut " + msg.member.displayName + "! :)")
+          });
         }
       else if (res.result.reasons.includes("owner only command"))
   			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
@@ -298,38 +302,43 @@ commands.set("ping", async msg => {
 // UTILS
 commands.set("serverinfo", async msg => {
   msg.channel.send("", await msg.guild.embedInfo());
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "utility"}});
+}, {maxargs: 0, guildonly: true, info: {show: true, type: "utility"}});
 
-commands.set("userinfo", async msg => {
-	let member = msg.member;
-	if (msg.content.split(" ").slice(1).length > 0)
-	  member = (await tools.stringToMembers(msg.content.replace(msg.prefix + "userinfo ", ""), msg.guild)).shift();
-	if (!member)
-		msg.channel.send(msg.lang.commands.userinfo.noUser());
-	else
-		msg.channel.send("", member.embedInfo());
+commands.set("userinfo", async (msg, args, argstr) => {
+  if (args.length == 0) msg.channel.send("", msg.member.embedInfo());
+  else {
+    let nb = 0;
+    let members = await tools.stringToMembers(argstr, msg.guild);
+    members.forEach(member => {
+      nb++;
+      msg.channel.send("", member.embedInfo())
+    });
+    if (nb == 0) msg.channel.send(msg.lang.commands.userinfo.noUser());
+  }
 }, {guildonly: true, info: {show: true, type: "utility"}});
 
-commands.set("channelinfo", msg => {
-	let nb = msg.content.split(" ").slice(1).length;
-	let channel = msg.channel;
-	if (nb > 0)
-		channel = tools.stringToChannels(msg.content.replace(msg.prefix + "channelinfo ", ""), msg.guild).shift();
-	if (!channel)
-		msg.channel.send(msg.lang.commands.channelinfo.noChannel());
-	else
-		msg.channel.send("", channel.embedInfo());
+commands.set("channelinfo", (msg, args, argstr) => {
+  if (args.length == 0) msg.channel.send("", msg.channel.embedInfo());
+  else {
+    let nb = 0;
+    tools.stringToChannels(argstr, msg.guild).forEach(channel => {
+      nb++;
+      msg.channel.send("", channel.embedInfo())
+    });
+    if (nb == 0) msg.channel.send(msg.lang.commands.channelinfo.noChannel());
+  }
 }, {guildonly: true, info: {show: true, type: "utility"}});
 
-commands.set("roleinfo", msg => {
-	let nb = msg.content.split(" ").slice(1).length;
-	let role = msg.member.highestRole;
-	if (nb > 0)
-		role = tools.stringToRoles(msg.content.replace(msg.prefix + "roleinfo ", ""), msg.guild).shift();
-	if (!role)
-		msg.channel.send(msg.lang.commands.roleinfo.noRole());
-	else
-		msg.channel.send("", role.embedInfo());
+commands.set("roleinfo", (msg, args, argstr) => {
+  if (args.length == 0) msg.channel.send("", msg.member.highestRole.embedInfo());
+  else {
+    let nb = 0;
+    tools.stringToRoles(argstr, msg.guild).forEach(role => {
+      nb++;
+      msg.channel.send("", role.embedInfo())
+    });
+    if (nb == 0) msg.channel.send(msg.lang.commands.roleinfo.noRole());
+  }
 }, {guildonly: true, info: {show: true, type: "utility"}});
 
 commands.set("prune", async (msg, args) => {
@@ -752,9 +761,15 @@ commands.set("decrypt", async msg => {
 commands.set("danbooru", async (msg, args) => {
   let tags = args.join(" ");
   if (msg.guild && !msg.channel.nsfw) tags += " rating:safe";
-  let posts = await booru.posts({limit: 1, random: true, tags: tags});
-  if (posts.length == 0 || !posts[0]) msg.channel.send(msg.lang.misc.noResults());
-  else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
+  msg.channel.startTyping(1);
+  booru.posts({limit: 1, random: true, tags: tags}).then(posts => {
+    msg.channel.stopTyping();
+    if (posts.length == 0 || !posts[0]) msg.channel.send(msg.lang.misc.noResults());
+    else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
+  }).catch(err => {
+    msg.channel.stopTyping()
+    msg.channel.send(msg.lang.misc.noResults());
+  });
 }, {minargs: 1, maxargs: 2, info: {show: true, type: "nsfw"}});
 
 commands.set("spurriouscorrelations", msg => {
@@ -763,33 +778,8 @@ commands.set("spurriouscorrelations", msg => {
     msg.channel.stopTyping();
     let corrs = res.text.match(new RegExp("correlation_images/[a-z0-9_-]+[.]png", "gi"));
     if (corrs) msg.channel.send("", {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
-  }).catch(err => {
-    msg.channel.stopTyping();
-  });
+  }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
-
-/*commands.set("tictactoe", async (msg, args) => {
-  if (msg.channel._ttt) {
-    msg.channel.send(msg.lang.commands.tictactoe.already());
-    return;
-  }
-  msg.channel._ttt = true;
-  let delay = 20;
-  let other = args.length == 0 ? undefined, (await tools.stringToMembers(args[0], msg.guild)).shift();
-  msg.channel.send(msg.lang.commands.tictactoe.wantsToPlay("$PREFIX", msg.prefix, "$PLAYER", msg.member.displayName, "$DELAY", delay));
-  let msg2 = await msg.channel.waitResponse({delay: delay, filter: msg2 => {
-    if (msg.content != msg.prefix + "tttplay") return false;
-    if (msg.author.id == msg2.author.id) return false;
-    else return true;
-  }});
-  if (!msg2) msg.channel.send(msg.lang.commands.tictactoe.noPlayers("$PLAYER", msg.member.displayName));
-  else {
-
-  }
-  let ttt = Math.random() < 0.5 ? new TicTacToe(msg.channel, msg.member, msg2.member) : new TicTacToe(msg.channel, msg2.member, msg.member);
-
-  msg.channel._ttt = false;
-}, {maxargs: 1, info: {show: true, type: "game"}});*/
 
 // FUNCTIONS
 function login() {
