@@ -92,18 +92,16 @@ Object.defineProperty(discord.Guild.prototype, "prefix", {
 
 Object.defineProperty(discord.Guild.prototype, "logsChannel", {
 	get: function() {
-		return this.channels.find(channel => channel.name.toLowerCase() == "drb-logs" && channel.type == "text");
+		return this.channels.find(channel => channel.name == "drb-logs" && channel.type == "text");
 	}
 });
 
-Object.defineProperty(discord.Message.prototype, "reply", {
-	value: function(content, options) {
-		if (this.channel.type == "text")
-			return this.channel.send("`" + this.member.displayName + "`, " + content, options);
-		else
-			return this.channel.send(content.firstUpper(), options);
+Object.defineProperty(discord.Message.prototype, "authorName", {
+	get: function() {
+		if (this.guild) return this.member.displayName;
+		else return this.author.username;
 	}
-});
+})
 
 Object.defineProperty(discord.Guild.prototype, "nbCon", {
 	value: function nbCon() {

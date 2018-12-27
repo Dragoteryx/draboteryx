@@ -4,9 +4,17 @@ const util = require("util");
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-exports.assert = (obj, ...tests) => tests.every(test => test(obj));
-exports.validNumber = (nb, min = -Infinity, max = Infinity) => {
-	return exports.assert(Number(nb), nb => !isNaN(nb), nb => nb >= min, nb => nb <= max);
+exports.assert = (obj, ...tests) => {
+	for (let i = 0; i < tests.length; i++) {
+		if (!tests[i](obj)) return {valid: false, fail: i};
+	}
+	return {valid: true, fail: -1};
+}
+exports.validNumber = (nb, min = -Infinity, max = Infinity, integer = false) => {
+	return exports.assert(Number(nb), nb => !isNaN(nb), nb => nb >= min, nb => nb <= max, nb => {
+		if (integer) return Math.round(nb) == nb;
+		else return true;
+	});
 }
 
 exports.random = function(min, max) {

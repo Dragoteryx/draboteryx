@@ -19,6 +19,7 @@ const music = require("./src/music.js");
 const cleverbot = require("./src/cleverbot.js");
 const Lang = require("./langs/langs.js");
 const listenmoe = require("./src/listenmoe.js");
+const money = require("./src/money.js");
 
 // CONSTS
 const onHeroku = process.env.HEROKU != undefined;
@@ -83,10 +84,10 @@ client.on("message", async msg => {
   	if (!res.result.valid) {
   		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command")) {
         // not a command
-        if (msg.channel.name.toLowerCase().includes("cleverbot")) cleverbot(msg);
-        else if (msg.author.id == config.users.vltclone && msg.content == "je répond au bot") {
+        if (msg.guild && msg.channel.name.toLowerCase().includes("cleverbot")) cleverbot(msg);
+        else if (msg.guild && msg.author.id == config.users.vltclone && msg.content == "je répond au bot") {
           tools.stringToChannels("cleverbot", msg.guild).forEach(channel => {
-            channel.send("Salut " + msg.member.displayName + "! :)")
+            channel.send("Salut " + msg.authorName + "! :)")
           });
         }
       } else if (res.result.reasons.includes("owner only command"))
@@ -218,7 +219,7 @@ commands.set("help", (msg, args) => {
 		}
 		msg.author.send("", embed);
 		if (msg.channel.type != "dm")
-			msg.reply(msg.lang.commands.help.takeALook());
+			msg.channel.send(msg.lang.commands.help.takeALook());
 	} else {
 		if (commands.has(args[0])) {
 			let command = commands.get(args[0]);
@@ -232,7 +233,7 @@ commands.set("help", (msg, args) => {
 				.addField(msg.lang.commands.help.commandSyntax(), "```" + msg.lang.commands[command.name].syntax("$PREFIX", msg.prefix) + "```");
 				msg.author.send("", embed);
 				if (msg.channel.type != "dm")
-					msg.reply(msg.lang.commands.help.takeALook());
+					msg.channel.send(msg.lang.commands.help.takeALook());
 			}
 		} else msg.channel.send(msg.lang.commands.help.unknownCommand("$PREFIX", msg.prefix));
 	}
@@ -259,12 +260,12 @@ commands.set("reset", async msg => {
 
 commands.set("prefix", async (msg, args) => {
   if (args.length == 0)
-    msg.reply(msg.lang.commands.prefix.current("$PREFIX", msg.prefix));
+    msg.channel.send(msg.lang.commands.prefix.current("$PREFIX", msg.prefix));
   else {
     let prefix = args[0];
     if (msg.guild) {
       if (!msg.member.admin)
-        msg.reply(msg.lang.errors.adminOnlyCommand());
+        msg.channel.send(msg.lang.errors.adminOnlyCommand());
       else {
         msg.guild._prefix = prefix;
         msg.guild.sendData({prefix: prefix});
@@ -279,15 +280,15 @@ commands.set("lang", async (msg, args) => {
     let str = "";
     for (let lang of Object.values(langs))
       str += "\n- " + lang.name() + " (`" + lang.id() + "`)";
-    msg.reply(msg.lang.commands.lang.list() + str);
+    msg.channel.send(msg.lang.commands.lang.list() + str);
   } else {
     let lang = args[0];
     if (!Object.keys(langs).includes(lang))
-      msg.reply(msg.lang.commands.lang.unknown());
+      msg.channel.send(msg.lang.commands.lang.unknown());
     else {
       if (msg.guild) {
         if (!msg.member.admin)
-          msg.reply(msg.lang.errors.adminOnlyCommand());
+          msg.channel.send(msg.lang.errors.adminOnlyCommand());
         else {
           msg.guild._lang = lang;
           msg.guild.sendData({lang: lang});
@@ -303,6 +304,33 @@ commands.set("ping", async msg => {
   let delay = Date.now() - msg.createdTimestamp;
   msg.channel.send("Pong! (" + delay + "ms) :ping_pong:");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
+
+commands.set("money", async msg => {
+  await msg.author.fetchMoney();
+  msg.channel.send(msg.lang.commands.money.display("$AMOUNT", msg.author.money, "$CURRENCY", config.currency));
+}, {maxargs: 0, info: {show: true, type: "misc"}});
+
+commands.set("dropmoney", async (msg, args) => {
+  await msg.author.fetchMoney();
+  let res = tools.validNumber(args[0], 1, msg.author.money, true);
+  if (!res.valid) {
+    if (res.fail == 2) msg.channel.send(msg.lang.money.notEnough());
+    else msg.channel.send(msg.lang.money.invalidAmount());
+  } else {
+    let amount = Number(args[0]);
+    msg.channel.send(msg.lang.commands.dropmoney.userDropMoney("$PREFIX", msg.prefix, "$USERNAME", msg.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency));
+    let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => {
+      if (msg2.author.bot && msg.author.id != msg2.author.id) return false;
+      return msg2.content == msg.prefix + "pickmoney";
+    }});
+    if (!msg2) msg.channel.send(msg.lang.commands.dropmoney.noPickMoney());
+    else {
+      await msg2.author.fetchMoney();
+      msg.author.giveMoney(msg2.author, amount);
+      msg.channel.send(msg.lang.commands.dropmoney.pickMoney("$USERNAME", msg2.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency));
+    }
+  }
+}, {minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
 
 // MODERATION
 
@@ -350,16 +378,20 @@ commands.set("roleinfo", (msg, args, argstr) => {
 }, {guildonly: true, info: {show: true, type: "utility"}});
 
 commands.set("prune", async (msg, args) => {
-  let nb = args.length == 0 ? 100 : Math.floor(Number(args[0]));
-  if (nb > 100) {
-    msg.channel.send(msg.lang.commands.prune.limit());
-  } else {
-    try {
-      let res = await msg.channel.bulkDelete(nb, true);
-      msg.channel.send(msg.lang.commands.prune.done("$NB", res.size)).then(msg2 => msg2.delete(5000));
-    } catch(err) {
-      msg.channel.send(msg.lang.commands.prune.error());
-    }
+  let nb = 100;
+  if (args.length == 1) {
+    let res = tools.validNumber(args[0], 0, 100, true);
+    if (!res.valid) {
+      if (res.fail == 2) msg.channel.send(msg.lang.commands.prune.limit());
+      else msg.channel.send(msg.lang.commands.prune.invalid());
+      return;
+    } else nb = Number(args[0]);
+  }
+  try {
+    let res = await msg.channel.bulkDelete(nb, true);
+    msg.channel.send(msg.lang.commands.prune.done("$NB", res.size)).then(msg2 => msg2.delete(5000));
+  } catch(err) {
+    msg.channel.send(msg.lang.commands.prune.error());
   }
 }, {maxargs: 1, guildonly: true, info: {show: true, type: "utility"}});
 
@@ -515,11 +547,10 @@ commands.set("plremove", (msg, args) => {
     msg.channel.send(msg.lang.music.emptyPlaylist())
   else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
-    let id = Math.floor(Number(args[0]));
-    if (id < 1 || id > msg.guild.playlist.pending.length)
+    if (!tools.validNumber(args[0], 1, msg.guild.playlist.pending.length, true).valid)
       msg.channel.send(msg.lang.commands.plremove.invalidIndex());
     else {
-      let removed = msg.guild.playlist.pending.splice(id-1, 1)[0];
+      let removed = msg.guild.playlist.pending.splice(Number(args[0])-1, 1)[0];
       msg.channel.send(msg.lang.commands.plremove.done("$TITLE", removed.title));
     }
   } else if (msg.guild.playlist.streaming)
@@ -556,8 +587,8 @@ commands.set("volume", (msg, args) => {
     msg.channel.send(msg.lang.music.notConnected())
   else {
     msg.guild.musicChannel = msg.channel;
-    let volume = Number(args);
-    if (!isNaN(volume)) {
+    let volume = args[0];
+    if (tools.validNumber(volume, 0, msg.guild.playlist.maxVolume).valid) {
       msg.guild.playlist.volume = volume/100;
       if (volume < 0) volume = 0;
       if (volume/100 > msg.guild.playlist.maxVolume) volume = msg.guild.playlist.maxVolume*100;
@@ -657,10 +688,10 @@ commands.set("ttsay", msg => {
 
 commands.set("roll", (msg, args) => {
 	let max = 6;
-	if (args.length == 1 && tools.validNumber(args[0], 1))
+	if (args.length == 1 && tools.validNumber(args[0], 1, undefined, true).valid)
 		max = Number(args[0]);
 	let res = tools.random(1, max);
-	msg.reply(res + "/" + max + " :game_die:");
+	msg.channel.send(res + "/" + max + " :game_die:");
 }, {maxargs: 1, info: {show: true, type: "fun"}});
 
 commands.set("fact", (msg, args) => {
@@ -687,13 +718,13 @@ commands.set("reflex", async msg => {
 	await msg.channel.send(msg.lang.commands.reflex.msg("$RANDOM", random));
 	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => {
 		if (msg2.content == random && msg2.author.bot) {
-			msg2.reply(msg.lang.commands.reflex.bots());
+			msg.channel.send(msg.lang.commands.reflex.bots());
 			return false;
 		}
 		return msg2.content == random;
 	}});
 	if (!msg2) msg.channel.send(msg.lang.commands.reflex.slow());
-	else msg.channel.send(msg.lang.commands.reflex.wellPlayed("$WINNER", msg2.member.displayName));
+	else msg.channel.send(msg.lang.commands.reflex.wellPlayed("$WINNER", msg2.authorName));
 	msg.channel.reflex = false;
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "game"}});
 
@@ -718,7 +749,7 @@ commands.set("httpdog", msg => {
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("waifu", msg => {
-	msg.reply(msg.lang.commands.waifu.theTruth());
+	msg.channel.send(msg.lang.commands.waifu.theTruth());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("whatisthebestyoutubechannel?", msg => {

@@ -35,6 +35,10 @@
     "noStreaming": "This command is not available while streaming. Use `$PREFIXstream off` to end the stream.",
     "noPlaying": "You can't stream while there are still musics in the playlist."
   },
+  "money": {
+    "notEnough": "You don't have enough money.",
+    "invalidAmount": "This amount of money is invalid."
+  },
   "types": {
     "moderation": "Moderation commands",
     "utility": "Utility commands",
@@ -50,13 +54,30 @@
     "help": {
       "syntax": "$PREFIXhelp (command)",
       "description": "You probably know what this command does or else you wouldn't be reading this.",
-      "takeALook": "take a look at your private messages!",
+      "takeALook": "Take a look at your private messages!",
       "unknownCommand": "This command doesn't seem to exist. Use `$PREFIXhelp` to get a list of all commands.",
       "info": "Options between brackets are `required`. Those between parenthesis are `optional`.\nIf you need some help, use `$PREFIXserver` to join the test server.\nYou can also use `$PREFIXhelp [command]` to obtain help about one particular command.",
       "commandName": "Command",
       "commandType": "Type",
       "commandDescription": "Description",
       "commandSyntax": "Syntax"
+    },
+    "money": {
+      "syntax": "$PREFIXmoney",
+      "description": "Display how much money you have.",
+      "display": "You currently own `$AMOUNT` $CURRENCY."
+    },
+    "givemoney": {
+      "syntax": "$PREFIXgivemoney [amount] [user]",
+      "description": "Give money to someone else."
+    },
+    "dropmoney": {
+      "syntax": "$PREFIXdropmoney [amount]",
+      "description": "Drop money for other people to pick.",
+      "userDropMoney": "`$USERNAME` dropped `$AMOUNT` $CURRENCY. Type `$PREFIXpickmoney` to take it.",
+      "botDropMoney": "Oops, seems like I dropped `$AMOUNT` $CURRENCY. Type `$PREFIXpickmoney` to take it.",
+      "pickMoney": "`$USERNAME` picked `$AMOUNT` $CURRENCY.",
+      "noPickMoney": "No one picked the money in time."
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",
@@ -70,17 +91,17 @@
     "prefix": {
       "syntax": "$PREFIXprefix (new prefix)",
       "description": "Show the current prefix, or set a new one.",
-      "current": "my current prefix is `$PREFIX`.",
+      "current": "My current prefix is `$PREFIX`.",
       "set": "My prefix has been set to `$PREFIX`.",
-      "guildonly": "you can't set a new prefix here."
+      "guildonly": "You can't set a new prefix here."
     },
     "lang": {
       "syntax": "$PREFIXlang (langage)",
       "description": "Show the list of languages available, or set a new one.",
-      "list": "you can choose between one of those languages:",
+      "list": "You can choose between one of those languages:",
       "set": "Language set to `$LANG`.",
-      "guildonly": "you can't set the language here.",
-      "unknown": "this language doesn't exist or the bot doesn't support it."
+      "guildonly": "You can't set the language here.",
+      "unknown": "This language doesn't exist or the bot doesn't support it."
     },
     "join": {
       "syntax": "$PREFIXjoin",
@@ -220,7 +241,7 @@
     "waifu": {
       "syntax": "$PREFIXwaifu",
       "description": "Get to know who your waifu is.",
-      "theTruth": "your waifu doesn't exist and if she did she wouldn't like you."
+      "theTruth": "Your waifu doesn't exist and if she did she wouldn't like you."
     },
     "encrypt": {
       "syntax": "$PREFIXencrypt [message]",
@@ -325,7 +346,8 @@
       "description": "Delete messages newer than 2 weeks in bulk. (maximum 100)",
       "done": "I deleted `$NB` messages.",
       "error": "Something went wrong when I tried to delete messages.",
-      "limit": "I can't delete more than `100` messages at a time."
+      "limit": "I can't delete more than `100` messages at a time.",
+      "invalid": "This number is invalid."
     },
     "danbooru": {
       "syntax": "$PREFIXdanbooru [1-2 tags]",

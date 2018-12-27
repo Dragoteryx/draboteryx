@@ -49,7 +49,7 @@
     "help": {
       "syntax": "$PREFIXhelp (commande)",
       "description": "Tu sais probablement déjà ce que fais cette commande ou tu ne serais pas en train de lire ça.",
-      "takeALook": "jette un coup d'oeil à tes messages privés !",
+      "takeALook": "Jette un coup d'oeil à tes messages privés !",
       "unknownCommand": "Cette commande n'existe pas. Utilise `$PREFIXhelp` pour obtenir une liste de toutes les commandes.",
       "info": "Les options entre crochets sont `requises`. Celles entre parenthèses sont `optionnelles`.\nSi tu as besoin d'aide, utilise `$PREFIXserver` pour rejoindre le serveur de test.\nTu peux également utiliser `$PREFIXhelp [commande]` pour obtenir les informations détaillées d'une commande.",
       "commandName": "Commande",
@@ -69,17 +69,17 @@
     "prefix": {
       "syntax": "$PREFIXprefix (nouveau préfixe)",
       "description": "Montrer le préfixe actuel, ou en choisir un nouveau.",
-      "current": "mon préfixe actuel est `$PREFIX`.",
+      "current": "Mon préfixe actuel est `$PREFIX`.",
       "set": "Mon nouveau préfixe est `$PREFIX`.",
-      "guildonly": "tu ne peux pas changer mon préfixe ici."
+      "guildonly": "Tu ne peux pas changer mon préfixe ici."
     },
     "lang": {
       "syntax": "$PREFIXlang (langue)",
       "description": "Montrer la liste des langues disponibles, ou en choisir une nouvelle.",
-      "list": "voilà la liste des langues disponibles :",
+      "list": "Voilà la liste des langues disponibles :",
       "set": "La langue a été réglée sur `$LANG`.",
-      "guildonly": "tu ne peux pas changer la langue ici.",
-      "unknown": "cette langue n'existe pas ou le bot ne la supporte pas."
+      "guildonly": "Tu ne peux pas changer la langue ici.",
+      "unknown": "Cette langue n'existe pas ou le bot ne la supporte pas."
     },
     "join": {
       "syntax": "$PREFIXjoin",
@@ -218,7 +218,7 @@
     "waifu": {
       "syntax": "$PREFIXwaifu",
       "description": "Pour savoir qui est ta waifu.",
-      "theTruth": "ta waifu n'existe pas et si elle existait elle ne t'aimerait pas."
+      "theTruth": "Ta waifu n'existe pas et si elle existait elle ne t'aimerait pas."
     },
     "encrypt": {
       "syntax": "$PREFIXencrypt [message]",
