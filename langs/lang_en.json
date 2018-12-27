@@ -69,7 +69,9 @@
     },
     "givemoney": {
       "syntax": "$PREFIXgivemoney [amount] [user]",
-      "description": "Give money to someone else."
+      "description": "Give money to another user.",
+      "gaveMoney": "`$USERNAME1` gave `$AMOUNT` $CURRENCY to `$USERNAME2`.",
+      "duplicates": "There are more than one user with this username."
     },
     "dropmoney": {
       "syntax": "$PREFIXdropmoney [amount]",

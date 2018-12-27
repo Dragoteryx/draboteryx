@@ -14,9 +14,11 @@ Object.defineProperty(discord.User.prototype, "fetchMoney", {
 
 Object.defineProperty(discord.User.prototype, "money", {
   get: function() {
-    return this._money;
+    if (this.owner) return Infinity;
+    else return this._money;
   },
   set: function(value) {
+    if (this.owner) return;
     this._money = value;
     this.sendData({money: value});
   }
@@ -24,6 +26,7 @@ Object.defineProperty(discord.User.prototype, "money", {
 
 Object.defineProperty(discord.User.prototype, "giveMoney", {
   value: function(user, value) {
+    if (this.id == user.id) return true;
     if (!tools.validNumber(value, 0)) return false;
     this.money -= value;
     user.money += value;

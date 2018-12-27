@@ -308,7 +308,26 @@ commands.set("ping", async msg => {
 commands.set("money", async msg => {
   await msg.author.fetchMoney();
   msg.channel.send(msg.lang.commands.money.display("$AMOUNT", msg.author.money, "$CURRENCY", config.currency));
-}, {maxargs: 0, info: {show: true, type: "misc"}});
+}, {bots: true, maxargs: 0, info: {show: true, type: "misc"}});
+
+commands.set("givemoney", async (msg, args) => {
+  await msg.author.fetchMoney();
+  let amount = Number(args.shift());
+  let res = tools.validNumber(amount, 1, msg.author.money, true);
+  if (!res.valid) {
+    if (res.fail == 2) msg.channel.send(msg.lang.money.notEnough());
+    else msg.channel.send(msg.lang.money.invalidAmount());
+  } else {
+    let members = await tools.stringToMembers(args.join(" "), msg.guild);
+    if (members.size == 0) msg.channel.send(msg.lang.commands.userinfo.noUser());
+    else if (members.size == 1) {
+      let member = members.values().next().value;
+      await member.user.fetchMoney();
+      msg.author.giveMoney(member.user, amount);
+      msg.channel.send(msg.lang.commands.givemoney.gaveMoney("$USERNAME1", msg.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency, "$USERNAME2", member.displayName));
+    } else msg.channel.send(msg.lang.commands.givemoney.duplicates());
+  }
+}, {guildonly: true, bots: true, minargs: 2, info: {show: true, type: "misc"}});
 
 commands.set("dropmoney", async (msg, args) => {
   await msg.author.fetchMoney();
@@ -330,7 +349,7 @@ commands.set("dropmoney", async (msg, args) => {
       msg.channel.send(msg.lang.commands.dropmoney.pickMoney("$USERNAME", msg2.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency));
     }
   }
-}, {minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
+}, {guildonly: true, bots: true, minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
 
 // MODERATION
 
