@@ -412,7 +412,7 @@ commands.set("prune", async (msg, args) => {
   } catch(err) {
     msg.channel.send(msg.lang.commands.prune.error());
   }
-}, {maxargs: 1, guildonly: true, info: {show: true, type: "utility"}});
+}, {admin: true, maxargs: 1, guildonly: true, info: {show: true, type: "utility"}});
 
 // MUSIC
 commands.set("join", async msg => {
