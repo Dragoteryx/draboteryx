@@ -2,6 +2,7 @@ const drabot = require("../drabot.js");
 const discord = require("discord.js");
 const config = require("../config.js");
 const tools = require("./tools.js");
+const EventEmitter = require("events");
 
 // GLOBAL JS OBJECTS
 Object.defineProperty(String.prototype, "firstUpper", {
@@ -30,6 +31,15 @@ Object.defineProperty(Array.prototype, "random", {
 		return this[tools.random(this.length-1)];
 	}
 });
+
+Object.defineProperty(EventEmitter.prototype, "recursiveOn", {
+	value: function(eventName, callback, recur) {
+		this.once(eventName, (...args) => {
+			callback(...args);
+			if (recur()) this.recursiveOn(eventName, callback, recur);
+		});
+	}
+})
 
 // DISCORD RELATED
 Object.defineProperty(discord.Message.prototype, "lang", {
@@ -89,7 +99,7 @@ Object.defineProperty(discord.Guild.prototype, "logsChannel", {
 Object.defineProperty(discord.Message.prototype, "reply", {
 	value: function(content, options) {
 		if (this.channel.type == "text")
-			return this.channel.send("``" + this.member.displayName + "``, " + content, options);
+			return this.channel.send("`" + this.member.displayName + "`, " + content, options);
 		else
 			return this.channel.send(content.firstUpper(), options);
 	}

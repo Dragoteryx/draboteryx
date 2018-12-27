@@ -12,7 +12,7 @@ class ListenMoe extends EventEmitter {
 		super();
 		let that = prv(this);
 		this.name = name;
-		this.type = "listenmoe"
+		this.type = "listen.moe"
 		this.data = null;
 		that.gateway = gateway;
 		that.stream = stream;
@@ -49,6 +49,7 @@ class ListenMoe extends EventEmitter {
 			if (res.op == 0) return this.heartbeat(that.websocket, res.d.heartbeat);
 			if (res.op == 1 && ["TRACK_UPDATE", "TRACK_UPDATE_REQUEST", "QUEUE_UPDATE"].some(val => val == res.t)) {
 				this.data = res.d;
+				this.emit("update");
 			}
 		}
 		that.websocket.onclose = err => {

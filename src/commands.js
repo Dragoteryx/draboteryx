@@ -8,7 +8,7 @@ function prv(object) {
 
 class CommandsHandler extends Map {
   set(name, callback, options = {}, error) {
-    options = Object.assign(Command.defaultOptions, options);
+    options = Object.assign(CommandsHandler.defaultOptions, options);
     let command = new Command(name, callback, options, error, this);
     return super.set(name, command);
   }
@@ -34,6 +34,26 @@ class CommandsHandler extends Map {
 		let commands = Array.from(this.values());
 		for (let command of commands)
 			yield command;
+	}
+	static get defaultOptions() {
+		return {
+			owner: false,
+			disabled: false,
+			admin: false,
+			mod: false,
+			dj: false,
+			guildonly: false,
+			guilds: [],
+			channels: [],
+			users: [],
+			permissions: [],
+			nsfw: false,
+			bots: false,
+			minargs: 0,
+			maxargs: Infinity,
+			uses: -1,
+			function: () => true
+		}
 	}
 }
 
@@ -96,26 +116,6 @@ class Command {
       returned = await this.callback(msg, args, args.join(" "));
     } else if (this.error) this.error(res);
     return res;
-  }
-  static get defaultOptions() {
-    return {
-      owner: false,
-			disabled: false,
-			admin: false,
-			mod: false,
-			dj: false,
-			guildonly: false,
-			guilds: [],
-			channels: [],
-			users: [],
-			permissions: [],
-			nsfw: false,
-			bots: false,
-			minargs: 0,
-			maxargs: Infinity,
-			uses: -1,
-			function: () => true
-		};
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "id": "fr",
   "name": "Français",
-  "author": "Dragoteryx#0407",
+  "author": "Dragoteryx#3172",
   "misc": {
     "test": "Ceci est un test.",
     "yes": "Oui",
@@ -14,7 +14,7 @@
     "merged": "Cette commande a été ajoutée à la commande `$PREFIX$COMMAND`."
   },
   "errors": {
-    "guildOnlyCommand": "Cette commande n'est pas disponible dans les channels privés.",
+    "guildOnlyCommand": "Cette commande n'est disponible que dans les serveurs publics.",
     "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
     "adminOnlyCommand": "Cette commande est réservée aux admins.",
     "modOnlyCommand": "Cette commande est réservée aux modérateurs.",
@@ -52,10 +52,10 @@
       "takeALook": "jette un coup d'oeil à tes messages privés !",
       "unknownCommand": "Cette commande n'existe pas. Utilise `$PREFIXhelp` pour obtenir une liste de toutes les commandes.",
       "info": "Les options entre crochets sont `requises`. Celles entre parenthèses sont `optionnelles`.\nSi tu as besoin d'aide, utilise `$PREFIXserver` pour rejoindre le serveur de test.\nTu peux également utiliser `$PREFIXhelp [commande]` pour obtenir les informations détaillées d'une commande.",
-      "embedcontent1": "Commande",
-      "embedcontent2": "Type",
-      "embedcontent3": "Description",
-      "embedcontent4": "Syntaxe"
+      "commandName": "Commande",
+      "commandType": "Type",
+      "commandDescription": "Description",
+      "commandSyntax": "Syntaxe"
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",
@@ -97,7 +97,7 @@
       "inactivity": "Tout le monde est parti et la playlist est vide, à plus !"
     },
     "request": {
-      "syntax": "$PREFIXrequest [Youtube link || Youtube query]",
+      "syntax": "$PREFIXrequest [Vidéo Youtube || Recherche Youtube || Playlist Youtube]",
       "description": "Demander une vidéo Youtube en utilisant un lien ou une recherche.",
       "adding": "Ajout de `$LINK` à la playlist.",
       "added": "`$TITLE` par `$AUTHOR` a été ajoutée à la playlist.",

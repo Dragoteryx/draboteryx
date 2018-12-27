@@ -1,10 +1,10 @@
 {
   "id": "en",
   "name": "English",
-  "author": "Dragoteryx#0407",
+  "author": "Dragoteryx#3172",
   "misc": {
     "test": "This is a test.",
-    "test2": "This is only available in english",
+    "test2": "This is only available in english.",
     "yes": "Yes",
     "no": "No",
     "noResults": "Sorry but I did not find anything.",
@@ -15,11 +15,11 @@
     "merged": "This command has been merged with the `$PREFIX$COMMAND` command."
   },
   "errors": {
-    "guildOnlyCommand": "You can't use this command in private channels.",
+    "guildOnlyCommand": "This command is only available in public servers.",
     "ownerOnlyCommand": "This is an owner only command.",
     "adminOnlyCommand": "This is an admin only command.",
     "modOnlyCommand": "This is a moderator only command.",
-    "djOnlyCommand": "This is a DJ only command.",
+    "djOnlyCommand": "This command requires DJ permissions.",
     "nsfwCommand": "What are you trying to do?",
     "wrongSyntax": "Use `$PREFIXhelp $COMMAND` to learn how to use this command.",
     "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server.",
@@ -53,10 +53,10 @@
       "takeALook": "take a look at your private messages!",
       "unknownCommand": "This command doesn't seem to exist. Use `$PREFIXhelp` to get a list of all commands.",
       "info": "Options between brackets are `required`. Those between parenthesis are `optional`.\nIf you need some help, use `$PREFIXserver` to join the test server.\nYou can also use `$PREFIXhelp [command]` to obtain help about one particular command.",
-      "embedcontent1": "Command",
-      "embedcontent2": "Type",
-      "embedcontent3": "Description",
-      "embedcontent4": "Syntax"
+      "commandName": "Command",
+      "commandType": "Type",
+      "commandDescription": "Description",
+      "commandSyntax": "Syntax"
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",
@@ -98,7 +98,7 @@
       "inactivity": "Everyone left and the playlist is empty, bye!"
     },
     "request": {
-      "syntax": "$PREFIXrequest [Youtube link || Youtube query]",
+      "syntax": "$PREFIXrequest [Youtube link || Youtube query || Youtube playlist link]",
       "description": "Request a Youtube video using a link or a query.",
       "adding": "Adding `$LINK` to the playlist.",
       "added": "`$TITLE` by `$AUTHOR` has been added to the playlist.",
@@ -116,8 +116,9 @@
       "syntax": "$PREFIXstream [stream]",
       "description": "Request one of the supported streams/radios:\n- listen.moe/jpop\n- listen.moe/kpop\n- off (to stop the stream)",
       "nowStreaming": "Now streaming: `$NAME`.",
-      "nowStreamingTitle": "Now streaming: `$NAME`. (title: `$TITLE`)",
-      "stopStreaming": "End of the stream."
+      "nowPlaying": "Now playing: `$TITLE`. (from `$NAME`)",
+      "stopStreaming": "End of the stream.",
+      "listenMoe": "Now playing: `$TITLE` by `$AUTHOR`."
     },
     "skip": {
       "syntax": "$PREFIXskip",

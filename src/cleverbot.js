@@ -15,7 +15,10 @@ module.exports = msg => {
             msg.author.cleverResponding = false;
             msg.channel.stopTyping();
             if (err) reject(res);
-            else resolve(res);
+            else {
+              msg.channel.send(res);
+              resolve(res);
+            }
           });
         } catch(err) {
           msg.channel.stopTyping();
