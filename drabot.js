@@ -305,6 +305,8 @@ commands.set("ping", async msg => {
   msg.channel.send("Pong! (" + delay + "ms) :ping_pong:");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
+// MONEY
+
 commands.set("money", async msg => {
   await msg.author.fetchMoney();
   msg.channel.send(msg.lang.commands.money.display("$AMOUNT", msg.author.money, "$CURRENCY", config.currency));
@@ -350,6 +352,29 @@ commands.set("dropmoney", async (msg, args) => {
     }
   }
 }, {guildonly: true, bots: true, minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
+
+commands.set("moneyleaderboard", async msg => {
+  if (msg.guild.large) {
+
+  } else {
+    let guild = await msg.guild.fetchMembers();
+    let members = Array.from(guild.members.values());
+    for (let member of members) {
+      await member.user.fetchMoney();
+    }
+    members.sort((member1, member2) => {
+      return member1.user.money > member2.user.money;
+    }).reverse();
+    let embed = tools.defaultEmbed();
+    for (let i = 0; i < members.length; i++) {
+      let member = members[i];
+      if (member.user.money == 0) break;
+      embed.addField(i+1 + " - " + member.displayName, member.user.money + " " + config.currency);
+      if (i == 19) break;
+    }
+    msg.channel.send("", embed);
+  }
+}, {guildonly: true, maxargs: 0, info: {show: false, type: "misc"}});
 
 // MODERATION
 

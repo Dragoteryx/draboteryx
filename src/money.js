@@ -1,6 +1,8 @@
 const discord = require("discord.js");
 const tools = require("./tools.js");
 
+const MAX_VALUE = 999999999;
+
 Object.defineProperty(discord.User.prototype, "fetchMoney", {
   value: async function() {
     if (this._money === undefined) {
@@ -15,10 +17,12 @@ Object.defineProperty(discord.User.prototype, "fetchMoney", {
 Object.defineProperty(discord.User.prototype, "money", {
   get: function() {
     if (this.owner) return Infinity;
+    else if this._money > MAX_VALUE return MAX_VALUE;
     else return this._money;
   },
   set: function(value) {
     if (this.owner) return;
+    if (value > MAX_VALUE) value = MAX_VALUE;
     this._money = value;
     this.sendData({money: value});
   }
@@ -26,8 +30,8 @@ Object.defineProperty(discord.User.prototype, "money", {
 
 Object.defineProperty(discord.User.prototype, "giveMoney", {
   value: function(user, value) {
-    if (this.id == user.id) return true;
     if (!tools.validNumber(value, 0)) return false;
+    if (this.id == user.id) return true;
     this.money -= value;
     user.money += value;
     return true;
@@ -39,3 +43,7 @@ Object.defineProperty(discord.User.prototype, "takeMoney", {
     return user.giveMoney(this, value);
   }
 })
+
+module.exports = {
+  MAX_VALUE: MAX_VALUE
+}
