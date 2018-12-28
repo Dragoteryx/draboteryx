@@ -63,6 +63,14 @@
       "commandDescription": "Description",
       "commandSyntax": "Syntax"
     },
+    "server": {
+      "syntax": "$PREFIXserver",
+      "description": "Get a link to join the debug server."
+    },
+    "invite": {
+      "syntax": "$PREFIXinvite",
+      "description": "Get an invite link."
+    },
     "money": {
       "syntax": "$PREFIXmoney",
       "description": "Display how much money you have.",

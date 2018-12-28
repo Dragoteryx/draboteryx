@@ -58,6 +58,14 @@
       "commandDescription": "Description",
       "commandSyntax": "Syntaxe"
     },
+    "server": {
+      "syntax": "$PREFIXserver",
+      "description": "Obtenir un lien vers le serveur de test."
+    },
+    "invite": {
+      "syntax": "$PREFIXinvite",
+      "description": "Obtenir un lien d'invitation."
+    },
     "money": {
       "syntax": "$PREFIXmoney",
       "description": "Afficher combien d'argent tu possèdes.",

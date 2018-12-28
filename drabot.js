@@ -186,11 +186,13 @@ commands.set("exec", async msg => {
       console.log("[EXEC]");
       console.dir(val, {colors: true});
     }
-    msg.channel.send((promise ? "Executed (Promise):\n" : "Executed:\n") + tools.stringifyObject(val));
 		msg.react("✅");
+    try {
+      msg.channel.send((promise ? "Executed (Promise):\n" : "Executed:\n") + tools.stringifyObject(val));
+    } catch(err) {}
 	} catch(err) {
-		funcs.logError(msg, err);
 		msg.react("⛔");
+    funcs.logError(msg, err);
 	}
 }, {owner: true, minargs: 1});
 
@@ -203,6 +205,23 @@ commands.set("setusername", async (msg, args, argstr) => {
   await client.user.setUsername(argstr);
   msg.channel.send("New username: `" + argstr + "`");
 }, {owner: true, minargs: 1});
+
+commands.set("setmoney", async (msg, args) => {
+  await msg.author.fetchMoney();
+  let amount = Number(args.shift());
+  let res = tools.validNumber(amount, 0, Infinity, true);
+  if (!res.valid) {
+    if (res.fail == 2) msg.channel.send(msg.lang.money.notEnough());
+    else msg.channel.send(msg.lang.money.invalidAmount());
+  } else {
+    let members = await tools.stringToMembers(args.join(" "), msg.guild);
+    if (members.size == 0) msg.channel.send(msg.lang.commands.userinfo.noUser());
+    else if (members.size == 1) {
+      members.values().next().value.user.money = amount;
+      msg.channel.send("Set money to `" + amount + "` " + config.currency + ".");
+    } else msg.channel.send(msg.lang.commands.givemoney.duplicates());
+  }
+}, {owner: true, minargs: 2});
 
 // BOT
 commands.set("help", (msg, args) => {
@@ -240,6 +259,14 @@ commands.set("help", (msg, args) => {
 		} else msg.channel.send(msg.lang.commands.help.unknownCommand("$PREFIX", msg.prefix));
 	}
 }, {maxargs: 1, info: {show: true, type: "bot"}});
+
+commands.set("server", msg => {
+  msg.channel.send("https://discord.gg/aCgwj8M");
+}, {maxargs: 0, info: {show: true, type: "bot"}});
+
+commands.set("invite", msg => {
+  msg.channel.send("https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
+}, {maxargs: 0, info: {show: true, type: "bot"}});
 
 commands.set("about", async msg => {
   msg.channel.send("", await funcs.showInfo(msg));
@@ -728,7 +755,7 @@ commands.set("ttsay", msg => {
 
 commands.set("roll", (msg, args) => {
 	let max = 6;
-	if (args.length == 1 && tools.validNumber(args[0], 1, undefined, true).valid)
+	if (args.length == 1 && tools.validNumber(args[0], 1, Infinity, true).valid)
 		max = Number(args[0]);
 	let res = tools.random(1, max);
 	msg.channel.send(res + "/" + max + " :game_die:");
