@@ -47,7 +47,7 @@ Object.defineProperty(discord.User.prototype, "fetchMoney", {
 Object.defineProperty(discord.Guild.prototype, "fetchMoney", {
   value: async function() {
     let fetched = await this.fetchMembers();
-    let members = Array.from(this.members.values());
+    let members = Array.from(fetched.members.values());
     return Promise.all(members.map(member => member.user.fetchMoney()));
   }
 });

@@ -96,6 +96,8 @@ client.on("message", async msg => {
         msg.channel.send(msg.lang.errors.disabledCommand());
   		else if (res.result.reasons.includes("guild only command"))
   			msg.channel.send(msg.lang.errors.guildOnlyCommand());
+      else if (res.result.reasons.includes("large guild"))
+        msg.channel.send(msg.lang.errors.largeGuild());
       else if (res.result.reasons.includes("admin only command"))
   			msg.channel.send(msg.lang.errors.adminOnlyCommand());
       else if (res.result.reasons.includes("mod only command"))
@@ -354,24 +356,21 @@ commands.set("dropmoney", async (msg, args) => {
 }, {guildonly: true, bots: true, minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
 
 commands.set("moneyleaderboard", async msg => {
-  if (msg.guild.large) {
-
-  } else {
-    await msg.guild.fetchMoney();
-    let members = Array.from(msg.guild.members.values());
-    members.sort((member1, member2) => {
-      return member1.user.money > member2.user.money;
-    }).reverse();
-    let embed = tools.defaultEmbed();
-    for (let i = 0; i < members.length; i++) {
-      let member = members[i];
-      if (member.user.money == 0) break;
-      embed.addField(i+1 + " - " + member.displayName, member.user.money + " " + config.currency);
-      if (i == 19) break;
-    }
-    msg.channel.send("", embed);
+  await msg.guild.fetchMoney();
+  let members = Array.from(msg.guild.members.values());
+  members.sort((member1, member2) => {
+    return member1.user.money > member2.user.money;
+  }).reverse();
+  let embed = tools.defaultEmbed();
+  for (let i = 0; i < members.length; i++) {
+    let member = members[i];
+    if (member.user.money == 0) break;
+    embed.addField(msg.lang.commands.moneyleaderboard.info("$POS", i+1, "$USERNAME", member.displayName),
+    msg.lang.commands.moneyleaderboard.display("$AMOUNT", member.user.money, "$CURRENCY", config.currency));
+    if (i == 19) break;
   }
-}, {guildonly: true, maxargs: 0, info: {show: false, type: "misc"}});
+  msg.channel.send("", embed);
+}, {guildonly: true, largeguilds: false, maxargs: 0, info: {show: true, type: "misc"}});
 
 // MODERATION
 

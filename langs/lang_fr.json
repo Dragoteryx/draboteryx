@@ -15,6 +15,7 @@
   },
   "errors": {
     "guildOnlyCommand": "Cette commande n'est disponible que dans les serveurs publics.",
+    "largeGuild": "Cette commande n'est utilisable que dans les serveurs avec 250 membres ou moins.",
     "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
     "adminOnlyCommand": "Cette commande est réservée aux admins.",
     "modOnlyCommand": "Cette commande est réservée aux modérateurs.",
@@ -56,6 +57,31 @@
       "commandType": "Type",
       "commandDescription": "Description",
       "commandSyntax": "Syntaxe"
+    },
+    "money": {
+      "syntax": "$PREFIXmoney",
+      "description": "Afficher combien d'argent tu possèdes.",
+      "display": "Tu possèdes actuellement `$AMOUNT` $CURRENCY."
+    },
+    "givemoney": {
+      "syntax": "$PREFIXgivemoney [quantité] [membre]",
+      "description": "Donner de l'argent à un autre membre.",
+      "gaveMoney": "`$USERNAME1` a donné `$AMOUNT` $CURRENCY à `$USERNAME2`.",
+      "duplicates": "Il y a plus d'un membre avec ce nom d'utilisateur."
+    },
+    "dropmoney": {
+      "syntax": "$PREFIXdropmoney [amount]",
+      "description": "Lacher de l'argent dans le tchat.",
+      "userDropMoney": "`$USERNAME` a laché `$AMOUNT` $CURRENCY. Tape `$PREFIXpickmoney` pour le ramasser.",
+      "botDropMoney": "Oups, j'ai fait tomber `$AMOUNT` $CURRENCY. Tape `$PREFIXpickmoney` pour le ramasser.",
+      "pickMoney": "`$USERNAME` a ramassé `$AMOUNT` $CURRENCY.",
+      "noPickMoney": "Personne n'a ramassé l'argent à temps."
+    },
+    "moneyleaderboard": {
+      "syntax": "$PREFIXmoneyleaderboard",
+      "description": "Tableau des richesses.",
+      "info": "`$POS` - $USERNAME",
+      "display": "`$AMOUNT` $CURRENCY"
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",

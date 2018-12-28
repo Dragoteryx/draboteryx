@@ -16,6 +16,7 @@
   },
   "errors": {
     "guildOnlyCommand": "This command is only available in public servers.",
+    "largeGuild": "This command is only available in servers with 250 members or less.",
     "ownerOnlyCommand": "This is an owner only command.",
     "adminOnlyCommand": "This is an admin only command.",
     "modOnlyCommand": "This is a moderator only command.",
@@ -80,6 +81,12 @@
       "botDropMoney": "Oops, seems like I dropped `$AMOUNT` $CURRENCY. Type `$PREFIXpickmoney` to take it.",
       "pickMoney": "`$USERNAME` picked `$AMOUNT` $CURRENCY.",
       "noPickMoney": "No one picked the money in time."
+    },
+    "moneyleaderboard": {
+      "syntax": "$PREFIXmoneyleaderboard",
+      "description": "Wealth leaderboard.",
+      "info": "`$POS` - $USERNAME",
+      "display": "`$AMOUNT` $CURRENCY"
     },
     "permissions": {
       "syntax": "$PREFIXpermissions",
@@ -260,7 +267,7 @@
       "decrypted": "I successfully decrypted this message: `$MESSAGE`."
     },
     "userinfo": {
-      "syntax": "$PREFIXuserinfo (member = you)",
+      "syntax": "$PREFIXuserinfo (user = you)",
       "description": "Info about a user. (case sensitive)",
       "member": "Member",
       "displayName": "Display name",

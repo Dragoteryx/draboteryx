@@ -43,6 +43,7 @@ class CommandsHandler extends Map {
 			mod: false,
 			dj: false,
 			guildonly: false,
+			largeguilds: true,
 			guilds: [],
 			channels: [],
 			users: [],
@@ -91,6 +92,8 @@ class Command {
       reasons.push("dj only command");
     if (options.guildonly && !msg.guild)
       reasons.push("guild only command");
+		else if (!options.largeguilds && msg.guild.large)
+			reasons.push("large guild");
     if (msg.guild && options.guilds.length != 0 && !options.guilds.includes(msg.guild.id))
       reasons.push("ignored guild");
     if (options.channels.length != 0 && !options.channels.includes(msg.channel.id))
