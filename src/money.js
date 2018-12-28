@@ -3,17 +3,6 @@ const tools = require("./tools.js");
 
 const MAX_VALUE = 999999999;
 
-Object.defineProperty(discord.User.prototype, "fetchMoney", {
-  value: async function() {
-    if (this._money === undefined) {
-      let data = await this.fetchData();
-      if (data.money === undefined) this._money = 0;
-      else this._money = data.money;
-    }
-    return this._money;
-  }
-});
-
 Object.defineProperty(discord.User.prototype, "money", {
   get: function() {
     if (this.owner) return Infinity;
@@ -42,7 +31,26 @@ Object.defineProperty(discord.User.prototype, "takeMoney", {
   value: function(user, value) {
     return user.giveMoney(this, value);
   }
-})
+});
+
+Object.defineProperty(discord.User.prototype, "fetchMoney", {
+  value: async function() {
+    if (this._money === undefined) {
+      let data = await this.fetchData();
+      if (data.money === undefined) this._money = 0;
+      else this._money = data.money;
+    }
+    return this._money;
+  }
+});
+
+Object.defineProperty(discord.Guild.prototype, "fetchMoney", {
+  value: async function() {
+    let fetched = await this.fetchMembers();
+    let members = Array.from(this.members.values());
+    return Promise.all(members.map(member => member.user.fetchMoney()));
+  }
+});
 
 module.exports = {
   MAX_VALUE: MAX_VALUE

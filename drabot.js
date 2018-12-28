@@ -357,11 +357,8 @@ commands.set("moneyleaderboard", async msg => {
   if (msg.guild.large) {
 
   } else {
-    let guild = await msg.guild.fetchMembers();
-    let members = Array.from(guild.members.values());
-    for (let member of members) {
-      await member.user.fetchMoney();
-    }
+    await msg.guild.fetchMoney();
+    let members = Array.from(msg.guild.members.values());
     members.sort((member1, member2) => {
       return member1.user.money > member2.user.money;
     }).reverse();
