@@ -101,7 +101,7 @@ Object.defineProperty(discord.Message.prototype, "authorName", {
 		if (this.guild) return this.member.displayName;
 		else return this.author.username;
 	}
-})
+});
 
 Object.defineProperty(discord.Guild.prototype, "nbCon", {
 	value: function nbCon() {

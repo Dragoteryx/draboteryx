@@ -796,22 +796,22 @@ commands.set("reflex", async msg => {
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "game"}});
 
 commands.set("cyanidehappiness", msg => {
-  let link = "http://explosm.net/rcg/";
+  let link = "http://explosm.net/rcg";
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
     msg.channel.stopTyping()
-    let img = res.text.match(new RegExp("http://files.explosm.net/rcg/[a-z]{9}.png", "i")).shift();
-  	msg.channel.send("(" + msg.lang.commands.cyanidehappiness.from("$LINK", link) + ")", {files: [img]});
+    let img = res.text.match(/http:\/\/files.explosm.net\/rcg\/[a-z]{9}\.png/i).shift();
+  	msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link), {files: [img]});
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 commands.set("httpdog", msg => {
-  let link = "https://httpstatusdogs.com/";
+  let link = "https://httpstatusdogs.com";
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
     msg.channel.stopTyping();
-  	let imgs = res.text.match(new RegExp("img/[1-5][0-9]{2}.jpg", "g"));
-  	msg.channel.send("", {files: [link + imgs.random()]});
+  	let imgs = res.text.match(/img\/[1-5][0-9]{2}\.jpg/g);
+  	msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link), {files: [link + "/" + imgs.random()]});
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
@@ -863,8 +863,20 @@ commands.set("spurriouscorrelations", msg => {
   msg.channel.startTyping(1);
   snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700)).then(res => {
     msg.channel.stopTyping();
-    let corrs = res.text.match(new RegExp("correlation_images/[a-z0-9_-]+[.]png", "gi"));
-    if (corrs) msg.channel.send("", {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
+    let corrs = res.text.match(/correlation_images\/[a-z0-9_-]+\.png/gi);
+    if (corrs) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", "http://tylervigen.com/spurious-correlations"), {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
+  }).catch(err => msg.channel.stopTyping());
+}, {maxargs: 0, info: {show: true, type: "fun"}});
+
+commands.set("csshumor", msg => {
+  let link = "https://csshumor.com";
+  msg.channel.startTyping(1);
+  snekfetch.get(link).then(res => {
+    msg.channel.stopTyping();
+    let humor = res.text.match(/<td class="crayon-code">.+<\/td>/i).shift().split(/[<>]/).filter(str => {
+      return !str.includes("class=") && !str.startsWith("/") && str.length > 0 && !str.startsWith("&");
+    }).join("");
+    if (humor.length > 0) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link) + "\n```css\n" + humor + "\n```");
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 

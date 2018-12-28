@@ -12,7 +12,8 @@
     "admin": "Admin",
     "mod": "Moderator",
     "dj": "DJ",
-    "merged": "This command has been merged with the `$PREFIX$COMMAND` command."
+    "merged": "This command has been merged with the `$PREFIX$COMMAND` command.",
+    "fromWebsite": "(from `$LINK`)"
   },
   "errors": {
     "guildOnlyCommand": "This command is only available in public servers.",
@@ -382,6 +383,10 @@
     "tictactoe": {
       "syntax": "$PREFIXtictactoe (@player)",
       "description": "Play TicTacToe with me or someone else."
+    },
+    "csshumor": {
+      "syntax": "$PREFIXcsshumor",
+      "description": "CSS Humor!"
     }
   }
 }

@@ -11,7 +11,8 @@
     "admin": "Admin",
     "mod": "Modérateur",
     "dj": "DJ",
-    "merged": "Cette commande a été ajoutée à la commande `$PREFIX$COMMAND`."
+    "merged": "Cette commande a été ajoutée à la commande `$PREFIX$COMMAND`.",
+    "fromWebsite": "(depuis `$LINK`)"
   },
   "errors": {
     "guildOnlyCommand": "Cette commande n'est disponible que dans les serveurs publics.",
@@ -351,6 +352,35 @@
     "rand": {
       "syntax": "$PREFIXrand [min] [max]",
       "description": "Obtenir un nombre random entre `min` et `max`."
+    },
+    "prune": {
+      "syntax": "$PREFIXprune (number of messages)",
+      "description": "Delete messages newer than 2 weeks in bulk. (maximum 100)",
+      "done": "I deleted `$NB` messages.",
+      "error": "Something went wrong when I tried to delete messages.",
+      "limit": "I can't delete more than `100` messages at a time.",
+      "invalid": "This number is invalid."
+    },
+    "danbooru": {
+      "syntax": "$PREFIXdanbooru [1-2 tags]",
+      "description": "Search on Danbooru. (hides NSFW pictures in SFW channels)",
+      "result": "Tags: `$TAGS`"
+    },
+    "spurriouscorrelations": {
+      "syntax": "$PREFIXspurriouscorrelations",
+      "description": "Spurrious correlations! (from `http://tylervigen.com/spurious-correlations`)"
+    },
+    "ping": {
+      "syntax": "$PREFIXping",
+      "description": "Pong!"
+    },
+    "tictactoe": {
+      "syntax": "$PREFIXtictactoe (@player)",
+      "description": "Play TicTacToe with me or someone else."
+    },
+    "csshumor": {
+      "syntax": "$PREFIXcsshumor",
+      "description": "CSS Humor!"
     }
   }
 }
