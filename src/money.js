@@ -17,7 +17,7 @@ Object.defineProperty(discord.User.prototype, "fetchMoney", {
 Object.defineProperty(discord.User.prototype, "money", {
   get: function() {
     if (this.owner) return Infinity;
-    else if this._money > MAX_VALUE return MAX_VALUE;
+    else if (this._money > MAX_VALUE) return MAX_VALUE;
     else return this._money;
   },
   set: function(value) {
