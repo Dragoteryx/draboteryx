@@ -110,7 +110,10 @@ client.on("message", async msg => {
   			msg.channel.send(msg.lang.errors.nsfwCommand());
   		else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
   			msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", res.command.name));
-  	}
+  	} else {
+      if (msg.guild) console.log("[LOG] Guild: '" + msg.guild.name + "' => '" + msg.content + "'");
+      else console.log("[LOG] Private channel => '" + msg.content + "'");
+    }
 
   } catch(err) {
     funcs.displayError(msg, err);
