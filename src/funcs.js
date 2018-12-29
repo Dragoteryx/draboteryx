@@ -6,9 +6,9 @@ const music = require("./music.js");
 
 exports.sendToOwner = async str => (await client.fetchApplication()).owner.send(str);
 exports.error = (str = "", err) => {
-	let preError = "[ERROR] " + (str.length > 0 ? str + ": " : "");
-	if (process.env.HEROKU != undefined)
-		console.log(preError + err.message);
+	let preError = "[ERROR] " + (str.length > 0 ? str + " => " : "");
+	if (true)//if (process.env.HEROKU != undefined)
+		console.log(preError + err.name + ": " + err.message);
 	else console.error(preError + "\n", err);
 }
 
@@ -16,7 +16,7 @@ exports.displayError = (msg, err) => {
 	drabot.client.fetchApplication().then(async app => {
 		let str = msg.lang.errors.unknown("$OWNERTAG", app.owner.tag, "$PREFIX", msg.prefix) + "```\n" + err.stack;
 		msg.channel.send(str.substring(0, 1995) + "\n```");
-		exports.error("msg => '" + msg.content + "'", err);
+		exports.error("Message: '" + msg.content + "'", err);
 	}).catch(console.error);
 }
 
