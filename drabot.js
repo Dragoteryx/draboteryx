@@ -111,8 +111,9 @@ client.on("message", async msg => {
   		else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
   			msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", res.command.name));
   	} else {
-      if (msg.guild) console.log("[LOG] Guild: '" + msg.guild.name + "' => '" + msg.content + "'");
-      else console.log("[LOG] Private channel => '" + msg.content + "'");
+      if (msg.channel.type == "text") console.log("[LOG] Guild channel: '" + msg.guild.name + "' => '" + msg.content + "'");
+      else if (msg.channel.type == "group") console.log("[LOG] Group channel => '" + msg.content + "'");
+      else if (msg.channel.type == "dm") console.log("[LOG] Private channel => '" + msg.content + "'");
     }
 
   } catch(err) {
