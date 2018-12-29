@@ -22,7 +22,7 @@ const listenmoe = require("./src/listenmoe.js");
 const money = require("./src/money.js");
 
 // CONSTS
-const onHeroku = process.env.HEROKU != undefined;
+const heroku = process.env.HEROKU != undefined;
 const client = new discord.Client();
 const commands = new CommandHandler();
 commands.owners = config.owners;
@@ -31,7 +31,7 @@ const langs = {
   fr: new Lang(require("./langs/lang_fr.json"), require("./langs/lang_en.json"))
 }
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
-const dbl = onHeroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
+const dbl = heroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
@@ -45,6 +45,7 @@ exports.client = client;
 exports.commands = commands;
 exports.langs = langs;
 exports.vars = vars;
+exports.heroku = heroku;
 
 // LISTEN TO MESSAGES
 client.on("message", async msg => {
@@ -125,8 +126,8 @@ process.on("uncaughtException", async err => {
 });
 process.on("unhandledRejection", async (err, promise) => {
   funcs.error("Unhandled Promise Rejection", err);
-  /*if (!ignoredErrors.includes(err.name))
-    process.exit(1);*/
+  if (!ignoredErrors.includes(err.name))
+    process.exit(1);
 });
 
 client.on("ready", async () => {
@@ -149,7 +150,7 @@ client.on("error", err => {
 	login();
 });
 client.on("debug", str => {
-  if (onHeroku) return;
+  if (heroku) return;
   console.log("[DEBUG] " + str);
 });
 
@@ -185,7 +186,7 @@ commands.set("exec", async msg => {
       promise = true;
       val = await val;
     }
-    if (!onHeroku) {
+    if (!heroku) {
       console.log("[EXEC]");
       console.dir(val, {colors: true});
     }

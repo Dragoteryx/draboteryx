@@ -6,7 +6,10 @@ const music = require("./music.js");
 const data = require("./data.js");
 
 exports.error = async (str = "", err) => {
-	console.log("[ERROR] " + (str.length > 0 ? str + " => " : "") + err.stack);
+	let preError = "[ERROR] " + (str.length > 0 ? str + " => " : "");
+	if (drabot.heroku)
+		console.log(preError + err.name + ": " + err.message);
+	else console.log(preError + err.stack);
 	drabot.client.channels.get(config.channels.errors).send("An error just occured: ```\n" + err.stack.substring(0, 1980) + "```");
 }
 
