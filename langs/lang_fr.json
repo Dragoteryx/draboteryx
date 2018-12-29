@@ -368,7 +368,7 @@
     },
     "spurriouscorrelations": {
       "syntax": "$PREFIXspurriouscorrelations",
-      "description": "Spurrious correlations!"
+      "description": "Des corrélations absurdes!"
     },
     "ping": {
       "syntax": "$PREFIXping",
