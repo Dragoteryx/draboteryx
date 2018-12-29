@@ -882,19 +882,27 @@ commands.set("decrypt", async msg => {
 	}
 }, {minargs: 1, info: {show: true, type: "misc"}});
 
-commands.set("danbooru", async (msg, args) => {
-  let tags = args.join(" ");
-  if (msg.guild && !msg.channel.nsfw) tags += " rating:safe";
+commands.set("danbooru", async (msg, args, argstr) => {
+  if (args.length > 3 || (args.length == 3 && !args.includes("rating:safe"))) {
+    msg.channel.send(msg.lang.commands.danbooru.limit("$LIMIT", 2));
+    return;
+  }
+  let tags = argstr;
+  if (msg.guild && !msg.guild.nsfw) {
+    args = args.filter(tag => !tag.startsWith("rating:"));
+    args.push("rating:safe");
+    tags = args.join(" ");
+  }
   msg.channel.startTyping(1);
   booru.posts({limit: 1, random: true, tags: tags}).then(posts => {
     msg.channel.stopTyping();
     if (posts.length == 0 || !posts[0]) msg.channel.send(msg.lang.misc.noResults());
     else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
   }).catch(err => {
-    msg.channel.stopTyping()
-    msg.channel.send(msg.lang.misc.noResults());
+    msg.channel.stopTyping();
+    funcs.displayError(msg, err);
   });
-}, {minargs: 1, maxargs: 2, info: {show: true, type: "nsfw"}});
+}, {minargs: 1, info: {show: true, type: "nsfw"}});
 
 commands.set("spurriouscorrelations", msg => {
   msg.channel.startTyping(1);

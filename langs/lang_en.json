@@ -370,7 +370,8 @@
     "danbooru": {
       "syntax": "$PREFIXdanbooru [1-2 tags]",
       "description": "Search on Danbooru. (hides NSFW pictures in SFW channels)",
-      "result": "Tags: `$TAGS`"
+      "result": "Tags: `$TAGS`",
+      "limit": "You can't use more than `$LIMIT` tags at once."
     },
     "spurriouscorrelations": {
       "syntax": "$PREFIXspurriouscorrelations",

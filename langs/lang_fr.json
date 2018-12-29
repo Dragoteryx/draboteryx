@@ -364,7 +364,8 @@
     "danbooru": {
       "syntax": "$PREFIXdanbooru [1-2 tags]",
       "description": "Faire une recherche sur danbooru. (les images NSFW sont ignorées sur les channels SFW)",
-      "result": "Tags: `$TAGS`"
+      "result": "Tags: `$TAGS`",
+      "limit": "Tu ne peux pas utiliser plus de `$LIMIT` tags à la fois."
     },
     "spurriouscorrelations": {
       "syntax": "$PREFIXspurriouscorrelations",
