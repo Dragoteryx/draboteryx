@@ -125,8 +125,8 @@ process.on("uncaughtException", async err => {
 });
 process.on("unhandledRejection", async (err, promise) => {
   funcs.error("Unhandled Promise Rejection", err);
-  if (!ignoredErrors.includes(err.name))
-    process.exit(1);
+  /*if (!ignoredErrors.includes(err.name))
+    process.exit(1);*/
 });
 
 client.on("ready", async () => {
