@@ -37,7 +37,6 @@ const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
 
 // GLOBALS
-let connected = false;
 let debug = false;
 let firstConnection = true;
 
@@ -149,25 +148,27 @@ process.on("exit", code => {
 });
 
 client.on("ready", () => {
-	if (!connected) {
-    if (!pfAliases.ready) {
-      pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
-      pfAliases.ready = true;
-    }
-		connected = true;
-    client.user.setActivity(config.prefix + "help");
-		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
-    let guild = client.guilds.get(config.guilds.drg);
-    if (guild) {
-      if (firstConnection) {
-        guild.logsChannel.send("Hello world!");
-        firstConnection = false;
-      } else guild.logsChannel.send("I've just restarted.");
-    }
-	}
+  if (!pfAliases.ready) {
+    pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
+    pfAliases.ready = true;
+  }
+  client.user.setActivity(config.prefix + "help");
+	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
+  let guild = client.guilds.get(config.guilds.drg);
+  if (guild) {
+    if (firstConnection) {
+      guild.sendLog("Hello world!");
+      firstConnection = false;
+    } else guild.sendLog("I've just restarted.");
+  }
+});
+client.on("disconnect", async () => {
+  console.log("[INFO] Disconnected.");
+  let guild = client.guilds.get(config.guilds.drg);
+  if (guild) await guild.sendLog("Disconnected!");
 });
 client.on("error", err => {
-	connected = false;
+  console.log("[INFO] Disconnected.");
   funcs.error("Drabot disconnect", err);
 	login();
 });
@@ -248,6 +249,13 @@ commands.set("setmoney", async (msg, args) => {
     } else msg.channel.send(msg.lang.commands.givemoney.duplicates());
   }
 }, {owner: true, minargs: 2});
+
+commands.set("restart", async msg => {
+  msg.channel.send("Ok I'm disconnecting!");
+  await client.destroy();
+  let nb = await login();
+  msg.channel.send("I'm back!");
+}, {owner: true, maxargs: 0});
 
 // BOT
 commands.set("help", (msg, args) => {
@@ -906,14 +914,17 @@ commands.set("csshumor", msg => {
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 // FUNCTIONS
-function login() {
+async function login(delay = 20000, nb = 1) {
 	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connecting." : "[INFO] Connecting.");
-	client.login(process.env.DISCORDTOKEN).catch(async () => {
-		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connection failed." : "[INFO] Connection failed.");
-    console.log("Retrying in 60 seconds.");
-		await tools.sleep(60000);
-		login();
-	});
+  try {
+    await client.login(process.env.DISCORDTOKEN);
+    return nb;
+  } catch(err) {
+    console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connection failed." : "[INFO] Connection failed.");
+    console.log("Retrying in '" + delay/1000 + "' seconds.");
+		await tools.sleep(delay);
+		return login(delay, nb+1);
+  }
 }
 
 login();

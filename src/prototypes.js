@@ -102,6 +102,20 @@ Object.defineProperty(discord.Guild.prototype, "modLogsChannel", {
 	}
 });
 
+Object.defineProperty(discord.Guild.prototype, "sendLog", {
+	value: function(...args) {
+		let channel = this.logsChannel;
+		if (channel) channel.send(...args);
+	}
+});
+
+Object.defineProperty(discord.Guild.prototype, "sendModLog", {
+	value: function(...args) {
+		let channel = this.modLogsChannel;
+		if (channel) channel.send(...args);
+	}
+});
+
 Object.defineProperty(discord.Message.prototype, "authorName", {
 	get: function() {
 		if (this.guild) return this.member.displayName;
