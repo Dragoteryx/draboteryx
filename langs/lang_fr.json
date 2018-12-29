@@ -355,20 +355,20 @@
     },
     "prune": {
       "syntax": "$PREFIXprune (number of messages)",
-      "description": "Delete messages newer than 2 weeks in bulk. (maximum 100)",
-      "done": "I deleted `$NB` messages.",
-      "error": "Something went wrong when I tried to delete messages.",
-      "limit": "I can't delete more than `100` messages at a time.",
-      "invalid": "This number is invalid."
+      "description": "Supprimer les messages ayant moins de 2 semaines d'ancienneté. (maximum 100)",
+      "done": "J'ai supprimé `$NB` messages.",
+      "error": "Quelque chose m'a empêcher de supprimer les messages.",
+      "limit": "Je ne peux pas supprimer plus de `100` messages d'un coup.",
+      "invalid": "Ce nombre est invalide."
     },
     "danbooru": {
       "syntax": "$PREFIXdanbooru [1-2 tags]",
-      "description": "Search on Danbooru. (hides NSFW pictures in SFW channels)",
+      "description": "Faire une recherche sur danbooru. (les images NSFW sont ignorées sur les channels SFW)",
       "result": "Tags: `$TAGS`"
     },
     "spurriouscorrelations": {
       "syntax": "$PREFIXspurriouscorrelations",
-      "description": "Spurrious correlations! (from `http://tylervigen.com/spurious-correlations`)"
+      "description": "Spurrious correlations!"
     },
     "ping": {
       "syntax": "$PREFIXping",

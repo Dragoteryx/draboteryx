@@ -121,13 +121,20 @@ client.on("message", async msg => {
 const ignoredErrors = ["DiscordAPIError", "PlaylistError"];
 process.on("uncaughtException", async err => {
   funcs.error("Uncaught Exception", err);
-  if (!ignoredErrors.includes(err.name))
+  if (!ignoredErrors.includes(err.name)) {
+    await client.destroy();
     process.exit(1);
+  }
 });
 process.on("unhandledRejection", async (err, promise) => {
   funcs.error("Unhandled Promise Rejection", err);
-  if (!ignoredErrors.includes(err.name))
+  if (!ignoredErrors.includes(err.name)) {
+    await client.destroy();
     process.exit(1);
+  }
+});
+process.on("exit", code => {
+  console.log("[INFO] Process exiting with code '" + code + "'");
 });
 
 client.on("ready", async () => {
