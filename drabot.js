@@ -35,9 +35,11 @@ const dbl = onHeroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
+
 // GLOBALS
 let connected = false;
 let debug = false;
+let lastDisconnectError = null;
 
 // EXPORTS
 exports.client = client;
@@ -111,18 +113,13 @@ client.on("message", async msg => {
   	}
 
   } catch(err) {
-    funcs.logError(msg, err);
+    funcs.displayError(msg, err);
   }
 });
 
 // EVENTS
 process.on("unhandledRejection", err => {
-	if (err instanceof discord.DiscordAPIError && onHeroku)
-		console.log("[ERROR] Unhandled Promise Rejection:\nDiscordAPIError: " + err.message);
-	else {
-		console.log("[ERROR] Unhandled Promise Rejection:");
-		console.error(err);
-	}
+	funcs.error("Unhandled Promise Rejection", err);
 });
 client.on("ready", async () => {
 	if (!connected) {
@@ -134,20 +131,18 @@ client.on("ready", async () => {
     client.user.setActivity(config.prefix + "help");
 		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
     let owner = (await client.fetchApplication()).owner;
-		if (onHeroku) {
-			if (!client.shard) console.log("(Heroku launch)");
-      if (owner.presence.status == "online")
-			  owner.send("Heroku launch complete.");
-		} else {
-			if (!client.shard) console.log("(local launch)");
-      if (owner.presence.status == "online")
-			  owner.send("Local launch complete.");
-		}
+    if (owner.presence.status != "online") return;
+    owner.send("Hello Senpai! I've just restarted. :stuck_out_tongue:");
+    if (lastDisconnectError !== null) {
+      owner.send("You should take a look at this:```\n" + lastDisconnectError.stack.substring(0, 1980) + "\n```");
+      lastDisconnectError = null;
+    }
 	}
 });
 client.on("error", err => {
-	console.error("[ERROR]\n", err);
+  lastDisconnectError = err;
 	connected = false;
+  funcs.error("Drabot disconnect", err);
 	login();
 });
 client.on("guildCreate", guild => {
@@ -192,7 +187,7 @@ commands.set("exec", async msg => {
     } catch(err) {}
 	} catch(err) {
 		msg.react("⛔");
-    funcs.logError(msg, err);
+    funcs.displayError(msg, err);
 	}
 }, {owner: true, minargs: 1});
 
@@ -885,6 +880,7 @@ function login() {
 	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connecting." : "[INFO] Connecting.");
 	client.login(process.env.DISCORDTOKEN).catch(async () => {
 		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connection failed." : "[INFO] Connection failed.");
+    console.log("Retrying in 60 seconds.");
 		await tools.sleep(60000);
 		login();
 	});

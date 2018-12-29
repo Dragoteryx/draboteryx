@@ -4,11 +4,19 @@ const pack = require("../package.json");
 const tools = require("./tools.js");
 const music = require("./music.js");
 
-exports.logError = (msg, err) => {
+exports.sendToOwner = async str => (await client.fetchApplication()).owner.send(str);
+exports.error = (str = "", err) => {
+	let preError = "[ERROR] " + (str.length > 0 ? str + ": " : "");
+	if (process.env.HEROKU != undefined)
+		console.log(preError + err.message);
+	else console.error(preError + "\n", err);
+}
+
+exports.displayError = (msg, err) => {
 	drabot.client.fetchApplication().then(async app => {
 		let str = msg.lang.errors.unknown("$OWNERTAG", app.owner.tag, "$PREFIX", msg.prefix) + "```\n" + err.stack;
 		msg.channel.send(str.substring(0, 1995) + "\n```");
-		console.error("[ERROR] msg => '" + msg.content + "'\n", err);
+		exports.error("msg => '" + msg.content + "'", err);
 	}).catch(console.error);
 }
 
