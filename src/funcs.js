@@ -5,7 +5,7 @@ const tools = require("./tools.js");
 const music = require("./music.js");
 const data = require("./data.js");
 
-exports.error = async (str = "", err) => {
+exports.error = async function(str = "", err) {
 	let preError = "[ERROR] " + (str.length > 0 ? str + " => " : "");
 	if (drabot.heroku)
 		console.log(preError + err.name + ": " + err.message);
@@ -13,7 +13,7 @@ exports.error = async (str = "", err) => {
 	drabot.client.channels.get(config.channels.errors).send("An error just occured: ```\n" + err.stack.substring(0, 1980) + "```");
 }
 
-exports.displayError = (msg, err) => {
+exports.displayError = function(msg, err) {
 	drabot.client.fetchApplication().then(async app => {
 		let str = msg.lang.errors.unknown("$OWNERTAG", app.owner.tag, "$PREFIX", msg.prefix) + "```\n" + err.stack;
 		msg.channel.send(str.substring(0, 1995) + "\n```");
@@ -21,7 +21,7 @@ exports.displayError = (msg, err) => {
 	}).catch(console.error);
 }
 
-exports.musicErrors = (msg, err) => {
+exports.musicErrors = function(msg, err) {
 	if (err.message == music.errorMessages.memberNotInVoiceChannel) msg.channel.send(msg.lang.music.memberNotInVoiceChannel());
 	else if (err.message == music.errorMessages.voiceChannelNotJoinable) msg.channel.send(msg.lang.music.voiceChannelNotJoinable());
 	else if (err.message == music.errorMessages.voiceChannelNotSpeakable) msg.channel.send(msg.lang.music.voiceChannelNotSpeakable());
@@ -36,7 +36,7 @@ exports.musicErrors = (msg, err) => {
 	else exports.logError(msg, err);
 }
 
-exports.showInfo = async msg => {
+exports.showInfo = async function(msg) {
 	let stats = "";
 	let guilds = drabot.client.shard ?
 	(await drabot.client.shard.fetchClientValues("guilds.size")).reduce((acc, val) => acc += val, 0)

@@ -4,7 +4,7 @@ const util = require("util");
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-exports.assert = (obj, ...tests) => {
+exports.assert = function(obj, ...tests) {
 	for (let i = 0; i < tests.length; i++) {
 		if (!tests[i](obj)) return {valid: false, fail: i};
 	}
@@ -30,31 +30,31 @@ exports.coloredEmbed = color => new discord.RichEmbed().setColor(color);
 exports.defaultEmbed = () => exports.coloredEmbed("#808000");
 exports.discordEmbed = () => exports.coloredEmbed("#7289DA");
 
-exports.stringToMembers = async (str, guild) => {
+exports.stringToMembers = async function(str, guild) {
 	let guildFetched = await guild.fetchMembers();
 	if (str.startsWith("<@") && str.endsWith(">"))
 		return guildFetched.members.filter(member => member.id == str.replace("<@","").replace(">","").replace("!",""));
 	else return guildFetched.members.filter(member => member.displayName.toLowerCase() == str.toLowerCase());
 }
 
-exports.stringToChannels = (str, guild) => {
+exports.stringToChannels = function(str, guild) {
 	if (str.startsWith("<#") && str.endsWith(">"))
 		return guild.channels.filter(channel => channel.id == str.replace("<#","").replace(">",""));
 	else return guild.channels.filter(channel => channel.name.toLowerCase() == str.toLowerCase());
 }
 
-exports.stringToRoles = (str, guild) => {
+exports.stringToRoles = function(str, guild) {
 	if (str.startsWith("<@#") && str.endsWith(">"))
 		return guild.roles.filter(role => role.id == str.replace("<@#","").replace(">",""));
 	else return guild.roles.filter(role => role.name.toLowerCase() == str.toLowerCase());
 }
 
-exports.stringifyObject = object => {
+exports.stringifyObject = function(object) {
 	if (object instanceof Function) return "```js\n" + object.toString().substring(0, 1950) + "\n```";
 	else return "```js\n" + util.inspect(object, {depth: 0, breakLength: 0}).substring(0, 1950) + "\n```";
 }
 
-exports.parseTimestamp = timestamp => {
+exports.parseTimestamp = function(timestamp) {
 	if (timestamp instanceof Date)
 		return exports.parseTimestamp(timestamp.getTime());
 	let secondsAbs = Math.floor(timestamp/1000);
@@ -126,7 +126,7 @@ exports.parseTimestamp = timestamp => {
 	});
 }
 
-exports.range = (min = 0, max = 10) => {
+exports.range = function(min = 0, max = 10) {
 	if (max < min) {
 		let buffer = min;
 		min = max;
