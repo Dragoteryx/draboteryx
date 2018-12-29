@@ -39,6 +39,7 @@ const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOO
 // GLOBALS
 let connected = false;
 let debug = false;
+let firstConnection = true;
 
 // EXPORTS
 exports.client = client;
@@ -147,7 +148,7 @@ process.on("exit", code => {
   console.log("[INFO] Process exiting with code '" + code + "'");
 });
 
-client.on("ready", async () => {
+client.on("ready", () => {
 	if (!connected) {
     if (!pfAliases.ready) {
       pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
@@ -156,9 +157,13 @@ client.on("ready", async () => {
 		connected = true;
     client.user.setActivity(config.prefix + "help");
 		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
-    let owner = (await client.fetchApplication()).owner;
-    if (owner.presence.status == "online")
-      owner.send("Hello Senpai! I've just restarted. :stuck_out_tongue:");
+    let guild = client.guilds.get(config.guilds.drg);
+    if (guild) {
+      if (firstConnection) {
+        guild.logsChannel.send("Hello world!");
+        firstConnection = false;
+      } else guild.logsChannel.send("I've just restarted.");
+    }
 	}
 });
 client.on("error", err => {
@@ -351,7 +356,7 @@ commands.set("lang", async (msg, args) => {
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
 commands.set("ping", async msg => {
-  msg.channel.send("Pong! (" + client.ping + "ms) :ping_pong:");
+  msg.channel.send("Pong! (" + Math.round(client.ping) + "ms) :ping_pong:");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
 // MONEY

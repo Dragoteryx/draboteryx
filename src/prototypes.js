@@ -96,6 +96,12 @@ Object.defineProperty(discord.Guild.prototype, "logsChannel", {
 	}
 });
 
+Object.defineProperty(discord.Guild.prototype, "modLogsChannel", {
+	get: function() {
+		return this.channels.find(channel => channel.name == "drb-modlogs" && channel.type == "text");
+	}
+});
+
 Object.defineProperty(discord.Message.prototype, "authorName", {
 	get: function() {
 		if (this.guild) return this.member.displayName;
