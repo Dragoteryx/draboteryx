@@ -7,7 +7,7 @@ const music = require("./music.js");
 exports.sendToOwner = async str => (await client.fetchApplication()).owner.send(str);
 exports.error = (str = "", err) => {
 	let preError = "[ERROR] " + (str.length > 0 ? str + " => " : "");
-	if (true)//if (process.env.HEROKU != undefined)
+	if (process.env.HEROKU != undefined)
 		console.log(preError + err.name + ": " + err.message);
 	else console.error(preError + "\n", err);
 }

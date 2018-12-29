@@ -21,9 +21,11 @@ class CommandsHandler extends Map {
     return true;
   }
   async run(msg) {
+		if (msg.content.length == 0)
+			return {command: null, result: {valid: false, reasons: ["empty message"], returned: null}};
     if (!msg.content.startsWith(msg.prefix))
       return {command: null, result: {valid: false, reasons: ["no prefix"], returned: null}};
-    let name = msg.content.split(" ").shift().replace(msg.prefix, "");
+		let name = msg.content.split(/ +/g).shift().replace(msg.prefix, "").toLowerCase();
 		if (!this.has(name))
       return {command: null, result: {valid: false, reasons: ["unknown command"], returned: null}};
 		let command = this.get(name);
@@ -78,7 +80,7 @@ class Command {
     let reasons = [];
 		let returned = null;
     let options = this.options;
-    let args = msg.content.split(" ").slice(1);
+    let args = msg.content.split(/ +/g).slice(1);
 		let nbArgs = args.length;
     if (options.owner && !msg.author.owner)
       reasons.push("owner only command");
