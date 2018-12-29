@@ -39,7 +39,6 @@ const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOO
 // GLOBALS
 let connected = false;
 let debug = false;
-let lastDisconnectError = null;
 
 // EXPORTS
 exports.client = client;
@@ -49,8 +48,8 @@ exports.vars = vars;
 
 // LISTEN TO MESSAGES
 client.on("message", async msg => {
+  if (msg.author.id == client.user.id) return;
   try {
-    if (msg.author.id == client.user.id) return;
 
     // set prefix and lang
     if (msg.guild) {
@@ -118,9 +117,18 @@ client.on("message", async msg => {
 });
 
 // EVENTS
-process.on("unhandledRejection", err => {
-	funcs.error("Unhandled Promise Rejection", err);
+const ignoredErrors = ["DiscordAPIError", "PlaylistError"];
+process.on("uncaughtException", async err => {
+  funcs.error("Uncaught Exception", err);
+  if (!ignoredErrors.includes(err.name))
+    process.exit(1);
 });
+process.on("unhandledRejection", async (err, promise) => {
+  funcs.error("Unhandled Promise Rejection", err);
+  if (!ignoredErrors.includes(err.name))
+    process.exit(1);
+});
+
 client.on("ready", async () => {
 	if (!connected) {
     if (!pfAliases.ready) {
@@ -131,20 +139,20 @@ client.on("ready", async () => {
     client.user.setActivity(config.prefix + "help");
 		console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
     let owner = (await client.fetchApplication()).owner;
-    if (owner.presence.status != "online") return;
-    owner.send("Hello Senpai! I've just restarted. :stuck_out_tongue:");
-    if (lastDisconnectError !== null) {
-      owner.send("You should take a look at this:```\n" + lastDisconnectError.stack.substring(0, 1980) + "\n```");
-      lastDisconnectError = null;
-    }
+    if (owner.presence.status == "online")
+      owner.send("Hello Senpai! I've just restarted. :stuck_out_tongue:");
 	}
 });
 client.on("error", err => {
-  lastDisconnectError = err;
 	connected = false;
   funcs.error("Drabot disconnect", err);
 	login();
 });
+client.on("debug", str => {
+  if (onHeroku) return;
+  console.log("[DEBUG] " + str);
+});
+
 client.on("guildCreate", guild => {
   null;
 });
@@ -325,8 +333,7 @@ commands.set("lang", async (msg, args) => {
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
 commands.set("ping", async msg => {
-  let delay = Date.now() - msg.createdTimestamp;
-  msg.channel.send("Pong! (" + delay + "ms) :ping_pong:");
+  msg.channel.send("Pong! (" + client.ping + "ms) :ping_pong:");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
 // MONEY

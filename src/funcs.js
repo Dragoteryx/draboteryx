@@ -3,13 +3,10 @@ const config = require("../config.js");
 const pack = require("../package.json");
 const tools = require("./tools.js");
 const music = require("./music.js");
+const data = require("./data.js");
 
-exports.sendToOwner = async str => (await client.fetchApplication()).owner.send(str);
-exports.error = (str = "", err) => {
-	let preError = "[ERROR] " + (str.length > 0 ? str + " => " : "");
-	if (process.env.HEROKU != undefined)
-		console.log(preError + err.name + ": " + err.message);
-	else console.error(preError + "\n", err);
+exports.error = async (str = "", err) => {
+	console.log("[ERROR] " + (str.length > 0 ? str + " => " : "") + err.stack);
 }
 
 exports.displayError = (msg, err) => {

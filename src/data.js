@@ -52,6 +52,13 @@ async function deleteMongo(client, coll, find = {}) {
 }
 
 // PROTOTYPES
+async function fetchAllData(collection) {
+	let client = await connectMongo();
+	let all = await fetchMongo(client, collection, {});
+	client.close()
+	return all;
+}
+
 async function fetchData(collection, id) {
 	let client = await connectMongo();
 	let find = await fetchMongo(client, collection, {id: id});
@@ -156,3 +163,10 @@ function sendRedis(path, data) {
 	if (typeof data == "object") data = JSON.stringify(data);
 	return redis.set(path, data);
 }*/
+
+module.exports = {
+	fetchAllData: fetchAllData,
+	fetchData: fetchData,
+	sendData: sendData,
+	clearData: clearData
+}
