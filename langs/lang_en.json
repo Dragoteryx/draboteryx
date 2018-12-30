@@ -265,7 +265,8 @@
     "encrypt": {
       "syntax": "$PREFIXencrypt [message]",
       "description": "Encrypt a message. (AES)",
-      "specificKey": "Do you want me to use a specific key ? If you do reply with the key within `10` seconds.",
+      "specificKey": "Do you want to use a specific key?",
+      "askKey": "What key do you want to use then? You have `10` seconds to choose.",
       "encrypted": "Your encrypted message: `$MESSAGE`. Key: `$KEY`."
     },
     "decrypt": {
@@ -361,7 +362,7 @@
       "description": "Obtain a random number between `min` and `max`."
     },
     "prune": {
-      "syntax": "$PREFIXprune (number of messages)",
+      "syntax": "$PREFIXprune (number of messages to delete)",
       "description": "Delete messages newer than 2 weeks in bulk. (maximum 100)",
       "done": "I deleted `$NB` messages.",
       "error": "Something went wrong when I tried to delete messages.",

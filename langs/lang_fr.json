@@ -259,7 +259,8 @@
     "encrypt": {
       "syntax": "$PREFIXencrypt [message]",
       "description": "Chiffrer un message. (AES)",
-      "specificKey": "Tu veux utiliser une clé particulière ? Si oui répond moi d'ici `10` secondes.",
+      "specificKey": "Tu veux utiliser une clé particulière ?",
+      "askKey": "Quelle clé veux-tu utiliser ? Tu as `10` secondes pour la choisir.",
       "encrypted": "Ton message chiffré : `$MESSAGE`. Clé: `$KEY`."
     },
     "decrypt": {
@@ -355,7 +356,7 @@
       "description": "Obtenir un nombre random entre `min` et `max`."
     },
     "prune": {
-      "syntax": "$PREFIXprune (number of messages)",
+      "syntax": "$PREFIXprune (nombre de messages à supprimer)",
       "description": "Supprimer les messages ayant moins de 2 semaines d'ancienneté. (maximum 100)",
       "done": "J'ai supprimé `$NB` messages.",
       "error": "Quelque chose m'a empêcher de supprimer les messages.",

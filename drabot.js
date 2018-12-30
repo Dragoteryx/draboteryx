@@ -57,10 +57,9 @@ client.on("message", async msg => {
     // set prefix and lang
     if (msg.guild) {
       if (!msg.guild.fetched) {
-        msg.guild.fetchData().then(data => {
-          if (data.lang) msg.guild._lang = data.lang;
-          if (data.prefix) msg.guild._prefix = data.prefix;
-        });
+        let data = await msg.guild.fetchData();
+        if (data.lang) msg.guild._lang = data.lang;
+        if (data.prefix) msg.guild._prefix = data.prefix;
         msg.guild.fetched = true;
       }
       if (!msg.author.bot) {
@@ -82,7 +81,7 @@ client.on("message", async msg => {
     }
 
     // on message callbacks
-    msg.channel.onMsgCallbacks.forEach(func => func(msg));
+    //msg.channel.onMsgCallbacks.forEach(func => func(msg));
 
     // commands
   	let res = await commands.run(msg);
@@ -413,10 +412,10 @@ commands.set("dropmoney", async (msg, args) => {
   } else {
     let amount = Number(args[0]);
     msg.channel.send(msg.lang.commands.dropmoney.userDropMoney("$PREFIX", msg.prefix, "$USERNAME", msg.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency));
-    let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => {
+    let msg2 = await msg.channel.waitResponse(15000, msg2 => {
       if (msg2.author.bot && msg.author.id != msg2.author.id) return false;
       return msg2.content == msg.prefix + "pickmoney";
-    }});
+    });
     if (!msg2) msg.channel.send(msg.lang.commands.dropmoney.noPickMoney());
     else {
       await msg2.author.fetchMoney();
@@ -830,13 +829,13 @@ commands.set("reflex", async msg => {
   msg.channel.stopTyping();
 	let random = tools.random(100, 999);
 	await msg.channel.send(msg.lang.commands.reflex.msg("$RANDOM", random));
-	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => {
+	let msg2 = await msg.channel.waitResponse(10000, msg2 => {
 		if (msg2.content == random && msg2.author.bot) {
 			msg.channel.send(msg.lang.commands.reflex.bots());
 			return false;
 		}
 		return msg2.content == random;
-	}});
+	});
 	if (!msg2) msg.channel.send(msg.lang.commands.reflex.slow());
 	else msg.channel.send(msg.lang.commands.reflex.wellPlayed("$WINNER", msg2.authorName));
 	msg.channel.reflex = false;
@@ -870,20 +869,22 @@ commands.set("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
 }, {maxargs: 0});
 
-commands.set("encrypt", async msg => {
-	let message = msg.content.replace(msg.prefix + "encrypt ", "");
-	let key;
-	await msg.channel.send(msg.lang.commands.encrypt.specificKey());
-	let msg2 = await msg.channel.waitResponse({delay: 10000, filter: msg2 => msg2.author.id == msg.author.id});
-	if (!msg2) key = crypt.genNoise(8);
-	else key = msg2.content;
-	msg.channel.send(msg.lang.commands.encrypt.encrypted("$MESSAGE", crypt.encrypt(message, key), "$KEY", key));
+commands.set("encrypt", async (msg, args, argstr) => {
+	let key = crypt.genNoise(16);
+  let msg2 = await msg.channel.send(msg.lang.commands.encrypt.specificKey());
+  let useKey = await msg2.askValidation(10000, msg.author);
+  if (useKey) {
+    await msg.channel.send(msg.lang.commands.encrypt.askKey());
+    let msg3 = await msg.channel.waitResponse(10000, msg2 => msg2.author.id == msg.author.id);
+    if (msg3) key = msg3.content;
+  }
+  msg.channel.send(msg.lang.commands.encrypt.encrypted("$MESSAGE", crypt.encrypt(argstr, key), "$KEY", key));
 }, {minargs: 1, info: {show: true, type: "misc"}});
 
 commands.set("decrypt", async msg => {
 	let crypted = msg.content.replace(msg.prefix + "decrypt ", "");
 	await msg.channel.send(msg.lang.commands.decrypt.keyRequest());
-	let msg2 = await msg.channel.waitResponse({delay: 20000, filter: msg3 => msg3.author.id == msg.author.id});
+	let msg2 = await msg.channel.waitResponse(20000, msg3 => msg3.author.id == msg.author.id);
 	if (!msg2) msg.channel.send(msg.lang.commands.decrypt.unknownKey());
 	else {
 		let message = crypt.decrypt(crypted, msg2.content);

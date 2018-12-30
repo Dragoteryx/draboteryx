@@ -299,41 +299,55 @@ Object.defineProperty(discord.Guild.prototype, "djRole", {
 	}
 });
 
-Object.defineProperty(discord.Channel.prototype, "onMsgCallbacks", {
-	get: function() {
-		if (this._onMsgCallbacks === undefined)
-			this._onMsgCallbacks = new Map();
-		return this._onMsgCallbacks;
+Object.defineProperty(discord.Channel.prototype, "waitResponse", {
+	value: function(delay, filter = () => true) {
+		let resolved = false;
+		return new Promise(resolve => {
+			let collector = this.createMessageCollector(() => true, {time: delay});
+			collector.on("collect", async msg => {
+				if (await filter(msg)) {
+					resolved = true;
+					resolve(msg);
+					collector.stop();
+				}
+			});
+			collector.on("end", elements => {
+				if (!resolved) resolve(null);
+			});
+		});
 	}
 });
 
-Object.defineProperty(discord.Channel.prototype, "waitResponse", {
-	value: async function(options = {}) {
+Object.defineProperty(discord.Message.prototype, "waitReactions", {
+	value: function(delay, filter = () => true) {
+		let resolved = false;
 		return new Promise(resolve => {
-			if (options.delay === undefined)
-				options.delay = -1;
-			if (options.filter === undefined)
-				options.filter = () => true;
-			let random;
-			do {
-				random = tools.random(0, 255);
-			} while (this.onMsgCallbacks.has(this.id + "/" + random));
-			let delay;
-			if (options.delay >= 0) {
-				delay = setTimeout(() => {
-					this.onMsgCallbacks.delete(this.id + "/" + random);
-					resolve(null);
-				}, options.delay);
-			}
-			this.onMsgCallbacks.set(this.id + "/" + random, msg => {
-				if (msg.channel.id != this.id) return;
-				if (!options.filter(msg)) return;
-				this.onMsgCallbacks.delete(this.id + "/" + random);
-				if (options.delay >= 0)
-					clearTimeout(delay);
-				resolve(msg);
+			let collector = this.createReactionCollector(() => true, {time: delay});
+			collector.on("collect", async reaction => {
+				if (await filter(reaction)) {
+					resolved = true;
+					resolve(reaction);
+					collector.stop();
+				}
+			});
+			collector.on("end", elements => {
+				if (!resolved) resolve(null);
 			});
 		});
+	}
+});
+
+Object.defineProperty(discord.Message.prototype, "askValidation", {
+	value: async function(delay, user) {
+		await this.react("✅")
+		await this.react("⛔");
+		let reaction = await this.waitReactions(delay, async reaction => {
+			if (["✅", "⛔"].includes(reaction.emoji.name)) {
+				let users = await reaction.fetchUsers();
+				return users.has(user.id);
+			} else return false;
+		});
+		return reaction && reaction.emoji.name == "✅";
 	}
 });
 
