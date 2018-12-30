@@ -388,6 +388,10 @@
     "csshumor": {
       "syntax": "$PREFIXcsshumor",
       "description": "CSS Humor!"
+    },
+    "cleverbot": {
+      "syntax": "$PREFIXcleverbot [message]",
+      "description": "Have a casual chat with the bot. (you don't need to type `$PREFIXcleverbot` if the channel is named 'cleverbot' or in private messages)"
     }
   }
 }

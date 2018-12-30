@@ -116,6 +116,13 @@ Object.defineProperty(discord.Guild.prototype, "sendModLog", {
 	}
 });
 
+Object.defineProperty(discord.Message.prototype, "poster", {
+	get: function() {
+		if (this.guild) return this.member;
+		else return this.author;
+	}
+});
+
 Object.defineProperty(discord.Message.prototype, "authorName", {
 	get: function() {
 		if (this.guild) return this.member.displayName;

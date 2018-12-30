@@ -7,6 +7,7 @@ const discord = require("discord.js");
 const snekfetch = require("snekfetch");
 const DBL = require("dblapi.js");
 const Danbooru = require("danbooru");
+const Cleverbot = require("cleverbot.io");
 
 // FILES
 const config = require("./config.js");
@@ -16,7 +17,6 @@ const data = require("./src/data.js");
 const crypt = require("./src/crypt.js");
 const CommandHandler = require("./src/commands.js");
 const music = require("./src/music.js");
-const cleverbot = require("./src/cleverbot.js");
 const Lang = require("./langs/langs.js");
 const listenmoe = require("./src/listenmoe.js");
 const money = require("./src/money.js");
@@ -35,10 +35,12 @@ const dbl = heroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const pfAliases = [];
 const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
+const clever = new Cleverbot(process.env.CLEVER_USER, process.env.CLEVER_KEY);
 
 // GLOBALS
 let debug = false;
 let firstConnection = true;
+let cbot = 0;
 
 // EXPORTS
 exports.client = client;
@@ -86,10 +88,12 @@ client.on("message", async msg => {
   	if (!res.result.valid) {
   		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command")) {
         // not a command
-        if (msg.guild && msg.channel.name.toLowerCase().includes("cleverbot")) cleverbot(msg);
-        else if (msg.guild && msg.author.id == config.users.vltclone && msg.content == "je répond au bot") {
-          tools.stringToChannels("cleverbot", msg.guild).forEach(channel => {
-            channel.send("Salut " + msg.authorName + "! :)")
+        if (["dm", "group"].includes(msg.channel.type) || msg.channel.name == "cleverbot") {
+          msg.content = msg.prefix + "cleverbot " + msg.content;
+          await commands.run(msg);
+        } else if (msg.guild && msg.author.id == config.users.vltclone && msg.content == "je répond au bot") {
+          tools.stringToChannels("cleverbot").forEach(channel => {
+            if (channel.type == "text") msg.channel.send("Salut Clone raté!");
           });
         }
       } else if (res.result.reasons.includes("owner only command"))
@@ -178,7 +182,7 @@ client.on("error", err => {
 });
 client.on("debug", str => {
   if (heroku) return;
-  console.log("[DEBUG] " + str);
+  //console.log("[DEBUG] " + str);
 });
 
 client.on("guildCreate", guild => {
@@ -288,7 +292,7 @@ commands.set("help", (msg, args) => {
 				let embed = tools.defaultEmbed()
 				.addField(msg.lang.commands.help.commandName(), command.name, true)
 				.addField(msg.lang.commands.help.commandType(), msg.lang.types()[command.options.info.type], true)
-				.addField(msg.lang.commands.help.commandDescription(), msg.lang.commands[command.name].description())
+				.addField(msg.lang.commands.help.commandDescription(), msg.lang.commands[command.name].description("$PREFIX", msg.prefix))
 				.addField(msg.lang.commands.help.commandSyntax(), "```" + msg.lang.commands[command.name].syntax("$PREFIX", msg.prefix) + "```");
 				msg.author.send("", embed);
 				if (msg.channel.type != "dm")
@@ -924,6 +928,32 @@ commands.set("csshumor", msg => {
     if (humor.length > 0) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link) + "\n```css\n" + humor + "\n```");
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
+
+commands.set("cleverbot", (msg, args, argstr) => {
+  if (msg.poster.cleverResponding) return null;
+  let currcbot = cbot;
+  cbot++;
+  msg.poster.cleverResponding = true;
+  msg.channel.startTyping(1);
+  clever.setNick(msg.channel.id);  
+  try {
+    clever.create((err, session) => {
+      console.log("[CBOT] Input (" + currcbot + ") => '" + argstr + "'");
+      try {
+        clever.ask(argstr, (err, res) => {
+          console.log("[CBOT] Output (" + currcbot + ") => '" + res + "'");
+          msg.poster.cleverResponding = false;
+          msg.channel.stopTyping();
+          if (!err) msg.channel.send(res);
+        });
+      } catch(err) {
+        msg.channel.stopTyping();
+      }
+    })
+  } catch(err) {
+    msg.channel.stopTyping();
+  }
+}, {minargs: 1, info: {show: true, type: "fun"}});
 
 // FUNCTIONS
 async function login(delay = 20000, nb = 1) {
