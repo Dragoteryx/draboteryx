@@ -1,6 +1,7 @@
 "use strict";
 const discord = require("discord.js");
 const util = require("util");
+const drabot = require("../drabot.js");
 
 exports.getDate = () => new Date().getDate() + "/" + (new Date().getMonth()+1);
 exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -27,7 +28,7 @@ exports.random = function(min, max) {
 }
 
 exports.coloredEmbed = color => new discord.RichEmbed().setColor(color);
-exports.defaultEmbed = () => exports.coloredEmbed("#808000");
+exports.defaultEmbed = () => exports.coloredEmbed("#808000")/*.setThumbnail(drabot.client.user.avatarURL)*/;
 exports.discordEmbed = () => exports.coloredEmbed("#7289DA");
 
 exports.stringToMembers = async function(str, guild) {

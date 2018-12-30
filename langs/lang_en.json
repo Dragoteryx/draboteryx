@@ -54,11 +54,12 @@
   },
   "commands": {
     "help": {
-      "syntax": "$PREFIXhelp (command)",
+      "syntax": "$PREFIXhelp (commands)",
       "description": "You probably know what this command does or else you wouldn't be reading this.",
       "takeALook": "Take a look at your private messages!",
       "unknownCommand": "This command doesn't seem to exist. Use `$PREFIXhelp` to get a list of all commands.",
-      "info": "Options between brackets are `required`. Those between parenthesis are `optional`.\nIf you need some help, use `$PREFIXserver` to join the test server.\nYou can also use `$PREFIXhelp [command]` to obtain help about one particular command.",
+      "unknownCommands": "Those commands don't seem to exist. Use `$PREFIXhelp` to get a list of all commands.",
+      "info": "Options between brackets are `required`. Those between parenthesis are `optional`.\nIf you need some help, use `$PREFIXserver` to join the test server.\nYou can also use `$PREFIXhelp [commands]` to obtain help about one or more particular commands.",
       "commandName": "Command",
       "commandType": "Type",
       "commandDescription": "Description",

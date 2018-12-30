@@ -32,7 +32,7 @@ const langs = {
 }
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
 const dbl = heroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
-const pfAliases = [];
+const aliases = [];
 const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
 const clever = new Cleverbot(process.env.CLEVER_USER, process.env.CLEVER_KEY);
@@ -57,26 +57,27 @@ client.on("message", async msg => {
     // set prefix and lang
     if (msg.guild) {
       if (!msg.guild.fetched) {
-        try {
-          let res = await msg.guild.fetchData();
-          if (res.lang) msg.guild._lang = res.lang;
-          if (res.prefix) msg.guild._prefix = res.prefix;
-          msg.guild.fetched = true;
-        } catch(err) {}
+        msg.guild.fetchData().then(data => {
+          if (data.lang) msg.guild._lang = data.lang;
+          if (data.prefix) msg.guild._prefix = data.prefix;
+        });
+        msg.guild.fetched = true;
       }
       if (!msg.author.bot) {
-        if (!msg.author.dmChannel)
-          await msg.author.createDM();
-        msg.author.dmChannel._lang = msg.lang.id();
-        msg.author.dmChannel._prefix = msg.prefix;
+        if (!msg.author.dmChannel) {
+          msg.author.createDM().then(channel => {
+            msg.author.dmChannel._lang = msg.lang.id();
+            msg.author.dmChannel._prefix = msg.prefix;
+          });
+        }
       }
     }
 
     // replace tag with prefix
-    for (let alias of pfAliases) {
-      if (msg.content.startsWith(alias) && !msg.usedPrefixAlias) {
+    for (let alias of aliases) {
+      if (msg.content.startsWith(alias)) {
         msg.content = msg.content.replace(alias, msg.prefix);
-        msg.usedPrefixAlias = true;
+        break;
       }
     }
 
@@ -156,9 +157,9 @@ process.on("exit", code => {
 });
 
 client.on("ready", () => {
-  if (!pfAliases.ready) {
-    pfAliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
-    pfAliases.ready = true;
+  if (!aliases.ready) {
+    aliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
+    aliases.ready = true;
   }
   client.user.setActivity(config.prefix + "help");
 	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
@@ -205,6 +206,7 @@ client.on("playlistEmpty", playlist => {
 // COMMANDS --------------------------------------------------
 
 // OWNER
+
 commands.set("test", msg => {
   msg.channel.send("Test1 => " + msg.lang.misc.test() + "\nTest2 => " + msg.lang.misc.test2());
 }, {owner: true, maxargs: 0});
@@ -266,41 +268,42 @@ commands.set("restart", async msg => {
 }, {owner: true, maxargs: 0});
 
 // BOT
+
 commands.set("help", (msg, args) => {
-	if (args.length == 0) {
-		let coms = [];
-		for (let command of commands)
-			if (command.options.info && command.options.info.show && !command.options.disabled) coms.push({name: command.name, type: command.options.info.type});
-		let embed = tools.defaultEmbed();
-		embed.addField("Drabot " + msg.prefix + "help", msg.lang.commands.help.info("$PREFIX", msg.prefix));
-		for (let type of commandTypes) {
-			let str = "";
-			for (let com of coms)
-				if (com.type == type) str += " `" + com.name + "`";
-      if (str == "") str = "---";
-			embed.addField(msg.lang.types()[type], str.replace(" ", ""));
+  if (args.length == 0) {
+    let embed = tools.defaultEmbed();
+    for (let type of commandTypes) {
+      let sameType = commands.array.filter(command => command.options.info && command.options.info.show && command.options.info.type == type).map(command => "`" + command.name + "`").sort();;
+      if (sameType.length > 0)
+        embed.addField(msg.lang.types()[type], sameType.join(" | "));
+      else embed.addField(msg.lang.types()[type], "---");
 		}
-		msg.author.send("", embed);
-		if (msg.channel.type != "dm")
-			msg.channel.send(msg.lang.commands.help.takeALook());
-	} else {
-		if (commands.has(args[0])) {
-			let command = commands.get(args[0]);
-			if (!command.options.info || !command.options.info.show)
-				msg.channel.send(msg.lang.commands.help.unknownCommand("$PREFIX", msg.prefix));
-			else {
-				let embed = tools.defaultEmbed()
-				.addField(msg.lang.commands.help.commandName(), command.name, true)
+    msg.author.send(msg.lang.commands.help.info("$PREFIX", msg.prefix), embed);
+    if (msg.channel.type != "dm")
+      msg.channel.send(msg.lang.commands.help.takeALook());
+  } else {
+    let nb = 0;
+    args.sort();
+    for (let arg of args) {
+      arg = arg.toLowerCase();
+      if (commands.has(arg)) {
+        nb++;
+        let command = commands.get(arg);
+        let embed = tools.defaultEmbed()
+        .addField(msg.lang.commands.help.commandName(), command.name, true)
 				.addField(msg.lang.commands.help.commandType(), msg.lang.types()[command.options.info.type], true)
 				.addField(msg.lang.commands.help.commandDescription(), msg.lang.commands[command.name].description("$PREFIX", msg.prefix))
 				.addField(msg.lang.commands.help.commandSyntax(), "```" + msg.lang.commands[command.name].syntax("$PREFIX", msg.prefix) + "```");
 				msg.author.send("", embed);
-				if (msg.channel.type != "dm")
-					msg.channel.send(msg.lang.commands.help.takeALook());
-			}
-		} else msg.channel.send(msg.lang.commands.help.unknownCommand("$PREFIX", msg.prefix));
-	}
-}, {maxargs: 1, info: {show: true, type: "bot"}});
+      }
+    }
+    if (nb > 0) {
+      if (msg.channel.type != "dm")
+        msg.channel.send(msg.lang.commands.help.takeALook());
+    } else if (args.length == 1) msg.channel.send(msg.lang.commands.help.unknownCommand("$PREFIX", msg.prefix));
+    else msg.channel.send(msg.lang.commands.help.unknownCommands("$PREFIX", msg.prefix));
+  }
+}, {info: {show: true, type: "bot"}});
 
 commands.set("server", msg => {
   msg.channel.send("https://discord.gg/aCgwj8M");
@@ -444,6 +447,7 @@ commands.set("moneyleaderboard", async msg => {
 
 
 // UTILS
+
 commands.set("serverinfo", async msg => {
   msg.channel.send("", await msg.guild.embedInfo());
 }, {maxargs: 0, guildonly: true, info: {show: true, type: "utility"}});
@@ -504,6 +508,7 @@ commands.set("prune", async (msg, args) => {
 }, {admin: true, maxargs: 1, guildonly: true, info: {show: true, type: "utility"}});
 
 // MUSIC
+
 commands.set("join", async msg => {
   if (!msg.member.voiceChannelID)
     msg.channel.send(msg.lang.commands.join.notInVoiceChannel());
@@ -782,6 +787,7 @@ commands.set("playlist", async msg => {
 }, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
 
 // ELSE
+
 commands.set("say", msg => {
 	let content = msg.content.replace(msg.prefix + "say ", "");
 	msg.channel.send(content);
@@ -935,7 +941,7 @@ commands.set("cleverbot", (msg, args, argstr) => {
   cbot++;
   msg.poster.cleverResponding = true;
   msg.channel.startTyping(1);
-  clever.setNick(msg.channel.id);  
+  clever.setNick(msg.channel.id);
   try {
     clever.create((err, session) => {
       console.log("[CBOT] Input (" + currcbot + ") => '" + argstr + "'");
@@ -955,7 +961,8 @@ commands.set("cleverbot", (msg, args, argstr) => {
   }
 }, {minargs: 1, info: {show: true, type: "fun"}});
 
-// FUNCTIONS
+// FUNCTIONS -------------------------------------------------------------------------------
+
 async function login(delay = 20000, nb = 1) {
 	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connecting." : "[INFO] Connecting.");
   try {

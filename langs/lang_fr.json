@@ -49,11 +49,12 @@
   },
   "commands": {
     "help": {
-      "syntax": "$PREFIXhelp (commande)",
+      "syntax": "$PREFIXhelp (commandes)",
       "description": "Tu sais probablement déjà ce que fais cette commande ou tu ne serais pas en train de lire ça.",
       "takeALook": "Jette un coup d'oeil à tes messages privés !",
       "unknownCommand": "Cette commande n'existe pas. Utilise `$PREFIXhelp` pour obtenir une liste de toutes les commandes.",
-      "info": "Les options entre crochets sont `requises`. Celles entre parenthèses sont `optionnelles`.\nSi tu as besoin d'aide, utilise `$PREFIXserver` pour rejoindre le serveur de test.\nTu peux également utiliser `$PREFIXhelp [commande]` pour obtenir les informations détaillées d'une commande.",
+      "unknownCommands": "Ces commandes n'existent pas. Utilise `$PREFIXhelp` pour obtenir une liste de toutes les commandes.",
+      "info": "Les options entre crochets sont `requises`. Celles entre parenthèses sont `optionnelles`.\nSi tu as besoin d'aide, utilise `$PREFIXserver` pour rejoindre le serveur de test.\nTu peux également utiliser `$PREFIXhelp [commandes]` pour obtenir les informations détaillées d'une ou plusieurs commandes.",
       "commandName": "Commande",
       "commandType": "Type",
       "commandDescription": "Description",

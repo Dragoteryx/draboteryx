@@ -33,9 +33,11 @@ class CommandsHandler extends Map {
     return {command: command, result: result};
   }
 	*[Symbol.iterator]() {
-		let commands = Array.from(this.values());
-		for (let command of commands)
+		for (let command of this.array)
 			yield command;
+	}
+	get array() {
+		return Array.from(this.values());
 	}
 	static get defaultOptions() {
 		return {
