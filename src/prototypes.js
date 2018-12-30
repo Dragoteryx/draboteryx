@@ -339,10 +339,10 @@ Object.defineProperty(discord.Message.prototype, "waitReactions", {
 
 Object.defineProperty(discord.Message.prototype, "askValidation", {
 	value: async function(delay, user) {
-		await this.react("✅")
-		await this.react("⛔");
+		await this.react(this.lang.misc.yes());
+		await this.react(this.lang.misc.no());
 		let reaction = await this.waitReactions(delay, async reaction => {
-			if (["✅", "⛔"].includes(reaction.emoji.name)) {
+			if ([this.lang.misc.yes(), this.lang.misc.no()].includes(reaction.emoji.name)) {
 				let users = await reaction.fetchUsers();
 				return users.has(user.id);
 			} else return false;

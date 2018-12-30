@@ -28,6 +28,7 @@ const commands = new CommandHandler();
 commands.owners = config.owners;
 const langs = {
   en: new Lang(require("./langs/lang_en.json")),
+  //jp: new Lang(require("./langs/lang_jp.json"), require("./langs/lang_en.json")),
   fr: new Lang(require("./langs/lang_fr.json"), require("./langs/lang_en.json"))
 }
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];

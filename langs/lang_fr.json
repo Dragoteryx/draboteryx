@@ -4,8 +4,8 @@
   "author": "Dragoteryx#3172",
   "misc": {
     "test": "Ceci est un test.",
-    "yes": "Oui",
-    "no": "Non",
+    "yes": "✅",
+    "no": "⛔",
     "noResults": "Désolé mais je n'ai rien trouvé.",
     "owner": "Owner",
     "admin": "Admin",

@@ -5,8 +5,8 @@
   "misc": {
     "test": "This is a test.",
     "test2": "This is only available in english.",
-    "yes": "Yes",
-    "no": "No",
+    "yes": "✅",
+    "no": "⛔",
     "noResults": "Sorry but I did not find anything.",
     "owner": "Owner",
     "admin": "Admin",
