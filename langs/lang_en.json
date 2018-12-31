@@ -17,9 +17,7 @@
     "link": "Link"
   },
   "errors": {
-    "noGroupsCommmand": "This command is not available in public servers.",
-    "noDmsCommand": "This command is not available in private channels",
-    "noGroupsCommand": "This command is not available in group channels.",
+    "guildOnlyCommand": "This command is only available in public servers.",
     "largeGuild": "This command is only available in servers with 250 members or less.",
     "ownerOnlyCommand": "This is an owner only command.",
     "adminOnlyCommand": "This is an admin only command.",

@@ -35,7 +35,8 @@ class DrGClient extends Client {
             if (test2.valid) {
               let now = Date.now();
               this.emit("beforeCommand", msg, command, now, null, null);
-              let res = await command.run(msg, prefix);
+							let args = msg.content.split(/ +/g).slice(1);
+              let res = await command.run(msg, args, args.join(" "));
               this.emit("afterCommand", msg, command, now, Date.now(), res);
             } else this.emit("deniedCommand", msg, command, test2.reasons);
           } catch(err) {
@@ -60,23 +61,21 @@ class DrGClient extends Client {
     });
     this.commandProperty("bots", (msg, allowbots = false) => allowbots || !msg.author.bot);
     this.commandProperty("nsfw", (msg, isnsfw = false) => !isnsfw || msg.channel.nsfw);
-    this.commandProperty("largeguilds", (msg, allowlargeguilds = true) => !msg.guild || allowlargeguilds || !msg.guild.large);
-    this.commandProperty("guilds", (msg, allowguilds = true) => allowguilds || msg.channel.type != "text");
-    this.commandProperty("dms", (msg, allowdms = true) => allowdms || msg.channel.type != "dm");
-    this.commandProperty("groups", (msg, allowgroups = true) => allowgroups || msg.channel.type != "group");
-    this.commandProperty("minargs", (msg, minargs = 0) => msg.content.split(/ +/g).slice(1).length >= minargs);
-    this.commandProperty("maxargs", (msg, maxargs = Infinity) => msg.content.split(/ +/g).slice(1).length <= maxargs);
-		this.commandProperty("guildlist", (msg, guildlist = []) => {
-			if (guildlist.length == 0) return true;
-			else return msg.guild && guildlist.includes(msg.guild.id);
+    this.commandProperty("largeGuilds", (msg, allowlargeguilds = true) => msg.channel.type != "text" || allowlargeguilds || !msg.guild.large);
+		this.commandProperty("guildOnly", (msg, guildonly = false) => msg.channel.type == "text" || !guildonly);
+    this.commandProperty("minArgs", (msg, args = 0) => msg.content.split(/ +/g).slice(1).length >= args);
+    this.commandProperty("maxArgs", (msg, args = Infinity) => msg.content.split(/ +/g).slice(1).length <= args);
+		this.commandProperty("guildsList", (msg, list = []) => {
+			if (list.length == 0) return true;
+			else return msg.channel.type == "text" && list.includes(msg.guild.id);
 		});
-		this.commandProperty("channellist", (msg, channellist = []) => {
-			if (channellist.length == 0) return true;
-			else return channellist.includes(msg.channel.id);
+		this.commandProperty("channelsList", (msg, list = []) => {
+			if (list.length == 0) return true;
+			else return list.includes(msg.channel.id);
 		});
-		this.commandProperty("userlist", (msg, userlist = []) => {
-			if (userlist.length == 0) return true;
-			else return userlist.includes(msg.author.id);
+		this.commandProperty("usersList", (msg, list = []) => {
+			if (list.length == 0) return true;
+			else return list.includes(msg.author.id);
 		});
   }
   async fetchPrefix(msg) {
@@ -111,7 +110,7 @@ class DrGClient extends Client {
   deleteCommand(name) {
 		if (!this.commandExists(name)) return false;
 		let command = this.getCommand(name);
-		command.undoAllAliases();
+		command.aliases.forEach(alias => this.unbindAlias(alias));
     return prv(this).commands.delete(name);
   }
 	wipeCommands() {
@@ -148,11 +147,11 @@ class DrGClient extends Client {
 }
 
 class Command {
-  constructor(name, callback, properties, client) {
+  constructor(name, run, properties, client) {
     let that = prv(this);
     that.name = name;
     that.simplifiedTest = false;
-    this.callback = callback;
+    this.run = run;
     this.properties = properties;
     this.client = client;
     Object.defineProperty(this, "client", {
@@ -187,9 +186,6 @@ class Command {
     if (command.name == this.name) clientThat.aliases.delete(alias);
     return this;
   }
-	unbindAllAliases() {
-		this.aliases.forEach(alias => this.unbindAlias(alias));
-	}
   async test(msg, prefix) {
     if (prefix === undefined) prefix = await this.client.fetchPrefix(msg);
     let that = prv(this);
@@ -206,10 +202,6 @@ class Command {
       if (!test) reasons.push(property.name);
     }
     return {valid: reasons.length == 0, reasons: reasons, command: this};
-  }
-  async run(msg) {
-    let args = msg.content.split(/ +/g).slice(1);
-    return this.callback(msg, args, args.join(" "));
   }
 }
 

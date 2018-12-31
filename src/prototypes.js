@@ -33,7 +33,7 @@ Object.defineProperty(String.prototype, "HTMLToMarkdown", {
 Object.defineProperty(String.prototype, "removeHTML", {
 	value: function() {
 		let str = this;
-		let tags = str.match(/<[^>]*>/gi)
+		let tags = str.match(/<[^>]*>/gi);
 		if (tags !== null) tags.forEach(tag => {
 			str = str.replace(tag, "");
 		});

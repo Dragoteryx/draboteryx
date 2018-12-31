@@ -16,9 +16,7 @@
     "link": "Lien"
   },
   "errors": {
-    "noGroupsCommmand": "Cette command n'est pas disponible dans les serveurs publics.",
-    "noDmsCommand": "Cette commande n'est pas disponible dans les discussions privées.",
-    "noGroupsCommand": "Cette commande n'est pas disponible dans les discussions de groupe.",
+    "guildOnlyCommand": "This command n'est disponible que dans les serveurs publiques.",
     "largeGuild": "Cette commande n'est utilisable que dans les serveurs avec 250 membres ou moins.",
     "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
     "adminOnlyCommand": "Cette commande est réservée aux admins.",
