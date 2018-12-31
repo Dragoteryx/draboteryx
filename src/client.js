@@ -23,6 +23,7 @@ class DrGClient extends Client {
           that.fetched = true;
         }
         await this.commandsInit(msg);
+        if (this.user.id == msg.author.id) return;
         let prefix = await this.fetchPrefix(msg);
         let test1 = await this.testCommands(msg, prefix);
         if (test1.valid) {

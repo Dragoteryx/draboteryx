@@ -902,7 +902,7 @@ client.defineCommand("danbooru", async (msg, args, argstr) => {
   }).catch(err => msg.channel.stopTyping());
 }, {minargs: 1, info: {show: true, type: "nsfw"}});
 
-client.defineCommand("spurriouscorrelations", msg => {
+client.defineCommand(["spurriouscorrelations", "spcl"], msg => {
   msg.channel.startTyping(1);
   snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700)).then(res => {
     msg.channel.stopTyping();
