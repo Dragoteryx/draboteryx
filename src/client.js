@@ -66,6 +66,18 @@ class DrGClient extends Client {
     this.commandProperty("groups", (msg, allowgroups = true) => allowgroups || msg.channel.type != "group");
     this.commandProperty("minargs", (msg, minargs = 0) => msg.content.split(/ +/g).slice(1).length >= minargs);
     this.commandProperty("maxargs", (msg, maxargs = Infinity) => msg.content.split(/ +/g).slice(1).length <= maxargs);
+		this.commandProperty("guildlist", (msg, guildlist = []) => {
+			if (guildlist.length == 0) return true;
+			else return msg.guild && guildlist.includes(msg.guild.id);
+		});
+		this.commandProperty("channellist", (msg, channellist = []) => {
+			if (channellist.length == 0) return true;
+			else return channellist.includes(msg.channel.id);
+		});
+		this.commandProperty("userlist", (msg, userlist = []) => {
+			if (userlist.length == 0) return true;
+			else return userlist.includes(msg.author.id);
+		});
   }
   async fetchPrefix(msg) {
     let prefix = this.prefix;
@@ -84,7 +96,7 @@ class DrGClient extends Client {
   defineCommand(names, callback, properties) {
     let name = names instanceof Array ? names.shift() : names;
     let command = new Command(name, callback, properties, this);
-    if (names instanceof Array) names.forEach(alias => command.doAlias(alias));
+    if (names instanceof Array) names.forEach(alias => command.bindAlias(alias));
     prv(this).commands.set(name, command);
     return command;
   }
@@ -97,8 +109,15 @@ class DrGClient extends Client {
     return this.getCommand(name) !== undefined;
   }
   deleteCommand(name) {
+		if (!this.commandExists(name)) return false;
+		let command = this.getCommand(name);
+		command.undoAllAliases();
     return prv(this).commands.delete(name);
   }
+	wipeCommands() {
+		for (let command of this.commandsArray)
+			this.deleteCommand(command.name);
+	}
   async testCommands(msg, prefix) {
     if (prefix === undefined) prefix = await this.fetchPrefix(msg);
     let that = prv(this);
@@ -126,10 +145,6 @@ class DrGClient extends Client {
   get commandsArray() {
     return Array.from(prv(this).commands.values());
   }
-  *[Symbol.iterator]() {
-		for (let command of this.array)
-			yield command;
-	}
 }
 
 class Command {
@@ -149,21 +164,32 @@ class Command {
     return prv(this).name;
   }
   set name(newName) {
-    this.client.deleteCommand(this.name);
+		let thatClient = prv(this.client);
+    thatClient.commands.delete(this.name);
     prv(this).name = newName;
-    prv(this.client).commands.set(newName, this);
+    thatClient.commands.set(newName, this);
   }
-  doAlias(alias) {
+	get aliases() {
+		let aliases = [];
+		prv(this.client).aliases.forEach((command, alias) => {
+			if (this.name == command.name) aliases.push(alias);
+		});
+		return aliases;
+	}
+  bindAlias(alias) {
     let clientThat = prv(this.client);
     clientThat.aliases.set(alias, this);
     return this;
   }
-  undoAlias(alias) {
+  unbindAlias(alias) {
     let clientThat = prv(this.client);
     let command = this.client.getCommand(alias);
     if (command.name == this.name) clientThat.aliases.delete(alias);
     return this;
   }
+	unbindAllAliases() {
+		this.aliases.forEach(alias => this.unbindAlias(alias));
+	}
   async test(msg, prefix) {
     if (prefix === undefined) prefix = await this.client.fetchPrefix(msg);
     let that = prv(this);

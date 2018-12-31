@@ -7,7 +7,6 @@ const DrGClient = require("./src/client.js");
 const snekfetch = require("snekfetch");
 const DBL = require("dblapi.js");
 const Danbooru = require("danbooru");
-const Cleverbot = require("cleverbot.io");
 
 // FILES
 const config = require("./config.json");
@@ -19,6 +18,7 @@ const music = require("./src/music.js");
 const Lang = require("./langs/langs.js");
 const listenmoe = require("./src/listenmoe.js");
 const money = require("./src/money.js");
+const Cleverbot = require("./src/cleverbot.js");
 
 // CONSTS
 const client = new DrGClient();
@@ -96,9 +96,8 @@ client.on("disconnect", async () => {
   let guild = client.guilds.get(config.guilds.drg);
   if (guild) await guild.sendLog("Disconnected!");
 });
-client.on("error", err => {
+client.on("error", () => {
   console.log("[INFO] Disconnected.");
-  funcs.error("Drabot disconnect", err);
 	login();
 });
 
@@ -737,7 +736,7 @@ client.defineCommand("current", msg => {
   		.addField(msg.lang.commands.current.title(), current.title, true)
   		.addField(msg.lang.commands.current.author(), current.author.name + " (" + current.author.channelURL + ")", true)
   		.addField(msg.lang.commands.current.description(), current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
-  		.addField(msg.lang.commands.current.link(), current.link, true)
+  		.addField(msg.lang.misc.link(), current.link, true)
     } else if (current.type == "file") {
   		info.addField(msg.lang.commands.current.fileName(), current.name, true);
     }
@@ -797,17 +796,17 @@ client.defineCommand("roll", (msg, args) => {
 	msg.channel.send(res + "/" + max + " :game_die:");
 }, {maxargs: 1, info: {show: true, type: "fun"}});
 
-client.defineCommand("fact", (msg, args) => {
-	let link = "https://factgenerator.herokuapp.com/generate?words=" + args.join("_");
-  msg.channel.startTyping(1);
-	snekfetch.get(link).then(res => {
+client.defineCommand("fact", async (msg, args) => {
+  try {
+    msg.channel.startTyping(1);
+  	let res = await snekfetch.get("https://factgenerator.herokuapp.com/generate?words=" + args.join("_"));
     msg.channel.stopTyping();
-		let parsed = JSON.parse(res.text);
-		msg.channel.send(parsed.facts[0].text);
-	}).catch(err => {
+  	let parsed = JSON.parse(res.text);
+  	msg.channel.send(parsed.facts[0].text);
+  } catch(err) {
     msg.channel.stopTyping();
 		msg.channel.send(msg.lang.commands.fact.offline());
-	});
+  }
 }, {info: {show: true, type: "fun"}});
 
 client.defineCommand("reflex", async msg => {
@@ -831,24 +830,32 @@ client.defineCommand("reflex", async msg => {
 	msg.channel.reflex = false;
 }, {dms: false, groups: false, maxargs: 0, info: {show: true, type: "game"}});
 
-client.defineCommand(["cyanidehappiness", "cah"], msg => {
-  let link = "http://explosm.net/rcg";
-  msg.channel.startTyping(1);
-	snekfetch.get(link).then(res => {
+client.defineCommand(["cyanidehappiness", "cah"], async msg => {
+  try {
+    let link = "http://explosm.net/rcg";
+    msg.channel.startTyping(1);
+  	let res = await snekfetch.get(link);
     msg.channel.stopTyping()
     let img = res.text.match(/http:\/\/files.explosm.net\/rcg\/[a-z]{9}\.png/i).shift();
   	msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link), {files: [img]});
-  }).catch(err => msg.channel.stopTyping());
+  } catch(err) {
+    msg.channel.stopTyping();
+    throw err;
+  }
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-client.defineCommand("httpdog", msg => {
-  let link = "https://httpstatusdogs.com";
-  msg.channel.startTyping(1);
-	snekfetch.get(link).then(res => {
+client.defineCommand("httpdog", async msg => {
+  try {
+    let link = "https://httpstatusdogs.com";
+    msg.channel.startTyping(1);
+  	let res = await snekfetch.get(link);
     msg.channel.stopTyping();
   	let imgs = res.text.match(/img\/[1-5][0-9]{2}\.jpg/g);
   	msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link), {files: [link + "/" + imgs.random()]});
-  }).catch(err => msg.channel.stopTyping());
+  } catch(err) {
+    msg.channel.stopTyping();
+    throw err;
+  }
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
 client.defineCommand("waifu", msg => {
@@ -894,60 +901,117 @@ client.defineCommand("danbooru", async (msg, args, argstr) => {
     args.push("rating:safe");
     tags = args.join(" ");
   }
-  msg.channel.startTyping(1);
-  booru.posts({limit: 1, random: true, tags: tags}).then(posts => {
+  try {
+    msg.channel.startTyping(1);
+    let posts = await booru.posts({limit: 1, random: true, tags: tags});
     msg.channel.stopTyping();
     if (posts.length == 0 || !posts[0]) msg.channel.send(msg.lang.misc.noResults());
     else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
-  }).catch(err => msg.channel.stopTyping());
+  } catch(err) {
+    msg.channel.stopTyping();
+    throw err;
+  }
 }, {minargs: 1, info: {show: true, type: "nsfw"}});
 
-client.defineCommand(["spurriouscorrelations", "spcl"], msg => {
-  msg.channel.startTyping(1);
-  snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700)).then(res => {
-    msg.channel.stopTyping();
+client.defineCommand(["spurriouscorrelations", "spcl"], async msg => {
+  try {
+    msg.channel.startTyping(1);
+    let res = await snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700));
+    msg.channel.stopTyping()
     let corrs = res.text.match(/correlation_images\/[a-z0-9_-]+\.png/gi);
     if (corrs) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", "http://tylervigen.com/spurious-correlations"), {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
-  }).catch(err => msg.channel.stopTyping());
+  } catch(err) {
+    msg.channel.stopTyping()
+    throw err;
+  }
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-client.defineCommand("csshumor", msg => {
-  let link = "https://csshumor.com";
-  msg.channel.startTyping(1);
-  snekfetch.get(link).then(res => {
+client.defineCommand("csshumor", async msg => {
+  try {
+    let link = "https://csshumor.com";
+    msg.channel.startTyping(1);
+    let res = await snekfetch.get(link);
     msg.channel.stopTyping();
     let humor = res.text.match(/<td class="crayon-code">.+<\/td>/i).shift().split(/[<>]/).filter(str => {
       return !str.includes("class=") && !str.startsWith("/") && str.length > 0 && !str.startsWith("&");
     }).join("");
     if (humor.length > 0) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link) + "\n```css\n" + humor + "\n```");
-  }).catch(err => msg.channel.stopTyping());
-}, {maxargs: 0, info: {show: true, type: "fun"}});
-
-client.defineCommand(["cleverbot", "cbot"], (msg, args, argstr) => {
-  if (msg.poster.cleverResponding) return null;
-  let currcbot = cbot;
-  cbot++;
-  msg.poster.cleverResponding = true;
-  msg.channel.startTyping(1);
-  clever.setNick(msg.channel.id);
-  try {
-    clever.create((err, session) => {
-      console.log("[CBOT] Input (" + currcbot + ") => '" + argstr + "'");
-      try {
-        clever.ask(argstr, (err, res) => {
-          console.log("[CBOT] Output (" + currcbot + ") => '" + res + "'");
-          msg.poster.cleverResponding = false;
-          msg.channel.stopTyping();
-          if (!err) msg.channel.send(res);
-        });
-      } catch(err) {
-        msg.channel.stopTyping();
-      }
-    })
   } catch(err) {
     msg.channel.stopTyping();
+    throw err;
+  }
+}, {maxargs: 0, info: {show: true, type: "fun"}});
+
+client.defineCommand(["cleverbot", "cbot"], async (msg, args, argstr) => {
+  try {
+    if (msg.poster.cleverResponding) return null;
+    let currcbot = cbot;
+    cbot++;
+    msg.poster.cleverResponding = true;
+    msg.channel.startTyping(1);
+    console.log("[CBOT] Input (" + currcbot + ") => '" + argstr + "'");
+    let res = await clever.ask(argstr, msg.channel.id);
+    console.log("[CBOT] Output (" + currcbot + ") => '" + res + "'");
+    msg.poster.cleverResponding = false;
+    msg.channel.stopTyping();
+    let msg2 = await msg.channel.send(res);
+    return msg2;
+  } catch(err) {
+    msg.poster.cleverResponding = false;
+    msg.channel.stopTyping();
+    throw err;
   }
 }, {minargs: 1, info: {show: true, type: "fun"}});
+
+client.defineCommand("scp", async (msg, args) => {
+  try {
+    let scp = {};
+    let pages = [
+      "http://www.scp-wiki.net/scp-series",
+      "http://www.scp-wiki.net/scp-series-2",
+      "http://www.scp-wiki.net/scp-series-3",
+      "http://www.scp-wiki.net/scp-series-4",
+      "http://www.scp-wiki.net/scp-series-5"
+    ];
+    if (args.length == 0) {
+      msg.channel.startTyping(1);
+      let index = await snekfetch.get(pages.random());
+      let scpData = index.text.match(/<li><a href="\/scp-\d+">SCP-\d+<\/a> - .+<\/li>/gi).random();
+      scp.id = scpData.match(/scp-\d+/)[0];
+      scp.name = scpData.match(/ - .+<\/li>/i)[0].replace(" - ", "").replace("</li>", "").removeHTML();
+    } else {
+      let assert = tools.validNumber(args[0], 1, 4999, true);
+      if (!assert.valid) {
+        msg.channel.send(msg.lang.commands.scp.invalidSCP());
+        return;
+      } else {
+        msg.channel.startTyping(1);
+        while (args[0].length < 3)
+          args[0] = "0" + args[0];
+        scp.id = "scp-" + args[0];
+        let page;
+        if (args[0].length == 3) page = pages[0];
+        else page = pages[Number(args[0][0])];
+        let index = await snekfetch.get(page);
+        let scpData = index.text.match(new RegExp('<li><a href="/' + scp.id + '">SCP-' + args[0] + '</a> - .+</li>', "i"));
+        if (scpData)
+          scp.name = scpData[0].match(/ - .+<\/li>/i)[0].replace(" - ", "").replace("</li>", "").removeHTML();
+        else {
+          msg.channel.send(msg.lang.commands.scp.invalidSCP());
+          msg.channel.stopTyping();
+          return;
+        }
+      }
+    }
+    let embed = tools.coloredEmbed("#673D3D").setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/SCP_Foundation_%28emblem%29.svg/langfr-220px-SCP_Foundation_%28emblem%29.svg.png")
+    .addField(scp.id.toUpperCase(), scp.name).addField(msg.lang.misc.link(), "http://www.scp-wiki.net/" + scp.id);
+    msg.channel.stopTyping();
+    msg.channel.send("", embed);
+  } catch(err) {
+    msg.channel.stopTyping();
+    throw err;
+  }
+}, {maxargs: 1, info: {show: true, type: "misc"}});
 
 // FUNCTIONS -------------------------------------------------------------------------------
 

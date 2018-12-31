@@ -1,13 +1,12 @@
 {
   "name": "draboteryx",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short.",
   "main": "drabot.js",
   "engines": {
     "node": "9.3.0"
   },
   "dependencies": {
-    "cleverbot.io": "^1.0.4",
     "crypto-js": "^3.1.9-1",
     "danbooru": "^3.0.8",
     "dblapi.js": "^2.3.0",
@@ -15,9 +14,9 @@
     "dotenv": "^4.0.0",
     "mongodb": "^3.1.10",
     "musicmetadata": "^2.0.5",
+    "node-fetch": "^2.3.0",
     "node-opus": "^0.2.9",
     "prism-media": "^0.2.1",
-    "redis": "^2.8.0",
     "simple-youtube-api": "^5.1.1",
     "snekfetch": "^3.6.4",
     "ws": "^3.1.0",

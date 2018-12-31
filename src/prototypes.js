@@ -19,6 +19,28 @@ Object.defineProperty(String.prototype, "replaceAll", {
 	}
 });
 
+Object.defineProperty(String.prototype, "HTMLToMarkdown", {
+	value: function() {
+		return this.replaceAll("<i>", "*").replaceAll("</i>", "*")
+		.replaceAll("<b>", "**").replaceAll("</b>", "**")
+		.replaceAll("<strong>", "**").replaceAll("</strong>", "**")
+		.replaceAll("<strike>", "~~").replaceAll("</strike>", "~~")
+		.replaceAll("<br>", "\n").replaceAll("</br>", "\n").replaceAll("</ br>", "\n")
+		.trim()
+	}
+});
+
+Object.defineProperty(String.prototype, "removeHTML", {
+	value: function() {
+		let str = this;
+		let tags = str.match(/<[^>]*>/gi)
+		if (tags !== null) tags.forEach(tag => {
+			str = str.replace(tag, "");
+		});
+		return str;
+	}
+});
+
 Object.defineProperty(Array.prototype, "shuffle", {
 	value: function() {
 		this.sort(() => 0.5 > Math.random());

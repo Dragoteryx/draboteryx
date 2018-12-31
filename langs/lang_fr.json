@@ -12,7 +12,8 @@
     "mod": "Modérateur",
     "dj": "DJ",
     "merged": "Cette commande a été ajoutée à la commande `$PREFIX$COMMAND`.",
-    "fromWebsite": "(depuis `$LINK`)"
+    "fromWebsite": "(depuis `$LINK`)",
+    "link": "Lien"
   },
   "errors": {
     "noGroupsCommmand": "Cette command n'est pas disponible dans les serveurs publics.",
@@ -211,7 +212,6 @@
       "title": "Titre",
       "author": "Auteur",
       "description": "Description",
-      "link": "Lien",
       "requestedBy": "Ajoutée par",
       "fileName": "File name"
     },
@@ -390,6 +390,11 @@
     "cleverbot": {
       "syntax": "$PREFIXcleverbot [message]",
       "description": "Entretenir une discussion amicale avec le bot. (il n'est pas nécessaire d'écrire `$PREFIXcleverbot` si le channel s'appelle 'cleverbot' ou dans les discussions privées)"
+    },
+    "scp": {
+      "syntax": "$PREFIXscp (id)",
+      "description": "Afficher la page d'un SCP random ou choisi.",
+      "invalidSCP": "Ce SCP n'existe pas."
     }
   }
 }
