@@ -15,16 +15,18 @@
     "fromWebsite": "(depuis `$LINK`)"
   },
   "errors": {
-    "guildOnlyCommand": "Cette commande n'est disponible que dans les serveurs publics.",
+    "noGroupsCommmand": "Cette command n'est pas disponible dans les serveurs publics.",
+    "noDmsCommand": "Cette commande n'est pas disponible dans les discussions privées.",
+    "noGroupsCommand": "Cette commande n'est pas disponible dans les discussions de groupe.",
     "largeGuild": "Cette commande n'est utilisable que dans les serveurs avec 250 membres ou moins.",
     "ownerOnlyCommand": "Cette commande est réservée à mes propriétaires.",
     "adminOnlyCommand": "Cette commande est réservée aux admins.",
     "modOnlyCommand": "Cette commande est réservée aux modérateurs.",
     "djOnlyCommand": "Cette commande est réservée aux DJs.",
-    "nsfwCommand": "T'essayes de faire quoi là en fait ?",
+    "nsfwCommand": "Tu ne peux pas utiliser cette commande ici!",
+    "disabledCommand": "Cette commande a été temporairement désactivée.",
     "wrongSyntax": "Utilise `$PREFIXhelp $COMMAND` pour apprendre à utiliser cette commande.",
-    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test.",
-    "disabledCommand": "Cette commande a été temporairement désactivée."
+    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test."
   },
   "music": {
   	"notConnected": "Je ne suis pas connecté.",
@@ -387,7 +389,7 @@
     },
     "cleverbot": {
       "syntax": "$PREFIXcleverbot [message]",
-      "description": "Entretenir une discussion amicale avec le bot. (il n'est pas nécessaire d'écrire `$PREFIXcleverbot` si le channel s'appelle 'cleverbot' ou dans les messages privés)"
+      "description": "Entretenir une discussion amicale avec le bot. (il n'est pas nécessaire d'écrire `$PREFIXcleverbot` si le channel s'appelle 'cleverbot' ou dans les discussions privées)"
     }
   }
 }

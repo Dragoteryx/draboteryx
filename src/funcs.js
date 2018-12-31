@@ -1,5 +1,5 @@
 const drabot = require("../drabot.js");
-const config = require("../config.js");
+const config = require("../config.json");
 const pack = require("../package.json");
 const tools = require("./tools.js");
 const music = require("./music.js");

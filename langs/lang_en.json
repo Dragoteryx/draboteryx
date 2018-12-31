@@ -16,16 +16,18 @@
     "fromWebsite": "(from `$LINK`)"
   },
   "errors": {
-    "guildOnlyCommand": "This command is only available in public servers.",
+    "noGroupsCommmand": "This command is not available in public servers.",
+    "noDmsCommand": "This command is not available in private channels",
+    "noGroupsCommand": "This command is not available in group channels.",
     "largeGuild": "This command is only available in servers with 250 members or less.",
     "ownerOnlyCommand": "This is an owner only command.",
     "adminOnlyCommand": "This is an admin only command.",
     "modOnlyCommand": "This is a moderator only command.",
     "djOnlyCommand": "This command requires DJ permissions.",
-    "nsfwCommand": "What are you trying to do?",
+    "nsfwCommand": "You can't use this command here!",
+    "disabledCommand": "This command has been temporarily disabled.",
     "wrongSyntax": "Use `$PREFIXhelp $COMMAND` to learn how to use this command.",
-    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server.",
-    "disabledCommand": "This command has been temporarily disabled."
+    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
   },
   "music": {
     "notConnected": "I am not in a voice channel.",

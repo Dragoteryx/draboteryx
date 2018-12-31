@@ -1,6 +1,6 @@
-const drabot = require("../drabot.js");
 const discord = require("discord.js");
-const config = require("../config.js");
+const drabot = require("../drabot.js");
+const config = require("../config.json");
 const tools = require("./tools.js");
 const EventEmitter = require("events");
 
@@ -347,7 +347,7 @@ Object.defineProperty(discord.Message.prototype, "askValidation", {
 				return users.has(user.id);
 			} else return false;
 		});
-		return reaction && reaction.emoji.name == "✅";
+		return reaction && reaction.emoji.name == this.lang.misc.yes();
 	}
 });
 

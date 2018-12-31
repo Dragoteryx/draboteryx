@@ -3,128 +3,48 @@ require("dotenv").config();
 require("./src/prototypes.js");
 
 // IMPORTS
-const discord = require("discord.js");
+const DrGClient = require("./src/client.js");
 const snekfetch = require("snekfetch");
 const DBL = require("dblapi.js");
 const Danbooru = require("danbooru");
 const Cleverbot = require("cleverbot.io");
 
 // FILES
-const config = require("./config.js");
+const config = require("./config.json");
 const tools = require("./src/tools.js");
 const funcs = require("./src/funcs.js");
 const data = require("./src/data.js");
 const crypt = require("./src/crypt.js");
-const CommandHandler = require("./src/commands.js");
 const music = require("./src/music.js");
 const Lang = require("./langs/langs.js");
 const listenmoe = require("./src/listenmoe.js");
 const money = require("./src/money.js");
 
 // CONSTS
-const heroku = process.env.HEROKU != undefined;
-const client = new discord.Client();
-const commands = new CommandHandler();
-commands.owners = config.owners;
+const client = new DrGClient();
 const langs = {
   en: new Lang(require("./langs/lang_en.json")),
   //jp: new Lang(require("./langs/lang_jp.json"), require("./langs/lang_en.json")),
   fr: new Lang(require("./langs/lang_fr.json"), require("./langs/lang_en.json"))
 }
+const vars = {};
+const heroku = process.env.HEROKU != undefined;
+
+// GLOBALS
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
 const dbl = heroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const aliases = [];
-const vars = {};
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
 const clever = new Cleverbot(process.env.CLEVER_USER, process.env.CLEVER_KEY);
-
-// GLOBALS
 let debug = false;
 let firstConnection = true;
 let cbot = 0;
 
 // EXPORTS
 exports.client = client;
-exports.commands = commands;
 exports.langs = langs;
 exports.vars = vars;
 exports.heroku = heroku;
-
-// LISTEN TO MESSAGES
-client.on("message", async msg => {
-  if (msg.author.id == client.user.id) return;
-  try {
-
-    // set prefix and lang
-    if (msg.guild) {
-      if (!msg.guild.fetched) {
-        let data = await msg.guild.fetchData();
-        if (data.lang) msg.guild._lang = data.lang;
-        if (data.prefix) msg.guild._prefix = data.prefix;
-        msg.guild.fetched = true;
-      }
-      if (!msg.author.bot) {
-        if (!msg.author.dmChannel) {
-          msg.author.createDM().then(channel => {
-            msg.author.dmChannel._lang = msg.lang.id();
-            msg.author.dmChannel._prefix = msg.prefix;
-          });
-        }
-      }
-    }
-
-    // replace tag with prefix
-    for (let alias of aliases) {
-      if (msg.content.startsWith(alias)) {
-        msg.content = msg.content.replace(alias, msg.prefix);
-        break;
-      }
-    }
-
-    // on message callbacks
-    //msg.channel.onMsgCallbacks.forEach(func => func(msg));
-
-    // commands
-  	let res = await commands.run(msg);
-  	if (!res.result.valid) {
-  		if (res.result.reasons.includes("no prefix") || res.result.reasons.includes("unknown command")) {
-        // not a command
-        if (["dm", "group"].includes(msg.channel.type) || msg.channel.name == "cleverbot") {
-          msg.content = msg.prefix + "cleverbot " + msg.content;
-          await commands.run(msg);
-        } else if (msg.guild && msg.author.id == config.users.vltclone && msg.content == "je répond au bot") {
-          tools.stringToChannels("cleverbot").forEach(channel => {
-            if (channel.type == "text") msg.channel.send("Salut Clone raté!");
-          });
-        }
-      } else if (res.result.reasons.includes("owner only command"))
-  			msg.channel.send(msg.lang.errors.ownerOnlyCommand());
-      else if (res.result.reasons.includes("disabled"))
-        msg.channel.send(msg.lang.errors.disabledCommand());
-  		else if (res.result.reasons.includes("guild only command"))
-  			msg.channel.send(msg.lang.errors.guildOnlyCommand());
-      else if (res.result.reasons.includes("large guild"))
-        msg.channel.send(msg.lang.errors.largeGuild());
-      else if (res.result.reasons.includes("admin only command"))
-  			msg.channel.send(msg.lang.errors.adminOnlyCommand());
-      else if (res.result.reasons.includes("mod only command"))
-  			msg.channel.send(msg.lang.errors.modOnlyCommand());
-      else if (res.result.reasons.includes("dj only command"))
-  			msg.channel.send(msg.lang.errors.djOnlyCommand());
-  		else if (res.result.reasons.includes("nsfw"))
-  			msg.channel.send(msg.lang.errors.nsfwCommand());
-  		else if (res.result.reasons.some(reason => reason.includes(" arguments: ")))
-  			msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", res.command.name));
-  	} else {
-      if (msg.channel.type == "text") console.log("[LOG] Guild channel: '" + msg.guild.name + "' => '" + msg.content + "'");
-      else if (msg.channel.type == "group") console.log("[LOG] Group channel => '" + msg.content + "'");
-      else if (msg.channel.type == "dm") console.log("[LOG] Private channel => '" + msg.content + "'");
-    }
-
-  } catch(err) {
-    funcs.displayError(msg, err);
-  }
-});
 
 // EVENTS
 const ignoredErrors = ["DiscordAPIError", "PlaylistError"];
@@ -181,9 +101,53 @@ client.on("error", err => {
   funcs.error("Drabot disconnect", err);
 	login();
 });
-client.on("debug", str => {
-  if (heroku) return;
-  //console.log("[DEBUG] " + str);
+
+client.on("command", (msg, command) => {
+  if (msg.channel.type == "text") console.log("[LOG] Guild channel: '" + msg.guild.name + "' => '" + msg.content + "'");
+  else if (msg.channel.type == "group") console.log("[LOG] Group channel => '" + msg.content + "'");
+  else if (msg.channel.type == "dm") console.log("[LOG] Private channel => '" + msg.content + "'");
+});
+client.on("beforeCommand", (msg, command, before) => {
+  null;
+});
+client.on("afterCommand", (msg, command, before, after, res) => {
+  null;
+});
+client.on("deniedCommand", (msg, command, reasons) => {
+  if (reasons.includes("owner"))
+    msg.channel.send(msg.lang.errors.ownerOnlyCommand());
+  else if (reasons.includes("disabled"))
+    msg.channel.send(msg.lang.errors.disabledCommand());
+  else if (reasons.includes("admin"))
+    msg.channel.send(msg.lang.errors.adminOnlyCommand());
+  else if (reasons.includes("mod"))
+    msg.channel.send(msg.lang.errors.modOnlyCommand());
+  else if (reasons.includes("dj"))
+    msg.channel.send(msg.lang.errors.djOnlyCommand());
+  else if (reasons.includes("guilds"))
+    msg.channel.send(msg.lang.errors.noGuildsCommand());
+  else if (reasons.includes("dms"))
+    msg.channel.send(msg.lang.errors.noDmsCommand());
+  else if (reasons.includes("groups"))
+    msg.channel.send(msg.lang.errors.noGroupsCommmand());
+  else if (reasons.includes("largeguilds"))
+    msg.channel.send(msg.lang.errors.largeGuild());
+  else if (reasons.includes("nsfwCommand"))
+    msg.channel.send(msg.lang.errors.nsfwCommand());
+  else if (reasons.includes("maxargs") || reasons.includes("minargs"))
+    msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", command.name));
+  else if (reasons.includes("disabled"))
+    msg.channel.send(msg.lang.errors.disabledCommand());
+});
+client.on("notCommand", msg => {
+  if (msg.channel.type == "dm" || (msg.guild && ["cleverbot", "cbot", "drb-cleverbot", "drb-cbot"].includes(msg.channel.name))) {
+    let command = client.getCommand("cbot");
+    let args = msg.content.split(/ +/g);
+    command.callback(msg, args, args.join(" "));
+  }
+});
+client.on("commandError", (msg, err, command) => {
+  funcs.displayError(msg, err);
 });
 
 client.on("guildCreate", guild => {
@@ -205,13 +169,38 @@ client.on("playlistEmpty", playlist => {
 
 // COMMANDS --------------------------------------------------
 
+client.setupCommands(config.prefix, async msg => {
+  if (msg.guild) {
+    if (!msg.guild.fetched) {
+      let data = await msg.guild.fetchData();
+      if (data.lang) msg.guild._lang = data.lang;
+      if (data.prefix) msg.guild._prefix = data.prefix;
+      msg.guild.fetched = true;
+    }
+    if (!msg.author.bot) {
+      if (!msg.author.dmChannel) {
+        msg.author.createDM().then(channel => {
+          msg.author.dmChannel._lang = msg.lang.id();
+          msg.author.dmChannel._prefix = msg.prefix;
+        });
+      }
+    }
+  }
+});
+
+client.commandProperty("owner", (msg, owneronly = false) => !owneronly || msg.author.owner);
+client.commandProperty("admin", (msg, adminonly = false) => !adminonly || msg.author.admin);
+client.commandProperty("mod", (msg, modonly = false) => !modonly || msg.author.mod);
+client.commandProperty("dj", (msg, djonly = false) => !djonly || msg.author.dj);
+client.commandProperty("disabled", (msg, disabled = false) => !disabled || msg.author.owner);
+
 // OWNER
 
-commands.set("test", msg => {
+client.defineCommand("test", msg => {
   msg.channel.send("Test1 => " + msg.lang.misc.test() + "\nTest2 => " + msg.lang.misc.test2());
 }, {owner: true, maxargs: 0});
 
-commands.set("exec", async msg => {
+client.defineCommand("exec", async msg => {
 	try {
     let val = eval(msg.content.replace(msg.prefix + "exec ", ""));
     let promise = false;
@@ -233,17 +222,17 @@ commands.set("exec", async msg => {
 	}
 }, {owner: true, minargs: 1});
 
-commands.set("setavatar", async (msg, args) => {
+client.defineCommand("setavatar", async (msg, args) => {
   await client.user.setAvatar(args[0]);
   msg.channel.send("New avatar:", {files: [args[0]]});
 }, {owner: true, minargs: 1, maxargs: 1});
 
-commands.set("setusername", async (msg, args, argstr) => {
+client.defineCommand("setusername", async (msg, args, argstr) => {
   await client.user.setUsername(argstr);
   msg.channel.send("New username: `" + argstr + "`");
 }, {owner: true, minargs: 1});
 
-commands.set("setmoney", async (msg, args) => {
+client.defineCommand("setmoney", async (msg, args) => {
   await msg.author.fetchMoney();
   let amount = Number(args.shift());
   let res = tools.validNumber(amount, 0, Infinity, true);
@@ -260,7 +249,7 @@ commands.set("setmoney", async (msg, args) => {
   }
 }, {owner: true, minargs: 2});
 
-commands.set("restart", async msg => {
+client.defineCommand("restart", async msg => {
   msg.channel.send("Ok I'm disconnecting!");
   await client.destroy();
   let nb = await login();
@@ -269,11 +258,11 @@ commands.set("restart", async msg => {
 
 // BOT
 
-commands.set("help", (msg, args) => {
+client.defineCommand("help", (msg, args) => {
   if (args.length == 0) {
     let embed = tools.defaultEmbed();
     for (let type of commandTypes) {
-      let sameType = commands.array.filter(command => command.options.info && command.options.info.show && command.options.info.type == type).map(command => "`" + command.name + "`").sort();;
+      let sameType = client.commandsArray.filter(command => command.properties.info && command.properties.info.show && command.properties.info.type == type).map(command => "`" + command.name + "`").sort();;
       if (sameType.length > 0)
         embed.addField(msg.lang.types()[type], sameType.join(" | "));
       else embed.addField(msg.lang.types()[type], "---");
@@ -286,12 +275,12 @@ commands.set("help", (msg, args) => {
     args.sort();
     for (let arg of args) {
       arg = arg.toLowerCase();
-      if (commands.has(arg)) {
+      if (client.commandExists(arg)) {
         nb++;
-        let command = commands.get(arg);
+        let command = client.getCommand(arg);
         let embed = tools.defaultEmbed()
         .addField(msg.lang.commands.help.commandName(), command.name, true)
-				.addField(msg.lang.commands.help.commandType(), msg.lang.types()[command.options.info.type], true)
+				.addField(msg.lang.commands.help.commandType(), msg.lang.types()[command.properties.info.type], true)
 				.addField(msg.lang.commands.help.commandDescription(), msg.lang.commands[command.name].description("$PREFIX", msg.prefix))
 				.addField(msg.lang.commands.help.commandSyntax(), "```" + msg.lang.commands[command.name].syntax("$PREFIX", msg.prefix) + "```");
 				msg.author.send("", embed);
@@ -305,23 +294,23 @@ commands.set("help", (msg, args) => {
   }
 }, {info: {show: true, type: "bot"}});
 
-commands.set("server", msg => {
+client.defineCommand("server", msg => {
   msg.channel.send("https://discord.gg/aCgwj8M");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
-commands.set("invite", msg => {
+client.defineCommand("invite", msg => {
   msg.channel.send("https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
-commands.set("about", async msg => {
+client.defineCommand("about", async msg => {
   msg.channel.send("", await funcs.showInfo(msg));
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
-commands.set("permissions", async msg => {
+client.defineCommand("permissions", async msg => {
   msg.channel.send(msg.lang.commands.permissions.info());
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
-commands.set("reset", async msg => {
+client.defineCommand("reset", async msg => {
   if (msg.guild) {
     delete msg.guild._lang;
     delete msg.guild._prefix;
@@ -332,7 +321,7 @@ commands.set("reset", async msg => {
   } msg.channel.send("I've been reset to default values.\nLanguage: `English`\nPrefix: `/`");
 }, {admin: true, maxargs: 0, info: {show: true, type: "bot"}});
 
-commands.set("prefix", async (msg, args) => {
+client.defineCommand("prefix", async (msg, args) => {
   if (args.length == 0)
     msg.channel.send(msg.lang.commands.prefix.current("$PREFIX", msg.prefix));
   else {
@@ -349,7 +338,7 @@ commands.set("prefix", async (msg, args) => {
   }
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
-commands.set("lang", async (msg, args) => {
+client.defineCommand("lang", async (msg, args) => {
   if (args.length == 0) {
     let str = "";
     for (let lang of Object.values(langs))
@@ -374,18 +363,18 @@ commands.set("lang", async (msg, args) => {
   }
 }, {maxargs: 1, info: {show: true, type: "bot"}});
 
-commands.set("ping", async msg => {
+client.defineCommand("ping", async msg => {
   msg.channel.send("Pong! (" + Math.round(client.ping) + "ms) :ping_pong:");
 }, {maxargs: 0, info: {show: true, type: "bot"}});
 
 // MONEY
 
-commands.set("money", async msg => {
+client.defineCommand("money", async msg => {
   await msg.author.fetchMoney();
   msg.channel.send(msg.lang.commands.money.display("$AMOUNT", msg.author.money, "$CURRENCY", config.currency));
 }, {bots: true, maxargs: 0, info: {show: true, type: "misc"}});
 
-commands.set("givemoney", async (msg, args) => {
+client.defineCommand("givemoney", async (msg, args) => {
   await msg.author.fetchMoney();
   let amount = Number(args.shift());
   let res = tools.validNumber(amount, 1, msg.author.money, true);
@@ -402,9 +391,9 @@ commands.set("givemoney", async (msg, args) => {
       msg.channel.send(msg.lang.commands.givemoney.gaveMoney("$USERNAME1", msg.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency, "$USERNAME2", member.displayName));
     } else msg.channel.send(msg.lang.commands.givemoney.duplicates());
   }
-}, {guildonly: true, bots: true, minargs: 2, info: {show: true, type: "misc"}});
+}, {dms: false, groups: false, bots: true, minargs: 2, info: {show: true, type: "misc"}});
 
-commands.set("dropmoney", async (msg, args) => {
+client.defineCommand("dropmoney", async (msg, args) => {
   await msg.author.fetchMoney();
   let res = tools.validNumber(args[0], 1, msg.author.money, true);
   if (!res.valid) {
@@ -424,9 +413,9 @@ commands.set("dropmoney", async (msg, args) => {
       msg.channel.send(msg.lang.commands.dropmoney.pickMoney("$USERNAME", msg2.authorName, "$AMOUNT", amount, "$CURRENCY", config.currency));
     }
   }
-}, {guildonly: true, bots: true, minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
+}, {dms: false, groups: false, bots: true, minargs: 1, maxargs: 1, info: {show: true, type: "misc"}});
 
-commands.set("moneyleaderboard", async msg => {
+client.defineCommand("moneyleaderboard", async msg => {
   await msg.guild.fetchMoney();
   let members = Array.from(msg.guild.members.values());
   members.sort((member1, member2) => {
@@ -441,18 +430,18 @@ commands.set("moneyleaderboard", async msg => {
     if (i == 19) break;
   }
   msg.channel.send("", embed);
-}, {guildonly: true, largeguilds: false, maxargs: 0, info: {show: true, type: "misc"}});
+}, {dms: false, groups: false, largeguilds: false, maxargs: 0, info: {show: true, type: "misc"}});
 
 // MODERATION
 
 
 // UTILS
 
-commands.set("serverinfo", async msg => {
+client.defineCommand("serverinfo", async msg => {
   msg.channel.send("", await msg.guild.embedInfo());
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "utility"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "utility"}});
 
-commands.set("userinfo", async (msg, args, argstr) => {
+client.defineCommand("userinfo", async (msg, args, argstr) => {
   if (args.length == 0) msg.channel.send("", msg.member.embedInfo());
   else {
     let nb = 0;
@@ -463,9 +452,9 @@ commands.set("userinfo", async (msg, args, argstr) => {
     });
     if (nb == 0) msg.channel.send(msg.lang.commands.userinfo.noUser());
   }
-}, {guildonly: true, info: {show: true, type: "utility"}});
+}, {dms: false, groups: false, info: {show: true, type: "utility"}});
 
-commands.set("channelinfo", (msg, args, argstr) => {
+client.defineCommand("channelinfo", (msg, args, argstr) => {
   if (args.length == 0) msg.channel.send("", msg.channel.embedInfo());
   else {
     let nb = 0;
@@ -475,9 +464,9 @@ commands.set("channelinfo", (msg, args, argstr) => {
     });
     if (nb == 0) msg.channel.send(msg.lang.commands.channelinfo.noChannel());
   }
-}, {guildonly: true, info: {show: true, type: "utility"}});
+}, {dms: false, groups: false, info: {show: true, type: "utility"}});
 
-commands.set("roleinfo", (msg, args, argstr) => {
+client.defineCommand("roleinfo", (msg, args, argstr) => {
   if (args.length == 0) msg.channel.send("", msg.member.highestRole.embedInfo());
   else {
     let nb = 0;
@@ -487,9 +476,9 @@ commands.set("roleinfo", (msg, args, argstr) => {
     });
     if (nb == 0) msg.channel.send(msg.lang.commands.roleinfo.noRole());
   }
-}, {guildonly: true, info: {show: true, type: "utility"}});
+}, {dms: false, groups: false, info: {show: true, type: "utility"}});
 
-commands.set("prune", async (msg, args) => {
+client.defineCommand("prune", async (msg, args) => {
   let nb = 100;
   if (args.length == 1) {
     let res = tools.validNumber(args[0], 0, 100, true);
@@ -505,11 +494,11 @@ commands.set("prune", async (msg, args) => {
   } catch(err) {
     msg.channel.send(msg.lang.commands.prune.error());
   }
-}, {admin: true, maxargs: 1, guildonly: true, info: {show: true, type: "utility"}});
+}, {admin: true, maxargs: 1, dms: false, groups: false, info: {show: true, type: "utility"}});
 
 // MUSIC
 
-commands.set("join", async msg => {
+client.defineCommand("join", async msg => {
   if (!msg.member.voiceChannelID)
     msg.channel.send(msg.lang.commands.join.notInVoiceChannel());
   else if (msg.member.voiceChannelID == msg.guild.me.voiceChannelID)
@@ -526,9 +515,9 @@ commands.set("join", async msg => {
       msg.channel.send(msg.lang.commands.join.hello());
     }
   }
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("leave", async msg => {
+client.defineCommand("leave", async msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else {
@@ -536,9 +525,9 @@ commands.set("leave", async msg => {
     msg.guild.playlist.leave();
     msg.channel.send(msg.lang.commands.leave.bye());
   }
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("request", async (msg, args) => {
+client.defineCommand("request", async (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.streaming) {
@@ -594,9 +583,9 @@ commands.set("request", async (msg, args) => {
       }
     }
   } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
-}, {minargs: 1, guildonly: true, info: {show: true, type: "music"}});
+}, {minargs: 1, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("stream", async (msg, args) => {
+client.defineCommand("stream", async (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.playing) {
@@ -614,9 +603,9 @@ commands.set("stream", async (msg, args) => {
       msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", stream.name));
     } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
   } else msg.channel.send(msg.lang.music.noPlaying());
-}, {disabled: true, minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
+}, {disabled: true, minargs: 1, maxargs: 1, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("pause", msg => {
+client.defineCommand("pause", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.dispatching)
@@ -626,9 +615,9 @@ commands.set("pause", msg => {
     msg.guild.playlist.paused = true;
     msg.channel.send(msg.lang.commands.pause.done());
   }
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("resume", msg => {
+client.defineCommand("resume", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.dispatching)
@@ -638,9 +627,9 @@ commands.set("resume", msg => {
     msg.guild.playlist.paused = false;
     msg.channel.send(msg.lang.commands.resume.done());
   }
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("skip", msg => {
+client.defineCommand("skip", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -651,9 +640,9 @@ commands.set("skip", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("plremove", (msg, args) => {
+client.defineCommand("plremove", (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.pending.length == 0)
@@ -669,9 +658,9 @@ commands.set("plremove", (msg, args) => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {minargs: 1, maxargs: 1, guildonly: true, info: {show: true, type: "music"}});
+}, {minargs: 1, maxargs: 1, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("plclear", msg => {
+client.defineCommand("plclear", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -681,9 +670,9 @@ commands.set("plclear", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("plshuffle", msg => {
+client.defineCommand("plshuffle", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -693,9 +682,9 @@ commands.set("plshuffle", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("volume", (msg, args) => {
+client.defineCommand("volume", (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else {
@@ -708,9 +697,9 @@ commands.set("volume", (msg, args) => {
       msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
     } else msg.channel.send(msg.lang.commands.volume.invalidVolume());
   }
-}, {guildonly: true, minargs: 1, maxargs: 1, info: {show: true, type: "music"}});
+}, {dms: false, groups: false, minargs: 1, maxargs: 1, info: {show: true, type: "music"}});
 
-commands.set("loop", msg => {
+client.defineCommand("loop", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -721,9 +710,9 @@ commands.set("loop", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("plloop", msg => {
+client.defineCommand("plloop", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -734,9 +723,9 @@ commands.set("plloop", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxargs: 0, guildonly: true, info: {show: true, type: "music"}});
+}, {maxargs: 0, dms: false, groups: false, info: {show: true, type: "music"}});
 
-commands.set("current", msg => {
+client.defineCommand("current", msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -758,9 +747,9 @@ commands.set("current", msg => {
       msg.channel.send(msg.lang.commands.stream.nowPlaying("$TITLE", msg.guild.playlist.current.title, "$NAME", msg.guild.playlist.current.name));
   } else
     msg.channel.send(msg.lang.music.notPlayingNorStreaming())
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+}, {dms: false, groups: false, maxargs: 0, info: {show: true, type: "music"}});
 
-commands.set("playlist", async msg => {
+client.defineCommand("playlist", async msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
@@ -784,23 +773,23 @@ commands.set("playlist", async msg => {
   	} else msg.channel.send(msg.lang.music.emptyPlaylist() + " " + msg.lang.commands.playlist.displayCurrent("$PREFIX", msg.prefix));
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "music"}});
+}, {dms: false, groups: false, maxargs: 0, info: {show: true, type: "music"}});
 
 // ELSE
 
-commands.set("say", msg => {
+client.defineCommand("say", msg => {
 	let content = msg.content.replace(msg.prefix + "say ", "");
 	msg.channel.send(content);
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.set("ttsay", msg => {
+client.defineCommand("ttsay", msg => {
 	let content = msg.content.replace(msg.prefix + "ttsay ", "");
 	msg.channel.send(content, {tts: true});
 	msg.delete();
 }, {owner: true, minargs: 1});
 
-commands.set("roll", (msg, args) => {
+client.defineCommand("roll", (msg, args) => {
 	let max = 6;
 	if (args.length == 1 && tools.validNumber(args[0], 1, Infinity, true).valid)
 		max = Number(args[0]);
@@ -808,7 +797,7 @@ commands.set("roll", (msg, args) => {
 	msg.channel.send(res + "/" + max + " :game_die:");
 }, {maxargs: 1, info: {show: true, type: "fun"}});
 
-commands.set("fact", (msg, args) => {
+client.defineCommand("fact", (msg, args) => {
 	let link = "https://factgenerator.herokuapp.com/generate?words=" + args.join("_");
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
@@ -821,7 +810,7 @@ commands.set("fact", (msg, args) => {
 	});
 }, {info: {show: true, type: "fun"}});
 
-commands.set("reflex", async msg => {
+client.defineCommand("reflex", async msg => {
 	if (msg.channel.reflex) return;
 	msg.channel.reflex = true;
 	msg.channel.send(msg.lang.commands.reflex.rules());
@@ -840,9 +829,9 @@ commands.set("reflex", async msg => {
 	if (!msg2) msg.channel.send(msg.lang.commands.reflex.slow());
 	else msg.channel.send(msg.lang.commands.reflex.wellPlayed("$WINNER", msg2.authorName));
 	msg.channel.reflex = false;
-}, {guildonly: true, maxargs: 0, info: {show: true, type: "game"}});
+}, {dms: false, groups: false, maxargs: 0, info: {show: true, type: "game"}});
 
-commands.set("cyanidehappiness", msg => {
+client.defineCommand(["cyanidehappiness", "cah"], msg => {
   let link = "http://explosm.net/rcg";
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
@@ -852,7 +841,7 @@ commands.set("cyanidehappiness", msg => {
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("httpdog", msg => {
+client.defineCommand("httpdog", msg => {
   let link = "https://httpstatusdogs.com";
   msg.channel.startTyping(1);
 	snekfetch.get(link).then(res => {
@@ -862,15 +851,15 @@ commands.set("httpdog", msg => {
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("waifu", msg => {
+client.defineCommand("waifu", msg => {
 	msg.channel.send(msg.lang.commands.waifu.theTruth());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("whatisthebestyoutubechannel?", msg => {
+client.defineCommand("whatisthebestyoutubechannel?", msg => {
 	msg.channel.send("https://www.youtube.com/channel/UC6nSFpj9HTCZ5t-N3Rm3-HA :ok_hand:");
 }, {maxargs: 0});
 
-commands.set("encrypt", async (msg, args, argstr) => {
+client.defineCommand("encrypt", async (msg, args, argstr) => {
 	let key = crypt.genNoise(16);
   let msg2 = await msg.channel.send(msg.lang.commands.encrypt.specificKey());
   let useKey = await msg2.askValidation(10000, msg.author);
@@ -882,7 +871,7 @@ commands.set("encrypt", async (msg, args, argstr) => {
   msg.channel.send(msg.lang.commands.encrypt.encrypted("$MESSAGE", crypt.encrypt(argstr, key), "$KEY", key));
 }, {minargs: 1, info: {show: true, type: "misc"}});
 
-commands.set("decrypt", async msg => {
+client.defineCommand("decrypt", async msg => {
 	let crypted = msg.content.replace(msg.prefix + "decrypt ", "");
 	await msg.channel.send(msg.lang.commands.decrypt.keyRequest());
 	let msg2 = await msg.channel.waitResponse(20000, msg3 => msg3.author.id == msg.author.id);
@@ -894,7 +883,7 @@ commands.set("decrypt", async msg => {
 	}
 }, {minargs: 1, info: {show: true, type: "misc"}});
 
-commands.set("danbooru", async (msg, args, argstr) => {
+client.defineCommand("danbooru", async (msg, args, argstr) => {
   if (args.length > 3 || (args.length == 3 && !args.includes("rating:safe"))) {
     msg.channel.send(msg.lang.commands.danbooru.limit("$LIMIT", 2));
     return;
@@ -910,13 +899,10 @@ commands.set("danbooru", async (msg, args, argstr) => {
     msg.channel.stopTyping();
     if (posts.length == 0 || !posts[0]) msg.channel.send(msg.lang.misc.noResults());
     else msg.channel.send(msg.lang.commands.danbooru.result("$TAGS", tags), {files: [posts[0].large_file_url]});
-  }).catch(err => {
-    msg.channel.stopTyping();
-    funcs.displayError(msg, err);
-  });
+  }).catch(err => msg.channel.stopTyping());
 }, {minargs: 1, info: {show: true, type: "nsfw"}});
 
-commands.set("spurriouscorrelations", msg => {
+client.defineCommand("spurriouscorrelations", msg => {
   msg.channel.startTyping(1);
   snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700)).then(res => {
     msg.channel.stopTyping();
@@ -925,7 +911,7 @@ commands.set("spurriouscorrelations", msg => {
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("csshumor", msg => {
+client.defineCommand("csshumor", msg => {
   let link = "https://csshumor.com";
   msg.channel.startTyping(1);
   snekfetch.get(link).then(res => {
@@ -937,7 +923,7 @@ commands.set("csshumor", msg => {
   }).catch(err => msg.channel.stopTyping());
 }, {maxargs: 0, info: {show: true, type: "fun"}});
 
-commands.set("cleverbot", (msg, args, argstr) => {
+client.defineCommand(["cleverbot", "cbot"], (msg, args, argstr) => {
   if (msg.poster.cleverResponding) return null;
   let currcbot = cbot;
   cbot++;
