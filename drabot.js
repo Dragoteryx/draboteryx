@@ -8,7 +8,7 @@ const DBL = require("dblapi.js");
 const Danbooru = require("danbooru");
 
 // FILES
-const DrGClient = require("./src/client.js");
+const {Client} = require("./src/client.js");
 const config = require("./config.json");
 const tools = require("./src/tools.js");
 const funcs = require("./src/funcs.js");
@@ -21,7 +21,27 @@ const money = require("./src/money.js");
 const Cleverbot = require("./src/cleverbot.js");
 
 // CONSTS
-const client = new DrGClient();
+const client = new Client({
+  prefix: config.prefix,
+  messageInit: async msg => {
+    if (msg.guild) {
+      if (!msg.guild.fetched) {
+        let data = await msg.guild.fetchData();
+        if (data.lang) msg.guild._lang = data.lang;
+        if (data.prefix) msg.guild._prefix = data.prefix;
+        msg.guild.fetched = true;
+      }
+      if (!msg.author.bot) {
+        if (!msg.author.dmChannel) {
+          msg.author.createDM().then(channel => {
+            msg.author.dmChannel._lang = msg.lang.id();
+            msg.author.dmChannel._prefix = msg.prefix;
+          });
+        }
+      }
+    }
+  }
+});
 const langs = {
   en: new Lang(require("./langs/lang_en.json")),
   //jp: new Lang(require("./langs/lang_jp.json"), require("./langs/lang_en.json")),
@@ -39,6 +59,7 @@ const clever = new Cleverbot(process.env.CLEVER_USER, process.env.CLEVER_KEY);
 let debug = false;
 let firstConnection = true;
 let cbot = 0;
+let cbotRespond = 0 // 0 all | 1 users | 2 bots
 
 // EXPORTS
 exports.client = client;
@@ -55,10 +76,10 @@ process.on("uncaughtException", async err => {
 });
 process.on("unhandledRejection", async (err, promise) => {
   funcs.error("Unhandled Promise Rejection", err);
-  if (!ignoredErrors.includes(err.name)) {
+  /*if (!ignoredErrors.includes(err.name)) {
     await client.destroy();
     process.exit(1);
-  }
+  }*/
 });
 process.on("SIGTERM", async () => {
   await client.destroy();
@@ -138,7 +159,7 @@ client.on("notCommand", msg => {
   if (msg.channel.type == "dm" || (msg.guild && ["cleverbot", "cbot", "drb-cleverbot", "drb-cbot"].includes(msg.channel.name))) {
     let command = client.getCommand("cbot");
     let args = msg.content.split(/ +/g);
-    command.run(msg, args, args.join(" "));
+    command.run(msg, args, args.join(" "), command);
   }
 });
 client.on("commandError", (msg, err, command) => {
@@ -164,25 +185,6 @@ client.on("playlistEmpty", playlist => {
 
 // COMMANDS --------------------------------------------------
 
-client.setupCommands(config.prefix, async msg => {
-  if (msg.guild) {
-    if (!msg.guild.fetched) {
-      let data = await msg.guild.fetchData();
-      if (data.lang) msg.guild._lang = data.lang;
-      if (data.prefix) msg.guild._prefix = data.prefix;
-      msg.guild.fetched = true;
-    }
-    if (!msg.author.bot) {
-      if (!msg.author.dmChannel) {
-        msg.author.createDM().then(channel => {
-          msg.author.dmChannel._lang = msg.lang.id();
-          msg.author.dmChannel._prefix = msg.prefix;
-        });
-      }
-    }
-  }
-});
-
 client.commandProperty("owner", (msg, owneronly = false) => !owneronly || msg.author.owner);
 client.commandProperty("admin", (msg, adminonly = false) => !adminonly || msg.author.admin);
 client.commandProperty("mod", (msg, modonly = false) => !modonly || msg.author.mod);
@@ -191,13 +193,14 @@ client.commandProperty("disabled", (msg, disabled = false) => !disabled || msg.a
 
 // OWNER
 
-client.defineCommand("test", msg => {
+client.defineCommand("test", function(msg) {
   msg.channel.send("Test1 => " + msg.lang.misc.test() + "\nTest2 => " + msg.lang.misc.test2());
+  this.delete();
 }, {owner: true, maxArgs: 0});
 
-client.defineCommand("exec", async msg => {
+client.defineCommand(["exec", "eval"], async (msg, args, argstr) => {
 	try {
-    let val = eval(msg.content.replace(msg.prefix + "exec ", ""));
+    let val = eval(argstr);
     let promise = false;
     if (val instanceof Promise) {
       promise = true;
@@ -297,7 +300,7 @@ client.defineCommand("invite", msg => {
   msg.channel.send("https://discordapp.com/oauth2/authorize?client_id=273576577512767488&scope=bot&permissions=70437888");
 }, {maxArgs: 0, info: {show: true, type: "bot"}});
 
-client.defineCommand("about", async msg => {
+client.defineCommand(["about", "info"], async msg => {
   msg.channel.send("", await funcs.showInfo(msg));
 }, {maxArgs: 0, info: {show: true, type: "bot"}});
 
@@ -333,7 +336,7 @@ client.defineCommand("prefix", async (msg, args) => {
   }
 }, {maxArgs: 1, info: {show: true, type: "bot"}});
 
-client.defineCommand("lang", async (msg, args) => {
+client.defineCommand(["lang", "language"], async (msg, args) => {
   if (args.length == 0) {
     let str = "";
     for (let lang of Object.values(langs))
@@ -432,11 +435,11 @@ client.defineCommand("moneyleaderboard", async msg => {
 
 // UTILS
 
-client.defineCommand("serverinfo", async msg => {
+client.defineCommand(["serverinfo", "guildinfo"], async msg => {
   msg.channel.send("", await msg.guild.embedInfo());
 }, {maxArgs: 0, guildOnly: true, info: {show: true, type: "utility"}});
 
-client.defineCommand("userinfo", async (msg, args, argstr) => {
+client.defineCommand(["userinfo", "memberinfo"], async (msg, args, argstr) => {
   if (args.length == 0) msg.channel.send("", msg.member.embedInfo());
   else {
     let nb = 0;
@@ -940,13 +943,15 @@ client.defineCommand("csshumor", async msg => {
 
 client.defineCommand(["cleverbot", "cbot"], async (msg, args, argstr) => {
   try {
+    if (cbotRespond == 1 && msg.author.bot) return null;
+    if (cbotRespond == 2 && !msg.author.bot) return null;
     if (msg.poster.cleverResponding) return null;
     let currcbot = cbot;
     cbot++;
     msg.poster.cleverResponding = true;
     msg.channel.startTyping(1);
     console.log("[CBOT] Input (" + currcbot + ") => '" + argstr + "'");
-    let res = await clever.ask(argstr, msg.channel.id);
+    let res = await clever.fetch(argstr, msg.channel.id);
     console.log("[CBOT] Output (" + currcbot + ") => '" + res + "'");
     msg.poster.cleverResponding = false;
     msg.channel.stopTyping();
@@ -957,7 +962,7 @@ client.defineCommand(["cleverbot", "cbot"], async (msg, args, argstr) => {
     msg.channel.stopTyping();
     throw err;
   }
-}, {minArgs: 1, info: {show: true, type: "fun"}});
+}, {bots: true, minArgs: 1, info: {show: true, type: "fun"}});
 
 client.defineCommand("scp", async (msg, args) => {
   try {

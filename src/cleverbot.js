@@ -16,21 +16,23 @@ class Cleverbot {
     this.nick = nick;
   }
   async create(nick) {
-    let res = await snekfetch.post(url + "create").send({user: this.user, key: this.key, nick: nick !== undefined ? nick : this.nick});
+    this.nick = nick || this.nick;
+    let res = await snekfetch.post(url + "create").send({user: this.user, key: this.key, nick: this.nick});
     let data = JSON.parse(res.text);
     if (!["success", "Error: reference name already exists"].includes(data.status))
       throw new CleverbotError(this, data.status);
   }
-  async fetch(str, nick) {
-    let res = await snekfetch.post(url + "ask").send({user: this.user, key: this.key, nick: nick !== undefined ? nick : this.nick, text:str});
+  async ask(str, nick) {
+    this.nick = nick || this.nick;
+    let res = await snekfetch.post(url + "ask").send({user: this.user, key: this.key, nick: this.nick, text: str});
     let data = JSON.parse(res.text);
     if (data.status == "success")
       return data.response;
     else throw new CleverbotError(this, data.status);
   }
-  async ask(str, nick) {
+  async fetch(str, nick) {
     await this.create(nick);
-    return this.fetch(str, nick);
+    return this.ask(str, nick);
   }
 }
 

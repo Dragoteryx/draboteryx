@@ -1,4 +1,4 @@
-const {Client} = require("discord.js");
+const discord = require("discord.js");
 const privates = new WeakMap();
 function prv(object) {
 	if (!privates.has(object))
@@ -6,23 +6,22 @@ function prv(object) {
 	return privates.get(object);
 }
 
-class DrGClient extends Client {
+class Client extends discord.Client {
   constructor(...args) {
     super(args);
+		this.prefix = args.prefix === undefined ? "" : args.prefix;
+		this.messageInit = args.messageInit === undefined ? () => undefined : args.messageInit;
     let that = prv(this);
     that.commands = new Map();
     that.properties = new Map();
     that.aliases = new Map();
     that.fetched = false;
-    this.prefix = "";
-    this.commandsInit = () => undefined;
+		this.on("ready", () => {
+			that.mentions = ["<@" + this.user.id + "> ", "<@!" + this.user.id + ">"];
+		});
     this.on("message", async msg => {
       try {
-        if (!that.fetched) {
-          that.mentions = ["<@" + this.user.id + "> ", "<@!" + this.user.id + ">"];
-          that.fetched = true;
-        }
-        await this.commandsInit(msg);
+        await this.messageInit(msg);
         if (this.user.id == msg.author.id) return;
         let prefix = await this.fetchPrefix(msg);
         let test1 = await this.testCommands(msg, prefix);
@@ -36,7 +35,7 @@ class DrGClient extends Client {
               let now = Date.now();
               this.emit("beforeCommand", msg, command, now, null, null);
 							let args = msg.content.split(/ +/g).slice(1);
-              let res = await command.run(msg, args, args.join(" "));
+              let res = await command.run(msg, args, args.join(" "), command);
               this.emit("afterCommand", msg, command, now, Date.now(), res);
             } else this.emit("deniedCommand", msg, command, test2.reasons);
           } catch(err) {
@@ -65,15 +64,15 @@ class DrGClient extends Client {
 		this.commandProperty("guildOnly", (msg, guildonly = false) => msg.channel.type == "text" || !guildonly);
     this.commandProperty("minArgs", (msg, args = 0) => msg.content.split(/ +/g).slice(1).length >= args);
     this.commandProperty("maxArgs", (msg, args = Infinity) => msg.content.split(/ +/g).slice(1).length <= args);
-		this.commandProperty("guildsList", (msg, list = []) => {
+		this.commandProperty("guilds", (msg, list = []) => {
 			if (list.length == 0) return true;
 			else return msg.channel.type == "text" && list.includes(msg.guild.id);
 		});
-		this.commandProperty("channelsList", (msg, list = []) => {
+		this.commandProperty("channels", (msg, list = []) => {
 			if (list.length == 0) return true;
 			else return list.includes(msg.channel.id);
 		});
-		this.commandProperty("usersList", (msg, list = []) => {
+		this.commandProperty("users", (msg, list = []) => {
 			if (list.length == 0) return true;
 			else return list.includes(msg.author.id);
 		});
@@ -100,9 +99,10 @@ class DrGClient extends Client {
     return command;
   }
   getCommand(name) {
-    let command = prv(this).commands.get(name);
+		let that = prv(this);
+    let command = that.commands.get(name);
     if (command !== undefined) return command;
-    else return prv(this).aliases.get(name);
+    else return that.aliases.get(name);
   }
   commandExists(name) {
     return this.getCommand(name) !== undefined;
@@ -110,7 +110,7 @@ class DrGClient extends Client {
   deleteCommand(name) {
 		if (!this.commandExists(name)) return false;
 		let command = this.getCommand(name);
-		command.aliases.forEach(alias => this.unbindAlias(alias));
+		command.aliases.forEach(alias => command.unbindAlias(alias));
     return prv(this).commands.delete(name);
   }
 	wipeCommands() {
@@ -186,6 +186,9 @@ class Command {
     if (command.name == this.name) clientThat.aliases.delete(alias);
     return this;
   }
+	delete() {
+		return this.client.deleteCommand(this.name);
+	}
   async test(msg, prefix) {
     if (prefix === undefined) prefix = await this.client.fetchPrefix(msg);
     let that = prv(this);
@@ -198,11 +201,13 @@ class Command {
     let reasons = [];
     let properties = Array.from(prv(this.client).properties.values());
     for (let property of properties) {
-      let test = await property.test(msg, this.properties[property.name]);
+      let test = await property.test(msg, this.properties[property.name], this);
       if (!test) reasons.push(property.name);
     }
     return {valid: reasons.length == 0, reasons: reasons, command: this};
   }
 }
 
-module.exports = DrGClient;
+module.exports = {
+	Client: Client
+}

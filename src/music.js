@@ -45,9 +45,8 @@ Object.defineProperty(discord.Guild.prototype, "playlist", {
   }
 });
 
-class Playlist extends EventEmitter {
+class Playlist {
   constructor(guild) {
-    super();
     let that = prv(this);
     this.current = null;
     this.pending = new PlaylistArray(this);
@@ -109,13 +108,11 @@ class Playlist extends EventEmitter {
         that.dispatcher = this.current.play(this.channel.connection, {passes: 3});
         that.dispatcher.setVolume(that.volume);
         that.dispatcher.on("start", () => {
-          this.emit("start", this.current);
           this.client.emit("playlistStart", this, this.current);
         });
         that.dispatcher.on("end", async reason => {
           if (reason == "stop") return;
           await sleep(500);
-          this.emit("end", this.current);
           this.client.emit("playlistEnd", this, this.current);
           if (that.pllooping)
             this.pending.push(this.current);
@@ -123,12 +120,10 @@ class Playlist extends EventEmitter {
         });
         that.dispatcher.on("error", console.error);
         if (!this.looping) {
-          this.emit("next", this.current);
           this.client.emit("playlistNext", this, this.current);
         }
       } else {
         that.playing = false;
-        this.emit("empty");
         this.client.emit("playlistEmpty", this);
         this.current = undefined;
         this.pending.clear();

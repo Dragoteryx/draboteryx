@@ -14,7 +14,6 @@
     "dotenv": "^4.0.0",
     "mongodb": "^3.1.10",
     "musicmetadata": "^2.0.5",
-    "node-fetch": "^2.3.0",
     "node-opus": "^0.2.9",
     "prism-media": "^0.2.1",
     "simple-youtube-api": "^5.1.1",
