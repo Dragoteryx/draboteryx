@@ -60,6 +60,7 @@ let debug = false;
 let firstConnection = true;
 let cbot = 0;
 let cbotRespond = 0 // 0 all | 1 users | 2 bots
+let crashs = 0
 
 // EXPORTS
 exports.client = client;
@@ -102,6 +103,7 @@ client.on("ready", () => {
     aliases.push("<@" + client.user.id + "> ", "<@!" + client.user.id + "> ");
     aliases.ready = true;
   }
+  crashs = 0
   client.user.setActivity(config.prefix + "help");
 	console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connected!" : "[INFO] Connected!");
   let guild = client.guilds.get(config.guilds.drg);
@@ -775,15 +777,13 @@ client.defineCommand("playlist", async msg => {
 
 // ELSE
 
-client.defineCommand("say", msg => {
-	let content = msg.content.replace(msg.prefix + "say ", "");
-	msg.channel.send(content);
+client.defineCommand("say", (msg, args, argstr) => {
+	msg.channel.send(argstr);
 	msg.delete();
 }, {owner: true, minArgs: 1});
 
-client.defineCommand("ttsay", msg => {
-	let content = msg.content.replace(msg.prefix + "ttsay ", "");
-	msg.channel.send(content, {tts: true});
+client.defineCommand("ttsay", (msg, args, argstr) => {
+	msg.channel.send(argstr, {tts: true});
 	msg.delete();
 }, {owner: true, minArgs: 1});
 
@@ -877,8 +877,8 @@ client.defineCommand("encrypt", async (msg, args, argstr) => {
   msg.channel.send(msg.lang.commands.encrypt.encrypted("$MESSAGE", crypt.encrypt(argstr, key), "$KEY", key));
 }, {minArgs: 1, info: {show: true, type: "misc"}});
 
-client.defineCommand("decrypt", async msg => {
-	let crypted = msg.content.replace(msg.prefix + "decrypt ", "");
+client.defineCommand("decrypt", async (msg, args, argstr) => {
+	let crypted = argstr;
 	await msg.channel.send(msg.lang.commands.decrypt.keyRequest());
 	let msg2 = await msg.channel.waitResponse(20000, msg3 => msg3.author.id == msg.author.id);
 	if (!msg2) msg.channel.send(msg.lang.commands.decrypt.unknownKey());
@@ -1023,9 +1023,15 @@ async function login(delay = 20000, nb = 1) {
     return nb;
   } catch(err) {
     console.log(client.shard ? "[INFO] Shard '" + client.shard.id + "' connection failed." : "[INFO] Connection failed.");
-    console.log("Retrying in '" + delay/1000 + "' seconds.");
-		await tools.sleep(delay);
-		return login(delay, nb+1);
+    crashs++
+    if (crashs >= 3) {
+      console.log("Failed to connect 3 times in a row, restarting.");
+      process.exit();
+    } else {
+      console.log("Retrying in '" + delay/1000 + "' seconds.");
+  		await tools.sleep(delay);
+  		return login(delay, nb+1);
+    }
   }
 }
 

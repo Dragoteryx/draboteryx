@@ -34,14 +34,10 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 Object.defineProperty(discord.Guild.prototype, "playlist", {
   get: function() {
-    if (!this._playlist) {
-      this._playlist = new Playlist(this)
-      Object.defineProperty(this, "_playlist", {
-        writable: false,
-        enumerable: false
-      });
-    }
-    return this._playlist;
+    if (this.client.playlists === undefined) return undefined;
+    if (!this.client.playlists.has(this.id))
+      this.client.playlists.set(this.id, new Playlist(this))
+    return this.client.playlists.get(this.id)
   }
 });
 

@@ -11,6 +11,7 @@ class Client extends discord.Client {
     super(args);
 		this.prefix = args.prefix === undefined ? "" : args.prefix;
 		this.messageInit = args.messageInit === undefined ? () => undefined : args.messageInit;
+		this.playlists = new discord.Collection()
     let that = prv(this);
     that.commands = new Map();
     that.properties = new Map();
@@ -114,8 +115,10 @@ class Client extends discord.Client {
     return prv(this).commands.delete(name);
   }
 	wipeCommands() {
+		let nb = this.commandsArray.length
 		for (let command of this.commandsArray)
 			this.deleteCommand(command.name);
+		return nb;
 	}
   async testCommands(msg, prefix) {
     if (prefix === undefined) prefix = await this.fetchPrefix(msg);
