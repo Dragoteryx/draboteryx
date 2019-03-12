@@ -895,7 +895,7 @@ client.defineCommand("danbooru", async (msg, args, argstr) => {
     return;
   }
   let tags = argstr;
-  if (msg.guild && !msg.guild.nsfw) {
+  if (msg.guild && !msg.channel.nsfw) {
     args = args.filter(tag => !tag.startsWith("rating:"));
     args.push("rating:safe");
     tags = args.join(" ");
