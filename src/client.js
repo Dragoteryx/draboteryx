@@ -18,7 +18,7 @@ class Client extends discord.Client {
     that.aliases = new Map();
     that.fetched = false;
 		this.on("ready", () => {
-			that.mentions = ["<@" + this.user.id + "> ", "<@!" + this.user.id + ">"];
+			that.mentions = ["<@" + this.user.id + "> ", "<@!" + this.user.id + "> "];
 		});
     this.on("message", async msg => {
       try {
@@ -47,18 +47,13 @@ class Client extends discord.Client {
         this.emit("commandError", msg, err, null);
       }
     });
-    this.commandProperty("owner", async (msg, owneronly = false) => {
+		this.commandProperty("owner", async (msg, owneronly = false) => {
       if (!owneronly) return true;
       let owner = (await this.fetchApplication()).owner;
       return msg.author.id == owner.id;
     });
     this.commandProperty("admin", (msg, adminonly = false) => !msg.guild || !adminonly || msg.member.hasPermission("ADMINISTRATOR"));
-    this.commandProperty("permissions", (msg, permissions = []) => {
-      if (!msg.guild) return true;
-      for (let permission of permissions)
-        if (!msg.member.hasPermission(permission)) return false;
-      return true;
-    });
+    this.commandProperty("permissions", (msg, permissions = []) => !msg.guild || permissions.length == 0 || msg.member.hasPermission(permissions));
     this.commandProperty("bots", (msg, allowbots = false) => allowbots || !msg.author.bot);
     this.commandProperty("nsfw", (msg, isnsfw = false) => !isnsfw || msg.channel.nsfw);
     this.commandProperty("largeGuilds", (msg, allowlargeguilds = true) => msg.channel.type != "text" || allowlargeguilds || !msg.guild.large);
