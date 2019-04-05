@@ -7,10 +7,10 @@ function prv(object) {
 }
 
 class Client extends discord.Client {
-  constructor(...args) {
-    super(args);
-		this.prefix = args.prefix === undefined ? "/" : args.prefix;
-		this.onMessage = args.onMessage === undefined ? () => undefined : args.onMessage;
+  constructor(options) {
+    super(options);
+		this.prefix = options.prefix === undefined ? "/" : options.prefix;
+		this.onMessage = options.onMessage === undefined ? () => undefined : options.onMessage;
 		this.playlists = new discord.Collection();
     let that = prv(this);
     that.commands = new Map();
@@ -22,7 +22,9 @@ class Client extends discord.Client {
 		});
     this.on("message", async msg => {
       try {
+				console.log(0)
         await this.onMessage(msg);
+				console.log(99)
         if (this.user.id == msg.author.id) return;
         let prefix = await this.fetchPrefix(msg);
         let test1 = await this.testCommands(msg, prefix);
