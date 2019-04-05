@@ -2,6 +2,7 @@ const discord = require("discord.js");
 const EventEmitter = require("events");
 
 const ytdl = require("ytdl-core");
+const ytdl_discord = require("ytdl-core-discord");
 const YoutubeAPI = require("simple-youtube-api");
 const fs = require("fs");
 const musicmetadata = require("musicmetadata");
@@ -91,7 +92,7 @@ class Playlist {
     return channel;
   }
 
-  next() {
+  async next() {
     if (!this.connected)
       throw new PlaylistError(this, messages.notConnected);
     if (this.streaming)
@@ -101,7 +102,7 @@ class Playlist {
       this.current = this.looping ? this.current : this.pending.shift();
       if (this.current) {
         that.playing = true;
-        that.dispatcher = this.current.play(this.channel.connection, {passes: 3});
+        that.dispatcher = await this.current.play(this.channel.connection, {passes: 3});
         that.dispatcher.setVolume(that.volume);
         that.dispatcher.on("start", () => {
           this.client.emit("playlistStart", this, this.current);
@@ -134,7 +135,7 @@ class Playlist {
     }
   }
 
-  stream(stream) {
+  async stream(stream) {
     if (!this.connected)
       throw new PlaylistError(this, messages.notConnected);
     if (this.playing)
@@ -146,7 +147,7 @@ class Playlist {
       if (this.dispatching)
         that.dispatcher.end("stop");
       this.current = stream;
-      that.dispatcher = this.current.stream(this.channel.connection, {passes: 3});
+      that.dispatcher = await this.current.stream(this.channel.connection, {passes: 3});
       that.streaming = true;
       that.dispatcher.setVolume(this.volume);
       that.dispatcher.on("start", () => {
@@ -274,7 +275,7 @@ class YoutubeVideo {
   constructor(object) {
     Object.assign(this, object);
   }
-  play(voiceConnection, options) {
+  async play(voiceConnection, options) {
     return voiceConnection.playStream(ytdl(this.link, {filter:"audioonly"}), options);
   }
 }

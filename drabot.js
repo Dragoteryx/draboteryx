@@ -5,7 +5,7 @@ require("./src/prototypes.js");
 // IMPORTS
 const snekfetch = require("snekfetch");
 const DBL = require("dblapi.js");
-const Danbooru = require("danbooru");;
+const Danbooru = require("danbooru");
 
 // FILES
 const {Client} = require("./src/client.js");
