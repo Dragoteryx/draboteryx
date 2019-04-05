@@ -2,7 +2,7 @@ const discord = require("discord.js");
 const EventEmitter = require("events");
 
 const ytdl = require("ytdl-core");
-const ytdl_discord = require("ytdl-core-discord");
+//const ytdl_discord = require("ytdl-core-discord");
 const YoutubeAPI = require("simple-youtube-api");
 const fs = require("fs");
 const musicmetadata = require("musicmetadata");

@@ -4,7 +4,8 @@
   "description": "A dumb Discord bot created to improve my skills and have fun at the same time. It's called DraBOTeryx, or Drabot for short.",
   "main": "drabot.js",
   "engines": {
-    "node": "10.15.3"
+    "node": "10.15.3",
+    "npm": "6.9.0"
   },
   "dependencies": {
     "crypto-js": "^3.1.9-1",
@@ -19,8 +20,7 @@
     "simple-youtube-api": "^5.1.1",
     "snekfetch": "^3.6.4",
     "ws": "^3.1.0",
-    "ytdl-core": "^0.20.4",
-    "ytdl-core-discord": "^1.0.3"
+    "ytdl-core": "^0.20.4"
   },
   "devDependencies": {},
   "scripts": {
