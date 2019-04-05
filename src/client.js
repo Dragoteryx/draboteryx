@@ -22,9 +22,7 @@ class Client extends discord.Client {
 		});
     this.on("message", async msg => {
       try {
-				console.log(0)
         await this.onMessage(msg);
-				console.log(99)
         if (this.user.id == msg.author.id) return;
         let prefix = await this.fetchPrefix(msg);
         let test1 = await this.testCommands(msg, prefix);

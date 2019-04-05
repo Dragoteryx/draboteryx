@@ -515,7 +515,7 @@ client.defineCommand("join", async msg => {
       msg.channel.send(msg.lang.commands.join.hello());
     }
   }
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {disabled = true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("leave", async msg => {
   if (!msg.guild.playlist.connected)
