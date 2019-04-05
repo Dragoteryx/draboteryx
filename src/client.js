@@ -9,20 +9,20 @@ function prv(object) {
 class Client extends discord.Client {
   constructor(...args) {
     super(args);
-		this.prefix = args.prefix === undefined ? "" : args.prefix;
-		this.messageInit = args.messageInit === undefined ? () => undefined : args.messageInit;
-		this.playlists = new discord.Collection()
+		this.prefix = args.prefix === undefined ? "/" : args.prefix;
+		this.onMessage = args.onMessage === undefined ? () => undefined : args.onMessage;
+		this.playlists = new discord.Collection();
     let that = prv(this);
     that.commands = new Map();
     that.properties = new Map();
     that.aliases = new Map();
-    that.fetched = false;
+		that.mentions = [];
 		this.on("ready", () => {
 			that.mentions = ["<@" + this.user.id + "> ", "<@!" + this.user.id + "> "];
 		});
     this.on("message", async msg => {
       try {
-        await this.messageInit(msg);
+        await this.onMessage(msg);
         if (this.user.id == msg.author.id) return;
         let prefix = await this.fetchPrefix(msg);
         let test1 = await this.testCommands(msg, prefix);
@@ -44,7 +44,7 @@ class Client extends discord.Client {
           }
         } else this.emit("notCommand", msg);
       } catch(err) {
-        this.emit("commandError", msg, err, null);
+        this.emit("messageError", msg, err);
       }
     });
 		this.commandProperty("owner", async (msg, owneronly = false) => {

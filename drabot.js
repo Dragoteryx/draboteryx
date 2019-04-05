@@ -23,7 +23,7 @@ const Cleverbot = require("./src/cleverbot.js");
 // CONSTS
 const client = new Client({
   prefix: config.prefix,
-  messageInit: async msg => {
+  onMessage: async msg => {
     if (msg.guild) {
       if (!msg.guild.fetched) {
         let data = await msg.guild.fetchData();
@@ -262,7 +262,7 @@ client.defineCommand("help", (msg, args) => {
   if (args.length == 0) {
     let embed = tools.defaultEmbed();
     for (let type of commandTypes) {
-      let sameType = client.commandsArray.filter(command => command.properties.info && command.properties.info.show && command.properties.info.type == type).map(command => "`" + command.name + "`").sort();;
+      let sameType = client.commandsArray.filter(command => command.properties.info && command.properties.info.show && command.properties.info.type == type).map(command => "`" + command.name + "`").sort();
       if (sameType.length > 0)
         embed.addField(msg.lang.types()[type], sameType.join(" | "));
       else embed.addField(msg.lang.types()[type], "---");

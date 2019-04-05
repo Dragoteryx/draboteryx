@@ -5,7 +5,7 @@ const ytdl = require("ytdl-core");
 const YoutubeAPI = require("simple-youtube-api");
 const fs = require("fs");
 const musicmetadata = require("musicmetadata");
-const snekfetch = require('snekfetch');
+const snekfetch = require("snekfetch");
 
 const messages = Object.freeze({
   notConnected: "the client is not connected.",
