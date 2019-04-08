@@ -7,12 +7,12 @@ function prv(object) {
 }
 
 class Client extends discord.Client {
-  constructor(options) {
+  constructor(options = {}) {
     super(options);
+		let that = prv(this);
 		this.prefix = options.prefix === undefined ? "/" : options.prefix;
 		this.onMessage = options.onMessage === undefined ? () => undefined : options.onMessage;
 		this.playlists = new discord.Collection();
-    let that = prv(this);
     that.commands = new Map();
     that.properties = new Map();
     that.aliases = new Map();
@@ -133,7 +133,7 @@ class Client extends discord.Client {
   commandProperty(name, test) {
     let that = prv(this);
     if (test === undefined)
-      delete that.properties.delete(name);
+      that.properties.delete(name);
     else that.properties.set(name, {
       name: name,
       test: test

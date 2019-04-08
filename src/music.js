@@ -2,7 +2,7 @@ const discord = require("discord.js");
 const EventEmitter = require("events");
 
 const ytdl = require("ytdl-core");
-//const ytdl_discord = require("ytdl-core-discord");
+const ytdl_discord = require("ytdl-core-discord");
 const YoutubeAPI = require("simple-youtube-api");
 const fs = require("fs");
 const musicmetadata = require("musicmetadata");
@@ -103,7 +103,7 @@ class Playlist {
       if (this.current) {
         that.playing = true;
         that.dispatcher = await this.current.play(this.channel.connection, {passes: 3});
-        that.dispatcher.setVolume(that.volume);
+        that.dispatcher.setVolume(this.volume);
         that.dispatcher.on("start", () => {
           this.client.emit("playlistStart", this, this.current);
         });
@@ -116,9 +116,8 @@ class Playlist {
           this.next();
         });
         that.dispatcher.on("error", console.error);
-        if (!this.looping) {
+        if (!this.looping)
           this.client.emit("playlistNext", this, this.current);
-        }
       } else {
         that.playing = false;
         this.client.emit("playlistEmpty", this);
@@ -189,12 +188,9 @@ class Playlist {
   }
 
   get volume() {
-    if (!this.connected) return undefined;
     return prv(this).volume;
   }
   set volume(volume) {
-    if (!this.connected)
-      throw new PlaylistError(this, messages.notConnected);
     let that = prv(this);
     volume = Number(volume);
     if (isNaN(volume)) volume = that.volume;
@@ -234,6 +230,7 @@ class Playlist {
     return prv(this).streaming;
   }
   get dispatching() {
+    if (!this.connected) return false;
     let that = prv(this);
     return !!that.dispatcher && !that.dispatcher.destroyed;
   }

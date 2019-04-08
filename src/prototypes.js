@@ -91,7 +91,10 @@ Object.defineProperty(discord.Guild.prototype, "lang", {
 Object.defineProperty(discord.Message.prototype, "prefix", {
   get: function() {
     return this.channel.prefix;
-  }
+  },
+	set: function(prefix) {
+		this.channel.prefix = prefix
+	}
 });
 
 Object.defineProperty(discord.Channel.prototype, "prefix", {
@@ -101,7 +104,12 @@ Object.defineProperty(discord.Channel.prototype, "prefix", {
     if (this.guild)
       return this.guild.prefix;
     else return config.prefix;
-  }
+  },
+	set: function(prefix) {
+		if (prefix.length == 0)
+			delete this._prefix
+		else this._prefix = prefix
+	}
 });
 
 Object.defineProperty(discord.Guild.prototype, "prefix", {
@@ -109,7 +117,12 @@ Object.defineProperty(discord.Guild.prototype, "prefix", {
 		if (this._prefix !== undefined)
 			return this._prefix;
     return config.prefix;
-  }
+  },
+	set: function(prefix) {
+		if (prefix.length == 0)
+			delete this._prefix
+		else this._prefix = prefix
+	}
 });
 
 Object.defineProperty(discord.Guild.prototype, "logsChannel", {
@@ -153,16 +166,11 @@ Object.defineProperty(discord.Message.prototype, "authorName", {
 });
 
 Object.defineProperty(discord.Guild.prototype, "nbCon", {
-	value: function nbCon() {
-		return new Promise((resolve, reject) => {
-			this.fetchMembers().then(guild => {
-				let presences = Array.from(guild.presences.values());
-				let h = 0;
-				for(let presence of presences)
-					if (presence.status != "offline") h++;
-				resolve(h);
-			}).catch(reject);
-		});
+	value: async function nbCon() {
+		let fetched = await this.fetchMembers()
+		return fetched.presences.reduce((acc, curr) => {
+			return curr.stats != "offline" ? acc + 1 : acc;
+		}, 0);
 	}
 });
 
@@ -340,7 +348,7 @@ Object.defineProperty(discord.Channel.prototype, "waitResponse", {
 	}
 });
 
-Object.defineProperty(discord.Message.prototype, "waitReactions", {
+Object.defineProperty(discord.Message.prototype, "waitReaction", {
 	value: function(delay, filter = () => true) {
 		let resolved = false;
 		return new Promise(resolve => {
@@ -363,7 +371,7 @@ Object.defineProperty(discord.Message.prototype, "askValidation", {
 	value: async function(delay, user) {
 		await this.react(this.lang.misc.yes());
 		await this.react(this.lang.misc.no());
-		let reaction = await this.waitReactions(delay, async reaction => {
+		let reaction = await this.waitReaction(delay, async reaction => {
 			if ([this.lang.misc.yes(), this.lang.misc.no()].includes(reaction.emoji.name)) {
 				let users = await reaction.fetchUsers();
 				return users.has(user.id);

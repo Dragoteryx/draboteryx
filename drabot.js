@@ -585,23 +585,25 @@ client.defineCommand("request", async (msg, args) => {
   } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
 }, {minArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
 
-client.defineCommand("stream", async (msg, args) => {
+client.defineCommand(["stream", "radio"], async (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (!msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
-    let stream;
-    if (args[0] == "listen.moe" || args[0] == "listen.moe/jpop") stream = listenmoe.jpop;
-    else if (args[0] == "listen.moe/kpop") stream = listenmoe.kpop;
-    else if (args[0] == "off") stream = null;
-    else {
+    let streams = [];
+    streams["listen.moe"] = listenmoe.jpop;
+    streams["listen.moe/jpop"] = listenmoe.jpop;
+    streams["listen.moe/kpop"] = listenmoe.kpop;
+    streams["off"] = null;
+    let stream = streams[args[0]];
+    if (stream === undefined)
       msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", "stream"));
-      return;
+    else {
+      msg.guild.playlist.stream(stream);
+      if (stream) {
+        msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", stream.name));
+      } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
     }
-    msg.guild.playlist.stream(stream);
-    if (stream) {
-      msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", stream.name));
-    } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
   } else msg.channel.send(msg.lang.music.noPlaying());
 }, {disabled: true, minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
 
