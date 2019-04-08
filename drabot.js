@@ -188,9 +188,9 @@ client.on("playlistEmpty", playlist => {
 // COMMANDS --------------------------------------------------
 
 client.commandProperty("owner", (msg, owneronly = false) => !owneronly || msg.author.owner);
-client.commandProperty("admin", (msg, adminonly = false) => !adminonly || msg.author.admin);
-client.commandProperty("mod", (msg, modonly = false) => !modonly || msg.author.mod);
-client.commandProperty("dj", (msg, djonly = false) => !djonly || msg.author.dj);
+client.commandProperty("admin", (msg, adminonly = false) => !adminonly || msg.member.admin);
+client.commandProperty("mod", (msg, modonly = false) => !modonly || msg.member.mod);
+client.commandProperty("dj", (msg, djonly = false) => !djonly || msg.member.dj);
 client.commandProperty("disabled", (msg, disabled = false) => !disabled || msg.author.owner);
 
 // OWNER
@@ -427,7 +427,7 @@ client.defineCommand("moneyleaderboard", async msg => {
     if (member.user.money == 0) break;
     embed.addField(msg.lang.commands.moneyleaderboard.info("$POS", i+1, "$USERNAME", member.displayName),
     msg.lang.commands.moneyleaderboard.display("$AMOUNT", member.user.money, "$CURRENCY", config.currency));
-    if (i == 19) break;
+    if (i == 20) break;
   }
   msg.channel.send("", embed);
 }, {guildOnly: true, largeGuilds: false, maxArgs: 0, info: {show: true, type: "misc"}});
