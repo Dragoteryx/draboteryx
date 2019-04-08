@@ -515,7 +515,7 @@ client.defineCommand("join", async msg => {
       msg.channel.send(msg.lang.commands.join.hello());
     }
   }
-}, {disabled: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("leave", async msg => {
   if (!msg.guild.playlist.connected)
@@ -605,7 +605,7 @@ client.defineCommand(["stream", "radio"], async (msg, args) => {
       } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
     }
   } else msg.channel.send(msg.lang.music.noPlaying());
-}, {disabled: true, minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
+}, {minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("pause", msg => {
   if (!msg.guild.playlist.connected)
