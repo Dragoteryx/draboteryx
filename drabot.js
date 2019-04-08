@@ -434,6 +434,65 @@ client.defineCommand("moneyleaderboard", async msg => {
 
 // MODERATION
 
+client.defineCommand("ban", async (msg, args, argstr) => {
+  let members = await tools.stringToMembers(argstr, msg.guild);
+  members = Array.from(members.values());
+  if (members.length > 0) {
+    for (let i = 0; i < members.length; i++) {
+      let member = members[i];
+      let msg2 = await msg.channel.send(msg.lang.commands.ban.confirm("$USER", member.toString()));
+      let valid = await msg2.askValidation(10000, msg.author);
+      if (!valid) continue;
+      if (member.bannable) {
+        let reason = ""
+        await msg.channel.send(msg.lang.commands.ban.reason());
+        let msg3 = await msg.channel.waitResponse(10000, msg3 => msg.author.id == msg3.author.id);
+        if (msg3) reason = msg3.content;
+        let name = member.displayName;
+        await member.ban(reason);
+        msg.channel.send(msg.lang.commands.ban.done("$USER", name, "$REASON", reason));
+        msg.guild.sendModLog(msg.lang.commands.ban.modlog("$MOD", msg.member, "$USER", name, "$REASON", reason));
+      } else msg.channel.send(msg.lang.commands.ban.unable());
+      break;
+    }
+  } else msg.channel.send(msg.lang.errors.noUser());
+}, {admin: true, guildOnly: true, minArgs: 1, info: {show: true, type: "moderation"}});
+
+client.defineCommand("kick", async (msg, args, argstr) => {
+  let members = await tools.stringToMembers(argstr, msg.guild);
+  members = Array.from(members.values());
+  if (members.length > 0) {
+    for (let i = 0; i < members.length; i++) {
+      let member = members[i];
+      let msg2 = await msg.channel.send(msg.lang.commands.kick.confirm("$USER", member.toString()));
+      let valid = await msg2.askValidation(10000, msg.author);
+      if (!valid) continue;
+      if (member.kickable) {
+        let reason = ""
+        await msg.channel.send(msg.lang.commands.kick.reason());
+        let msg3 = await msg.channel.waitResponse(10000, msg3 => msg.author.id == msg3.author.id);
+        if (msg3) reason = msg3.content;
+        let name = member.displayName;
+        await member.kick(reason);
+        msg.channel.send(msg.lang.commands.kick.done("$USER", name, "$REASON", reason));
+        msg.guild.sendModLog(msg.lang.commands.kick.modlog("$MOD", msg.member, "$USER", name, "$REASON", reason));
+      } else msg.channel.send(msg.lang.commands.kick.unable());
+      break;
+    }
+  } else msg.channel.send(msg.lang.errors.noUser());
+}, {mod: true, guildOnly: true, minArgs: 1, info: {show: true, type: "moderation"}});
+
+/*client.defineCommand("warn", async (msg, args, argstr) => {
+
+}, {owner: true, mod: true, guildOnly: true, minArgs: 1});
+
+client.defineCommand("warns", async (msg, args, argstr) => {
+
+}, {owner: true, mod: true, guildOnly: true, minArgs: 1});
+
+client.defineCommand("clearwarns", async (msg, args, argstr) => {
+
+}, {owner: true, admin: true, guildOnly: true, minArgs: 1});*/
 
 // UTILS
 
@@ -450,7 +509,7 @@ client.defineCommand(["userinfo", "memberinfo"], async (msg, args, argstr) => {
       nb++;
       msg.channel.send("", member.embedInfo())
     });
-    if (nb == 0) msg.channel.send(msg.lang.commands.userinfo.noUser());
+    if (nb == 0) msg.channel.send(msg.lang.errors.noUser());
   }
 }, {guildOnly: true, info: {show: true, type: "utility"}});
 
@@ -462,7 +521,7 @@ client.defineCommand("channelinfo", (msg, args, argstr) => {
       nb++;
       msg.channel.send("", channel.embedInfo())
     });
-    if (nb == 0) msg.channel.send(msg.lang.commands.channelinfo.noChannel());
+    if (nb == 0) msg.channel.send(msg.lang.errors.noChannel());
   }
 }, {guildOnly: true, info: {show: true, type: "utility"}});
 
@@ -474,7 +533,7 @@ client.defineCommand("roleinfo", (msg, args, argstr) => {
       nb++;
       msg.channel.send("", role.embedInfo())
     });
-    if (nb == 0) msg.channel.send(msg.lang.commands.roleinfo.noRole());
+    if (nb == 0) msg.channel.send(msg.lang.errors.noRole());
   }
 }, {guildOnly: true, info: {show: true, type: "utility"}});
 
@@ -494,7 +553,7 @@ client.defineCommand("prune", async (msg, args) => {
   } catch(err) {
     msg.channel.send(msg.lang.commands.prune.error());
   }
-}, {admin: true, maxArgs: 1, guildOnly: true, info: {show: true, type: "utility"}});
+}, {mod: true, maxArgs: 1, guildOnly: true, info: {show: true, type: "utility"}});
 
 // MUSIC
 
@@ -515,7 +574,7 @@ client.defineCommand("join", async msg => {
       msg.channel.send(msg.lang.commands.join.hello());
     }
   }
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("leave", async msg => {
   if (!msg.guild.playlist.connected)
@@ -525,7 +584,7 @@ client.defineCommand("leave", async msg => {
     msg.guild.playlist.leave();
     msg.channel.send(msg.lang.commands.leave.bye());
   }
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("request", async (msg, args) => {
   if (!msg.guild.playlist.connected)
@@ -583,7 +642,7 @@ client.defineCommand("request", async (msg, args) => {
       }
     }
   } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
-}, {minArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, minArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand(["stream", "radio"], async (msg, args) => {
   if (!msg.guild.playlist.connected)
@@ -605,7 +664,7 @@ client.defineCommand(["stream", "radio"], async (msg, args) => {
       } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
     }
   } else msg.channel.send(msg.lang.music.noPlaying());
-}, {minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("pause", msg => {
   if (!msg.guild.playlist.connected)
@@ -617,7 +676,7 @@ client.defineCommand("pause", msg => {
     msg.guild.playlist.paused = true;
     msg.channel.send(msg.lang.commands.pause.done());
   }
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("resume", msg => {
   if (!msg.guild.playlist.connected)
@@ -629,7 +688,7 @@ client.defineCommand("resume", msg => {
     msg.guild.playlist.paused = false;
     msg.channel.send(msg.lang.commands.resume.done());
   }
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("skip", msg => {
   if (!msg.guild.playlist.connected)
@@ -642,7 +701,7 @@ client.defineCommand("skip", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("plremove", (msg, args) => {
   if (!msg.guild.playlist.connected)
@@ -660,7 +719,7 @@ client.defineCommand("plremove", (msg, args) => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, minArgs: 1, maxArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("plclear", msg => {
   if (!msg.guild.playlist.connected)
@@ -672,7 +731,7 @@ client.defineCommand("plclear", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("plshuffle", msg => {
   if (!msg.guild.playlist.connected)
@@ -684,7 +743,7 @@ client.defineCommand("plshuffle", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("volume", (msg, args) => {
   if (!msg.guild.playlist.connected)
@@ -699,7 +758,7 @@ client.defineCommand("volume", (msg, args) => {
       msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
     } else msg.channel.send(msg.lang.commands.volume.invalidVolume());
   }
-}, {guildOnly: true, minArgs: 1, maxArgs: 1, info: {show: true, type: "music"}});
+}, {dj: true, guildOnly: true, minArgs: 1, maxArgs: 1, info: {show: true, type: "music"}});
 
 client.defineCommand("loop", msg => {
   if (!msg.guild.playlist.connected)
@@ -712,7 +771,7 @@ client.defineCommand("loop", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("plloop", msg => {
   if (!msg.guild.playlist.connected)
@@ -725,7 +784,7 @@ client.defineCommand("plloop", msg => {
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
-}, {maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
+}, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
 client.defineCommand("current", msg => {
   if (!msg.guild.playlist.connected)

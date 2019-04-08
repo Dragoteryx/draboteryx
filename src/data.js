@@ -100,6 +100,33 @@ Object.defineProperty(discord.Guild.prototype, "clearData", {
   }
 });
 
+Object.defineProperty(discord.GuildMember.prototype, "fetchData", {
+	value: async function() {
+		let data = await this.guild.fetchData();
+		let members = data.members === undefined ? {} : data.members;
+		return members[this.user.id] || {};
+	}
+});
+
+Object.defineProperty(discord.GuildMember.prototype, "sendData", {
+	value: async function(send) {
+		let data = await this.guild.fetchData();
+		let members = data.members === undefined ? {} : data.members;
+		let member = members[this.user.id] || {};
+		members[this.user.id] = Object.assign(member, send);
+		return this.guild.sendData({members: members});
+	}
+});
+
+Object.defineProperty(discord.GuildMember.prototype, "clearData", {
+	value: async function() {
+		let data = await this.guild.fetchData();
+		let members = data.members === undefined ? {} : data.members;
+		delete members[this.user.id];
+		return this.guild.sendData({members: members});
+	}
+});
+
 Object.defineProperty(discord.User.prototype, "fetchData", {
   value: function() {
     return fetchData("users", this.id);
@@ -115,24 +142,6 @@ Object.defineProperty(discord.User.prototype, "sendData", {
 Object.defineProperty(discord.User.prototype, "clearData", {
   value: function() {
 		return clearData("users", this.id);
-  }
-});
-
-Object.defineProperty(discord.GuildMember.prototype, "fetchData", {
-  value: function() {
-		return fetchData("guildmembers", this.guild.id + "." + this.user.id);
-  }
-});
-
-Object.defineProperty(discord.GuildMember.prototype, "sendData", {
-  value: function(data) {
-    return sendData("guildmembers", this.guild.id + "." + this.user.id, data);
-  }
-});
-
-Object.defineProperty(discord.GuildMember.prototype, "clearData", {
-  value: function() {
-		return clearData("guildmembers", this.guild.id + "." + this.user.id);
   }
 });
 

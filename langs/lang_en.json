@@ -26,7 +26,10 @@
     "nsfwCommand": "You can't use this command here!",
     "disabledCommand": "This command has been temporarily disabled.",
     "wrongSyntax": "Use `$PREFIXhelp $COMMAND` to learn how to use this command.",
-    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server."
+    "unknown": "An unknown error occured. Please contact `$OWNERTAG`. `$PREFIXserver` to join the test server.",
+    "noUser": "This user doesn't exist.",
+    "noChannel": "This channel doesn't exist.",
+    "noRole": "This role doesn't exist."
   },
   "music": {
     "notConnected": "I am not in a voice channel.",
@@ -298,8 +301,7 @@
       "currentlyPlaying": "Currently playing",
       "avatarURL": "Avatar URL",
       "defaultRole": "everyone (default role)",
-      "drabotPerms": "Bot permissions",
-      "noUser": "This user doesn't exist."
+      "drabotPerms": "Bot permissions"
     },
     "serverinfo": {
       "syntax": "$PREFIXserverinfo",
@@ -384,7 +386,7 @@
       "description": "Pong!"
     },
     "tictactoe": {
-      "syntax": "$PREFIXtictactoe (@player)",
+      "syntax": "$PREFIXtictactoe (user)",
       "description": "Play TicTacToe with me or someone else."
     },
     "csshumor": {
@@ -399,6 +401,24 @@
       "syntax": "$PREFIXscp (id)",
       "description": "Fetch a random SCP or the link to a SCP's page.",
       "invalidSCP": "This SCP doesn't exist."
+    },
+    "ban": {
+      "syntax": "$PREFIXban [user]",
+      "description": "Ban a user, and log the ban in the `drb-modlog` channel.",
+      "confirm": "Is that the user you want to ban: $USER?",
+      "unable": "I am not allowed to ban this user.",
+      "reason": "What is your reason to ban this user?",
+      "done": "Banned `$USER` for reason: `$REASON`.",
+      "modlog": "$MOD banned `$USER` for reason: `$REASON`."
+    },
+    "kick": {
+      "syntax": "$PREFIXkick [user]",
+      "description": "Kick a user, and log the kick in the `drb-modlog` channel.",
+      "confirm": "Is that the user you want to kick: $USER?",
+      "unable": "I am not allowed to kick this user.",
+      "reason": "What is your reason to kick this user?",
+      "done": "Kicked `$USER` for reason: `$REASON`.",
+      "modlog": "$MOD kicked `$USER` for reason: `$REASON`."
     }
   }
 }

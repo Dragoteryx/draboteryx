@@ -25,7 +25,10 @@
     "nsfwCommand": "Tu ne peux pas utiliser cette commande ici!",
     "disabledCommand": "Cette commande a été temporairement désactivée.",
     "wrongSyntax": "Utilise `$PREFIXhelp $COMMAND` pour apprendre à utiliser cette commande.",
-    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test."
+    "unknown": "Une erreur inconnue vient de se produire. Contactez `$OWNERTAG`. `$PREFIXserver` pour rejoindre le serveur de test.",
+    "noUser": "Cet utilisateur n'existe pas.",
+    "noChannel": "Ce channel n'existe pas.",
+    "noRole": "Ce rôle n'existe pas."
   },
   "music": {
   	"notConnected": "Je ne suis pas connecté.",
@@ -38,7 +41,7 @@
     "noPlaying": "You can't stream while there are still musics in the playlist."
   },
   "types": {
-    "moderation": "Commands de modération",
+    "moderation": "Commandes de modération",
     "utility": "Commandes utilitaires",
     "fun": "Commandes fun",
     "music": "Commandes musicales",
@@ -292,8 +295,7 @@
       "currentlyPlaying": "En train de jouer à",
       "avatarURL": "URL de l'avatar",
       "defaultRole": "everyone (rôle par défaut)",
-      "drabotPerms": "Permissions du bot",
-      "noUser": "Cet utilisateur n'existe pas."
+      "drabotPerms": "Permissions du bot"
     },
     "serverinfo": {
       "syntax": "$PREFIXserverinfo",
@@ -318,8 +320,7 @@
       "name": "Nom du channel",
       "id": "ID unique",
       "type": "Type",
-      "createdAt": "Créé le",
-      "noChannel": "Ce channel n'existe pas."
+      "createdAt": "Créé le"
     },
     "roleinfo": {
       "syntax": "$PREFIXroleinfo (role = your highest role)",
@@ -330,8 +331,7 @@
       "createdAt": "Créé le",
       "admin": "Admin ?",
       "mentionable": "Mentionnable ?",
-      "external": "Service externe ?",
-      "noRole": "Ce rôle n'existe pas."
+      "external": "Service externe ?"
     },
     "about": {
       "syntax": "$PREFIXabout",
@@ -393,6 +393,24 @@
       "syntax": "$PREFIXscp (id)",
       "description": "Afficher la page d'un SCP random ou choisi.",
       "invalidSCP": "Ce SCP n'existe pas."
+    },
+    "ban": {
+      "syntax": "$PREFIXban [membre]",
+      "description": "Banni un membre, et log le ban dans le channel `drb-modlog`.",
+      "confirm": "Est-ce le membre à bannir: $USER?",
+      "unable": "Je n'ai pas la permission de bannir ce membre.",
+      "reason": "Quelle est la raison du ban?",
+      "done": "`$USER` à été banni pour la raison suivante: `$REASON`.",
+      "modlog": "$MOD a banni `$USER` pour la raison suivante: `$REASON`."
+    },
+    "kick": {
+      "syntax": "$PREFIXkick [membre]",
+      "description": "Expulse un membre, et log l'expulsion dans le channel `drb-modlog`.",
+      "confirm": "Est-ce le membre à expulser: $USER?",
+      "unable": "Je n'ai pas la permission d'expulser ce membre.",
+      "reason": "Quelle est la raison de l'expulsion?",
+      "done": "`$USER` à été expulsé pour la raison suivante: `$REASON`.",
+      "modlog": "$MOD a expulsé `$USER` pour la raison suivante: `$REASON`."
     }
   }
 }
