@@ -105,7 +105,7 @@ class Client extends discord.Client {
     if (commandsInit !== undefined) this.commandsInit = commandsInit;
     return this;
   }
-  defineCommand(names, callback, properties) {
+  defineCommand(names, callback, properties = {}) {
     let name = names instanceof Array ? names.shift() : names;
     let command = new Command(name, callback, properties, this);
     if (names instanceof Array) names.forEach(alias => command.bindAlias(alias));

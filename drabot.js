@@ -1085,6 +1085,14 @@ client.defineCommand("scp", async (msg, args) => {
   }
 }, {maxArgs: 1, info: {show: true, type: "misc"}});
 
+/*client.defineCommand(["kitsu.io", "kitsuio", "kitsu"], async (msg, args) => {
+
+}, {minArgs: 1, info: {show: true, type: "misc"}});
+
+client.defineCommand(["myanimelist", "mal"], async (msg, args) => {
+
+}, {disabled: true, minArgs: 1, info: {show: true, type: "misc"}});*/
+
 // FUNCTIONS -------------------------------------------------------------------------------
 
 async function login(delay = 20000, nb = 1) {
