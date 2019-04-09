@@ -42,6 +42,8 @@ Object.defineProperty(discord.Guild.prototype, "playlist", {
   }
 });
 
+// CLASSES
+
 class Playlist {
   constructor(guild) {
     let that = prv(this);
@@ -115,7 +117,7 @@ class Playlist {
           this.client.emit("playlistEnd", this, this.current);
           if (that.pllooping)
             this.pending.push(this.current);
-          this.next(options);
+          this.next();
         });
         that.dispatcher.on("error", async err => {
           await sleep(500);
@@ -282,8 +284,8 @@ class YoutubeVideo {
   constructor(object) {
     Object.assign(this, object);
   }
-  async play(voiceConnection, options) {
-    return voiceConnection.playStream(ytdl(this.link, {filter:"audioonly"}), options);
+  play(voiceConnection, options) {
+    return voiceConnection.playStream(ytdl(this.url, {filter:"audioonly"}), options);
   }
 }
 
@@ -296,61 +298,66 @@ class MusicFile {
   }
 }
 
+// FUNCTIONS
+
+async function fetchYoutubeVideo(url) {
+  let info = await ytdl.getInfo(url);
+  return new YoutubeVideo({
+    title: info.title,
+    url: url,
+    description: info.description,
+    author: {
+      name: info.author.name,
+      avatarURL: info.author.avatar,
+      channelURL: info.author.channel_url
+    },
+    thumbnailURL: info.thumbnail_url,
+    maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
+    length: Number(info.length_seconds)*1000,
+    keywords: info.keywords,
+    type: "youtube"
+  });
+}
+
+// EXPORTS
+
 module.exports = {
   youtube: {
-    fetchVideo: async link => {
-      let info = await ytdl.getInfo(link);
-    	return new YoutubeVideo({
-    		title: info.title,
-    		link: link,
-    		description: info.description,
-    		author: {
-    			name: info.author.name,
-    			avatarURL: info.author.avatar,
-    			channelURL: info.author.channel_url
-    		},
-    		thumbnailURL: info.thumbnail_url,
-    		maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
-    		length: Number(info.length_seconds)*1000,
-    		keywords: info.keywords,
-        type: "youtube"
-    	});
-    },
+    fetchVideo: fetchYoutubeVideo,
     query: async (query, apiKey, nb = 5) => {
     	let youtube = new YoutubeAPI(apiKey);
     	let res =	await youtube.searchVideos(query, nb);
-    	let videos = [];
-    	for (let video of res) {
-    		video = await video.fetch();
-    		videos.push({title: video.title, link: video.url, authorName: video.channel.title, length: video.durationSeconds*1000});
-    	}
+    	let videos = res.map(video => fetchYoutubeVideo(video.url));
     	return videos;
     },
-    fetchPlaylist: async (link, apiKey) => {
+    fetchPlaylist: async (url, apiKey) => {
     	let youtube = new YoutubeAPI(apiKey);
-    	let playlist = await youtube.getPlaylist(link);
+    	let playlist = await youtube.getPlaylist(url);
     	let res = await playlist.getVideos();
-    	let videos = [];
-    	for (let video of res)
-    		videos.push({title: video.title, link: video.url});
+    	let videos = res.map(video => fetchYoutubeVideo(video.url));
     	return {title: playlist.title, videos: videos};
     }
   },
   misc: {
     fetchFile: path => {
       return new Promise((resolve, reject) => {
-    		let readableStream = fs.createReadStream(path);
-    		let parser = musicmetadata(readableStream, {duration: true, fileSize: fs.statSync(path).size}, async (err, metadata) => {
-          readableStream.close();
-    		  if (err) reject(err);
-    			else resolve(new MusicFile({
-            path: path,
-            name: path.split("/").pop(),
-            length: Math.round(metadata.duration*1000),
-            metadata: metadata,
-            type: "file"
-          }));
-    		});
+        fs.access(path, fs.F_OK, (err) => {
+          if (err) reject(err);
+          else {
+            let readableStream = fs.createReadStream(path);
+        		let parser = musicmetadata(readableStream, {duration: true, fileSize: fs.statSync(path).size}, async (err, metadata) => {
+              readableStream.close();
+        		  if (err) reject(err);
+        			else resolve(new MusicFile({
+                path: path,
+                name: path.split("/").pop(),
+                length: Math.round(metadata.duration*1000),
+                metadata: metadata,
+                type: "file"
+              }));
+        		});
+          }
+        });
     	});
     }
   }

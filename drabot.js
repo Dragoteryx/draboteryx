@@ -49,6 +49,12 @@ const langs = {
 }
 const heroku = process.env.HEROKU != undefined;
 const vars = {};
+const emotes = {
+  ["lenny"]: "( ͡° ͜ʖ ͡°)",
+  ["shrug"]: "¯\\_(ツ)_/¯",
+  ["tableflip"]: "(ノ°Д°）ノ︵ ┻━┻",
+  ["tableunflip"]: "┬──┬◡ﾉ(° -°ﾉ)"
+}
 const responses = {
   ["shrek is love"]: "Shrek is Life.",
   ["hit or miss"]: "I guess they never miss, huh?"
@@ -60,7 +66,6 @@ const dbl = heroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const aliases = [];
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
 const clever = new Cleverbot(process.env.CLEVER_USER, process.env.CLEVER_KEY);
-
 let debug = false;
 let firstConnection = true;
 let cbot = 0;
@@ -72,20 +77,17 @@ exports.client = client;
 exports.langs = langs;
 exports.vars = vars;
 exports.heroku = heroku;
+exports.emotes = emotes;
 
 // EVENTS
-const ignoredErrors = ["DiscordAPIError", "PlaylistError"];
 process.on("uncaughtException", async err => {
   funcs.error("Uncaught Exception", err);
   await client.destroy();
   process.exit(1);
 });
 process.on("unhandledRejection", async (err, promise) => {
+  if (err.name == "DiscordAPIError" && err.message == "Missing Permissions") return;
   funcs.error("Unhandled Promise Rejection", err);
-  /*if (!ignoredErrors.includes(err.name)) {
-    await client.destroy();
-    process.exit(1);
-  }*/
 });
 process.on("SIGTERM", async () => {
   await client.destroy();
@@ -119,10 +121,8 @@ client.on("ready", () => {
     } else guild.sendLog("I've just restarted.");
   }
 });
-client.on("disconnect", async () => {
+client.on("disconnect", () => {
   console.log("[INFO] Disconnected.");
-  let guild = client.guilds.get(config.guilds.drg);
-  if (guild) await guild.sendLog("Disconnected!");
 });
 client.on("error", () => {
   console.log("[INFO] Disconnected.");
@@ -186,7 +186,7 @@ client.on("playlistCreated", playlist => {
   playlist.playOptions = {passes: 3};
 });
 client.on("playlistNext", (playlist, next) => {
-	if (!next.file) playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
+	if (next.type != "file") playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
 	else playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlayingFile("$TITLE", next.name, "$MEMBER", next.member.displayName));
 });
 client.on("playlistEmpty", playlist => {
@@ -602,7 +602,7 @@ client.defineCommand("request", async (msg, args) => {
   else if (!msg.guild.playlist.streaming) {
     msg.guild.musicChannel = msg.channel;
     if (["https://www.youtube.com/watch?", "https://youtu.be/", "https://youtube.com/watch?"].some(val => args[0].startsWith(val))) {
-      let msg2 = await msg.channel.send(msg.lang.commands.request.adding("$LINK", args[0]));
+      let msg2 = await msg.channel.send(msg.lang.commands.request.adding("$URL", args[0]));
       try {
         let request = await music.youtube.fetchVideo(args[0]);
         msg2.edit(msg.lang.commands.request.added("$TITLE", request.title, "$AUTHOR", request.author.name));
@@ -616,21 +616,22 @@ client.defineCommand("request", async (msg, args) => {
         else throw err;
       }
     } else if (["https://www.youtube.com/playlist?", "https://youtube.com/playlist?"].some(val => args[0].startsWith(val))) {
-      let msg2 = await msg.channel.send(msg.lang.commands.request.fetchingYoutubePlaylist("$LINK", args[0]));
+      let msg2 = await msg.channel.send(msg.lang.commands.request.fetchingYoutubePlaylist("$URL", args[0]));
       try {
+        let nb = 0;
         let playlist = await music.youtube.fetchPlaylist(args[0], process.env.YOUTUBEAPIKEY);
         msg2.edit(msg.lang.commands.request.fetchingYoutubePlaylistTitle("$TITLE", playlist.title));
-        let nb = 0;
         for (let video of playlist.videos) {
           try {
-            let res = await music.youtube.fetchVideo(video.link);
-            res.member = msg.member;
-            msg.guild.playlist.pending.push(res);
+            video = await video;
+            console.dir(video);
+            video.member = msg.member;
+            msg.guild.playlist.pending.push(video);
           } catch(err) {
             nb++;
           }
         }
-        msg.channel.send(msg.lang.commands.request.youtubePlaylistFetched("$TITLE", playlist.title, "$NB", nb));
+        msg.channel.send(msg.lang.commands.request.youtubePlaylistFetched("$TITLE", playlist.title, "$ERRORS", nb));
       } catch(err) {
         msg2.edit(msg.lang.commands.request.youtubePlaylistFetchError());
       }
@@ -640,12 +641,22 @@ client.defineCommand("request", async (msg, args) => {
       let query = args.join(" ");
       let msg2 = await msg.channel.send(msg.lang.commands.request.searchingOnYoutube("$QUERY", query));
       try {
-        let videos = await music.youtube.query(query, process.env.YOUTUBEAPIKEY, 1);
-        if (videos.length == 1) {
-          let request = await music.youtube.fetchVideo(videos[0].link);
-          msg2.edit(msg.lang.commands.request.added("$TITLE", request.title, "$AUTHOR", request.author.name));
-          request.member = msg.member;
-          msg.guild.playlist.pending.push(request);
+        let videos = await music.youtube.query(query, process.env.YOUTUBEAPIKEY, 5);
+        if (videos.length > 0) {
+          for (let video of videos) {
+            try {
+              video = await video;
+              let msg3 = await msg.channel.send(msg.lang.commands.request.queryAsk("$TITLE", video.title));
+              let valid = await msg3.askValidation(10000, msg.author);
+              if (valid) {
+                msg.channel.send(msg.lang.commands.request.added("$TITLE", video.title, "$AUTHOR", video.author.name));
+                video.member = msg.member;
+                msg.guild.playlist.pending.push(video);
+                return;
+              }
+            } catch(err) {}
+          }
+          msg.channel.send(msg.lang.misc.noResults());
         } else msg2.edit(msg.lang.misc.noResults());
       } catch(err) {
         msg2.edit(msg.lang.commands.request.queryError());
@@ -653,6 +664,17 @@ client.defineCommand("request", async (msg, args) => {
     }
   } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
 }, {dj: true, minArgs: 1, guildOnly: true, info: {show: true, type: "music"}});
+
+client.defineCommand("playfile", async (msg, args, argstr) => {
+  if (!msg.guild.playlist.connected)
+    msg.channel.send(msg.lang.music.notConnected());
+  else if (!msg.guild.playlist.streaming) {
+    msg.guild.musicChannel = msg.channel;
+    let res = await music.misc.fetchFile(argstr);
+    res.member = msg.member;
+    msg.guild.playlist.pending.push(res);
+  } else msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
+}, {owner: true, dj: true, minArgs: 1, guildOnly: true});
 
 client.defineCommand(["stream", "radio"], async (msg, args) => {
   if (!msg.guild.playlist.connected)
@@ -707,7 +729,7 @@ client.defineCommand(["skip", "next"], msg => {
     msg.guild.musicChannel = msg.channel;
     let current = msg.guild.playlist.current;
     msg.guild.playlist.next({passes: 3});
-    msg.channel.send(msg.lang.commands.skip.skipped("$TITLE", current.title));
+    msg.channel.send(msg.lang.commands.skip.skipped("$TITLE", current.type != "file" ? current.title : current.name));
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
   else msg.channel.send(msg.lang.music.notPlaying())
@@ -808,7 +830,7 @@ client.defineCommand(["current", "playing"], msg => {
   		.addField(msg.lang.commands.current.title(), current.title, true)
   		.addField(msg.lang.commands.current.author(), current.author.name + " (" + current.author.channelURL + ")", true)
   		.addField(msg.lang.commands.current.description(), current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
-  		.addField(msg.lang.misc.link(), current.link, true)
+  		.addField(msg.lang.misc.url(), current.url, true)
     } else if (current.type == "file") {
   		info.addField(msg.lang.commands.current.fileName(), current.name, true);
     }
@@ -902,12 +924,12 @@ client.defineCommand("reflex", async msg => {
 
 client.defineCommand(["cyanidehappiness", "cah"], async msg => {
   try {
-    let link = "http://explosm.net/rcg";
+    let url = "http://explosm.net/rcg";
     msg.channel.startTyping(1);
-  	let res = await snekfetch.get(link);
+  	let res = await snekfetch.get(url);
     msg.channel.stopTyping()
     let img = res.text.match(/http:\/\/files.explosm.net\/rcg\/[a-z]{9}\.png/i).shift();
-  	msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link), {files: [img]});
+  	msg.channel.send(msg.lang.misc.fromWebsite("$URL", url), {files: [img]});
   } catch(err) {
     msg.channel.stopTyping();
     throw err;
@@ -916,12 +938,12 @@ client.defineCommand(["cyanidehappiness", "cah"], async msg => {
 
 client.defineCommand("httpdog", async msg => {
   try {
-    let link = "https://httpstatusdogs.com";
+    let url = "https://httpstatusdogs.com";
     msg.channel.startTyping(1);
-  	let res = await snekfetch.get(link);
+  	let res = await snekfetch.get(url);
     msg.channel.stopTyping();
   	let imgs = res.text.match(/img\/[1-5][0-9]{2}\.jpg/g);
-  	msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link), {files: [link + "/" + imgs.random()]});
+  	msg.channel.send(msg.lang.misc.fromWebsite("$URL", url), {files: [url + "/" + imgs.random()]});
   } catch(err) {
     msg.channel.stopTyping();
     throw err;
@@ -989,7 +1011,7 @@ client.defineCommand(["spurriouscorrelations", "spcl"], async msg => {
     let res = await snekfetch.get("http://tylervigen.com/page?page=" + tools.random(1, 3700));
     msg.channel.stopTyping()
     let corrs = res.text.match(/correlation_images\/[a-z0-9_-]+\.png/gi);
-    if (corrs) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", "http://tylervigen.com/spurious-correlations"), {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
+    if (corrs) msg.channel.send(msg.lang.misc.fromWebsite("$URL", "http://tylervigen.com/spurious-correlations"), {files: ["http://tylervigen.com/correlation_project/" + corrs.random()]});
   } catch(err) {
     msg.channel.stopTyping()
     throw err;
@@ -998,14 +1020,14 @@ client.defineCommand(["spurriouscorrelations", "spcl"], async msg => {
 
 client.defineCommand("csshumor", async msg => {
   try {
-    let link = "https://csshumor.com";
+    let url = "https://csshumor.com";
     msg.channel.startTyping(1);
-    let res = await snekfetch.get(link);
+    let res = await snekfetch.get(url);
     msg.channel.stopTyping();
     let humor = res.text.match(/<td class="crayon-code">.+<\/td>/i).shift().split(/[<>]/).filter(str => {
       return !str.includes("class=") && !str.startsWith("/") && str.length > 0 && !str.startsWith("&");
     }).join("");
-    if (humor.length > 0) msg.channel.send(msg.lang.misc.fromWebsite("$LINK", link) + "\n```css\n" + humor + "\n```");
+    if (humor.length > 0) msg.channel.send(msg.lang.misc.fromWebsite("$URL", url) + "\n```css\n" + humor + "\n```");
   } catch(err) {
     msg.channel.stopTyping();
     throw err;
@@ -1076,7 +1098,7 @@ client.defineCommand("scp", async (msg, args) => {
       }
     }
     let embed = tools.coloredEmbed("#673D3D").setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/SCP_Foundation_%28emblem%29.svg/langfr-220px-SCP_Foundation_%28emblem%29.svg.png")
-    .addField(scp.id.toUpperCase(), scp.name).addField(msg.lang.misc.link(), "http://www.scp-wiki.net/" + scp.id);
+    .addField(scp.id.toUpperCase(), scp.name).addField(msg.lang.misc.url(), "http://www.scp-wiki.net/" + scp.id);
     msg.channel.stopTyping();
     msg.channel.send("", embed);
   } catch(err) {

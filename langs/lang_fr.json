@@ -12,7 +12,7 @@
     "mod": "Modérateur",
     "dj": "DJ",
     "merged": "Cette commande a été ajoutée à la commande `$PREFIX$COMMAND`.",
-    "fromWebsite": "(depuis `$LINK`)",
+    "fromWebsite": "(depuis `$URL`)",
     "link": "Lien"
   },
   "errors": {
@@ -137,19 +137,20 @@
       "inactivity": "Tout le monde est parti et la playlist est vide, à plus !"
     },
     "request": {
-      "syntax": "$PREFIXrequest [Vidéo Youtube || Recherche Youtube || Playlist Youtube]",
+      "syntax": "$PREFIXrequest [vidéo Youtube || recherche Youtube || playlist Youtube]",
       "description": "Demander une vidéo Youtube en utilisant un lien ou une recherche.",
-      "adding": "Ajout de `$LINK` à la playlist.",
+      "adding": "Ajout de `$URL` à la playlist.",
       "added": "`$TITLE` par `$AUTHOR` a été ajoutée à la playlist.",
       "unexpectedFormat": "L'ID de cette vidéo ne respecte pas le format attendu.",
       "videoUnavailable": "Cette vidéo n'est pas disponible.",
       "notSupported": "Désolé, mais ce site web n'est pas supporté.",
-      "fetchingYoutubePlaylist": "Ajout de la playlist `$LINK` depuis Youtube.",
+      "fetchingYoutubePlaylist": "Ajout de la playlist `$URL` depuis Youtube.",
       "fetchingYoutubePlaylistTitle": "Ajout de la playlist `$TITLE` depuis Youtube.",
       "youtubePlaylistFetchError": "Il y a eu un problème pendant l'ajout de la playlist.\nPeut-être qu'elle n'est pas disponible ou qu'elle n'existe pas.",
-      "youtubePlaylistFetched": "La playlist `$TITLE` a été ajoutée. `$NB` vidéos n'ont pas pu être ajoutées.",
-      "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
-      "queryError": "Il y a eu un problème pendant la recherche sur Youtube."
+      "youtubePlaylistFetched": "La playlist `$TITLE` a été ajoutée. `$ERRORS` vidéos n'ont pas pu être ajoutées.",
+      "searchingOnYoutube": "Je recherche `$QUERY` sur Youtube.",
+      "queryError": "Il y a eu un problème pendant la recherche sur Youtube.",
+      "queryAsk": "Est-ce la vidéo que tu veux ajouter à la playlist : `$TITLE` ?"
     },
     "stream": {
       "syntax": "$PREFIXstream [stream]",
@@ -250,7 +251,7 @@
     "cyanidehappiness": {
       "syntax": "$PREFIXcyanidehappiness",
       "description": "Comic Cyanide and Happiness aléatoire.",
-      "from": "depuis `$LINK`"
+      "from": "depuis `$URL`"
     },
     "httpdog": {
       "syntax": "$PREFIXhttpdog",

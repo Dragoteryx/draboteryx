@@ -13,7 +13,7 @@
     "mod": "Moderator",
     "dj": "DJ",
     "merged": "This command has been merged with the `$PREFIX$COMMAND` command.",
-    "fromWebsite": "(from `$LINK`)",
+    "fromWebsite": "(from `$URL`)",
     "link": "Link"
   },
   "errors": {
@@ -144,17 +144,18 @@
     "request": {
       "syntax": "$PREFIXrequest [Youtube link || Youtube query || Youtube playlist link]",
       "description": "Request a Youtube video using a link or a query.",
-      "adding": "Adding `$LINK` to the playlist.",
+      "adding": "Adding `$URL` to the playlist.",
       "added": "`$TITLE` by `$AUTHOR` has been added to the playlist.",
       "unexpectedFormat": "This video ID doesn't match the expected format.",
       "videoUnavailable": "This video is unavailable.",
       "notSupported": "Sorry but this website is not supported.",
-      "fetchingYoutubePlaylist": "Fetching the playlist `$LINK` from Youtube.",
+      "fetchingYoutubePlaylist": "Fetching the playlist `$URL` from Youtube.",
       "fetchingYoutubePlaylistTitle": "Fetching the playlist `$TITLE` from Youtube.",
       "youtubePlaylistFetchError": "Something went wrong when fetching the playlist.\nIt's either unavailable or doesn't exist.",
-      "youtubePlaylistFetched": "The playlist `$TITLE` has been added to the current playlist. `$NB` videos couldn't be added.",
+      "youtubePlaylistFetched": "The playlist `$TITLE` has been added to the current playlist. `$ERRORS` videos couldn't be added.",
       "searchingOnYoutube": "Searching for `$QUERY` on Youtube.",
-      "queryError": "Something went wrong while searching on Youtube."
+      "queryError": "Something went wrong while searching on Youtube.",
+      "queryAsk": "Is this the video you want to add to the playlist: `$TITLE`?"
     },
     "stream": {
       "syntax": "$PREFIXstream [stream]",
@@ -255,7 +256,7 @@
     "cyanidehappiness": {
       "syntax": "$PREFIXcyanidehappiness",
       "description": "Random Cyanide and Happiness comic.",
-      "from": "from `$LINK`"
+      "from": "from `$URL`"
     },
     "httpdog": {
       "syntax": "$PREFIXhttpdog",
