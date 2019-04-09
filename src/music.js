@@ -283,7 +283,7 @@ class YoutubeVideo {
     Object.assign(this, object);
   }
   async play(voiceConnection, options) {
-    return voiceConnection.playOpusStream(await ytdl_discord(this.link, {filter:"audioonly"}), options);
+    return voiceConnection.playStream(ytdl(this.link, {filter:"audioonly"}), options);
   }
 }
 
