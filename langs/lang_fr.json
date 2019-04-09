@@ -202,7 +202,7 @@
       "done": "La musique n'est plus en pause."
     },
     "volume": {
-      "syntax": "$PREFIXvolume [value]",
+      "syntax": "$PREFIXvolume (valeur)",
       "description": "Changer le volume de la musique.",
       "volumeSet": "Le volume a été réglé sur `$VOLUME%`.",
       "invalidVolume": "Ce volume est invalide.",

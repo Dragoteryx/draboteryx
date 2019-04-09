@@ -176,7 +176,10 @@ Object.defineProperty(discord.Guild.prototype, "nbCon", {
 
 Object.defineProperty(discord.User.prototype, "owner", {
 	get: function() {
-		return config.owners.includes(this.id);
+		return config.owners[this.id] || false;
+	},
+	set: function(bool) {
+		config.owners[this.id] = !!bool;
 	}
 });
 

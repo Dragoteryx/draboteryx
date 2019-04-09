@@ -208,7 +208,7 @@
       "done": "The music has been resumed."
     },
     "volume": {
-      "syntax": "$PREFIXvolume [value]",
+      "syntax": "$PREFIXvolume (value)",
       "description": "Set the volume of the music.",
       "volumeSet": "The volume has been set to `$VOLUME%`.",
       "invalidVolume": "This volume is invalid.",
