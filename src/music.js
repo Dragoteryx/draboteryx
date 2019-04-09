@@ -36,12 +36,9 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 Object.defineProperty(discord.Guild.prototype, "playlist", {
   get: function() {
     if (this.client.playlists === undefined) return undefined;
-    if (!this.client.playlists.has(this.id)) {
-      let playlist = new Playlist(this)
-      this.client.playlists.set(this.id, playlist);
-      this.client.emit("playlistCreated", playlist);
-    }
-    return this.client.playlists.get(this.id)
+    if (!this.client.playlists.has(this.id))
+      this.client.playlists.set(this.id, new Playlist(this));
+    return this.client.playlists.get(this.id);
   }
 });
 
@@ -72,6 +69,7 @@ class Playlist {
       configurable: false,
       writable: false
     });
+    this.client.emit("playlistCreated", this);
   }
 
   join(voiceChannel) {

@@ -204,7 +204,9 @@
     "volume": {
       "syntax": "$PREFIXvolume [value]",
       "description": "Changer le volume de la musique.",
-      "volumeSet": "Le volume a été réglé sur `$VOLUME%`."
+      "volumeSet": "Le volume a été réglé sur `$VOLUME%`.",
+      "invalidVolume": "Ce volume est invalide.",
+      "currentVolume": "Le volume est à `$VOLUME%`."
     },
     "current": {
       "syntax": "$PREFIXcurrent",

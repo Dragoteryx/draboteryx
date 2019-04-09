@@ -83,6 +83,14 @@ class Client extends discord.Client {
 			else return list.includes(msg.author.id);
 		});
   }
+
+	get prefix() {
+		return prv(this).prefix;
+	}
+	set prefix(prefix) {
+		prv(this).prefix = prefix.split(/\s+/gi).join("");
+	}
+
   async fetchPrefix(msg) {
     let prefix = this.prefix;
     if (msg.prefix !== undefined) prefix = msg.prefix;
@@ -148,6 +156,7 @@ class Client extends discord.Client {
     return Array.from(prv(this).commands.values());
   }
 	prefixifyMessage(msg, prefix) {
+		if (prefix === undefined) prefix = this.prefix;
 		for (let mention of prv(this).mentions) {
 			if (msg.content.startsWith(mention)) {
 				let content = msg.content.replace(mention, prefix);

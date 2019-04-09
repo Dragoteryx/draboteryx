@@ -758,7 +758,9 @@ client.defineCommand("plshuffle", msg => {
 client.defineCommand("volume", (msg, args) => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
-  else {
+  else if (args.length == 0) {
+    msg.channel.send(msg.lang.commands.volume.currentVolume("$VOLUME", msg.guild.playlist.volume*100));
+  } else {
     msg.guild.musicChannel = msg.channel;
     let volume = args[0];
     if (tools.validNumber(volume, 0, msg.guild.playlist.maxVolume*100).valid) {
@@ -766,7 +768,7 @@ client.defineCommand("volume", (msg, args) => {
       msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
     } else msg.channel.send(msg.lang.commands.volume.invalidVolume());
   }
-}, {dj: true, guildOnly: true, minArgs: 1, maxArgs: 1, info: {show: true, type: "music"}});
+}, {dj: true, guildOnly: true, maxArgs: 1, info: {show: true, type: "music"}});
 
 client.defineCommand("loop", msg => {
   if (!msg.guild.playlist.connected)
