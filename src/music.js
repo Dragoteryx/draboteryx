@@ -36,8 +36,11 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 Object.defineProperty(discord.Guild.prototype, "playlist", {
   get: function() {
     if (this.client.playlists === undefined) return undefined;
-    if (!this.client.playlists.has(this.id))
-      this.client.playlists.set(this.id, new Playlist(this))
+    if (!this.client.playlists.has(this.id)) {
+      let playlist = new Playlist(this)
+      this.client.playlists.set(this.id, playlist);
+      this.client.emit("playlistCreated", playlist);
+    }
     return this.client.playlists.get(this.id)
   }
 });
@@ -56,6 +59,7 @@ class Playlist {
     this.maxVolume = Infinity;
     this.guild = guild;
     this.client = guild.client;
+    this.playOptions = {};
     Object.defineProperty(this, "pending", {
       configurable: false,
       writable: false
@@ -102,7 +106,7 @@ class Playlist {
       this.current = this.looping ? this.current : this.pending.shift();
       if (this.current) {
         that.playing = true;
-        that.dispatcher = await this.current.play(this.channel.connection, {passes: 3});
+        that.dispatcher = await this.current.play(this.channel.connection, this.playOptions);
         that.dispatcher.setVolume(this.volume);
         that.dispatcher.on("start", () => {
           this.client.emit("playlistStart", this, this.current);
@@ -113,9 +117,15 @@ class Playlist {
           this.client.emit("playlistEnd", this, this.current);
           if (that.pllooping)
             this.pending.push(this.current);
+          this.next(options);
+        });
+        that.dispatcher.on("error", async err => {
+          await sleep(500);
+          this.client.emit("playlistEnd", this, this.current);
+          if (that.pllooping)
+            this.pending.push(this.current);
           this.next();
         });
-        that.dispatcher.on("error", console.error);
         if (!this.looping)
           this.client.emit("playlistNext", this, this.current);
       } else {
@@ -146,7 +156,7 @@ class Playlist {
       if (this.dispatching)
         that.dispatcher.end("stop");
       this.current = stream;
-      that.dispatcher = await this.current.stream(this.channel.connection, {passes: 3});
+      that.dispatcher = await this.current.stream(this.channel.connection, this.playOptions);
       that.streaming = true;
       that.dispatcher.setVolume(this.volume);
       that.dispatcher.on("start", () => {
@@ -155,7 +165,9 @@ class Playlist {
       that.dispatcher.on("end", reason => {
         that.streaming = false;
       });
-      that.dispatcher.on("error", console.error);
+      that.dispatcher.on("error", err => {
+        that.streaming = false;
+      });
     }
   }
 

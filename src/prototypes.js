@@ -55,10 +55,10 @@ Object.defineProperty(Array.prototype, "random", {
 });
 
 Object.defineProperty(EventEmitter.prototype, "recursiveOn", {
-	value: function(eventName, callback, recur) {
-		this.once(eventName, (...args) => {
-			callback(...args);
-			if (recur()) this.recursiveOn(eventName, callback, recur);
+	value: function(eventName, callback) {
+		this.once(eventName, async (...args) => {
+			let res = await callback(...args);
+			if (res) this.recursiveOn(eventName, callback);
 		});
 	}
 })
@@ -391,4 +391,15 @@ Object.defineProperty(discord.GuildMember.prototype, "drabotPerms", {
 		if (this.admin) perms = perms.filter(perm => ![this.guild.lang.misc.mod(), this.guild.lang.misc.dj()].includes(perm));
 		return perms;
 	}
-})
+});
+
+Object.defineProperty(discord.Message.prototype, "prefixify", {
+	value: function(prefix) {
+		return this.client.prefixifyMessage(this, prefix);
+	}
+});
+Object.defineProperty(discord.Message.prototype, "prefixified", {
+	get: function(prefix) {
+		return this.prefixify(this.prefix);
+	}
+});

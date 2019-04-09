@@ -35,14 +35,24 @@ class Client extends discord.Client {
             if (test2.valid) {
               let now = Date.now();
               this.emit("beforeCommand", msg, command, now, null, null);
-							let args = msg.content.split(/ +/g).slice(1);
+							let args = this.prefixifyMessage(msg, prefix).split(/ +/g).slice(1);
               let res = await command.run(msg, args, args.join(" "), command);
               this.emit("afterCommand", msg, command, now, Date.now(), res);
             } else this.emit("deniedCommand", msg, command, test2.reasons);
           } catch(err) {
             this.emit("commandError", msg, err, command);
           }
-        } else this.emit("notCommand", msg);
+        } else {
+					for (let mention of that.mentions) {
+						if (msg.content.startsWith(mention)) {
+							let args = this.prefixifyMessage(msg, prefix).split(/ +/g);
+							args[0] = args[0].replace(prefix, "");
+							this.emit("clientMentionned", msg, args, args.join(" "));
+							return;
+						}
+					}
+					this.emit("notCommand", msg);
+				}
       } catch(err) {
         this.emit("messageError", msg, err);
       }
@@ -58,8 +68,8 @@ class Client extends discord.Client {
     this.commandProperty("nsfw", (msg, isnsfw = false) => !isnsfw || msg.channel.nsfw);
     this.commandProperty("largeGuilds", (msg, allowlargeguilds = true) => msg.channel.type != "text" || allowlargeguilds || !msg.guild.large);
 		this.commandProperty("guildOnly", (msg, guildonly = false) => msg.channel.type == "text" || !guildonly);
-    this.commandProperty("minArgs", (msg, args = 0) => msg.content.split(/ +/g).slice(1).length >= args);
-    this.commandProperty("maxArgs", (msg, args = Infinity) => msg.content.split(/ +/g).slice(1).length <= args);
+    this.commandProperty("minArgs", (msg, args = 0) => this.prefixifyMessage(msg).split(/ +/g).slice(1).length >= args);
+    this.commandProperty("maxArgs", (msg, args = Infinity) => this.prefixifyMessage(msg).split(/ +/g).slice(1).length <= args);
 		this.commandProperty("guilds", (msg, list = []) => {
 			if (list.length == 0) return true;
 			else return msg.channel.type == "text" && list.includes(msg.guild.id);
@@ -118,15 +128,10 @@ class Client extends discord.Client {
   async testCommands(msg, prefix) {
     if (prefix === undefined) prefix = await this.fetchPrefix(msg);
     let that = prv(this);
-    if (msg.content.length == 0) return {valid: false, reasons: ["0 length"], command: null};
-    for (let mention of that.mentions) {
-      if (msg.content.startsWith(mention)) {
-        msg.content = msg.content.replace(mention, prefix);
-        break;
-      }
-    }
-    if (!msg.content.startsWith(prefix)) return {valid: false, reasons: ["no prefix"], command: null};
-    let name = msg.content.split(/ +/g)[0].replace(prefix, "");
+		if (msg.content.length == 0) return {valid: false, reasons: ["0 length"], command: null};
+		let content = this.prefixifyMessage(msg, prefix);
+    if (!content.startsWith(prefix)) return {valid: false, reasons: ["no prefix"], command: null};
+    let name = content.split(/ +/g)[0].replace(prefix, "");
     if (!this.commandExists(name)) return {valid: false, reasons: ["unknown command"], command: null};
     return {valid: true, reasons: [], command: this.getCommand(name)};
   }
@@ -142,6 +147,17 @@ class Client extends discord.Client {
   get commandsArray() {
     return Array.from(prv(this).commands.values());
   }
+	prefixifyMessage(msg, prefix) {
+		for (let mention of prv(this).mentions) {
+			if (msg.content.startsWith(mention)) {
+				let content = msg.content.replace(mention, prefix);
+				while (content.startsWith(prefix + " "))
+					content = content.replace(prefix + " ", prefix);
+				return content;
+			}
+		}
+		return msg.content;
+	}
 }
 
 class Command {

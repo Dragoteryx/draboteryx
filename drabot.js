@@ -47,8 +47,12 @@ const langs = {
   //jp: new Lang(require("./langs/lang_jp.json"), require("./langs/lang_en.json")),
   fr: new Lang(require("./langs/lang_fr.json"), require("./langs/lang_en.json"))
 }
-const vars = {};
 const heroku = process.env.HEROKU != undefined;
+const vars = {};
+const responses = {
+  ["shrek is love"]: "Shrek is Life.",
+  ["hit or miss"]: "I guess they never miss, huh?"
+};
 
 // GLOBALS
 const commandTypes = ["moderation", "utility", "game", "fun", "misc", "music", "nsfw", "bot"];
@@ -56,6 +60,7 @@ const dbl = heroku ? new DBL(process.env.DBLAPITOKEN, client) : null;
 const aliases = [];
 const booru = new Danbooru(process.env.DANBOORU_LOGIN + ":" + process.env.DANBOORU_KEY);
 const clever = new Cleverbot(process.env.CLEVER_USER, process.env.CLEVER_KEY);
+
 let debug = false;
 let firstConnection = true;
 let cbot = 0;
@@ -157,6 +162,9 @@ client.on("deniedCommand", (msg, command, reasons) => {
   else if (reasons.includes("disabled"))
     msg.channel.send(msg.lang.errors.disabledCommand());
 });
+client.on("clientMentionned", (msg, args, argstr) => {
+  if (responses[argstr.toLowerCase()]) msg.channel.send(responses[argstr.toLowerCase()]);
+});
 client.on("notCommand", msg => {
   if (msg.channel.type == "dm" || (msg.guild && ["cleverbot", "cbot", "drb-cleverbot", "drb-cbot"].includes(msg.channel.name))) {
     let command = client.getCommand("cbot");
@@ -173,6 +181,9 @@ client.on("guildCreate", guild => {
 });
 client.on("guildDelete", guild => {
   guild.clearData();
+});
+client.on("playlistCreated", playlist => {
+  playlist.playOptions = {passes: 3};
 });
 client.on("playlistNext", (playlist, next) => {
 	if (!next.file) playlist.guild.musicChannel.send(playlist.guild.lang.music.nowPlaying("$TITLE", next.title, "$AUTHOR", next.author.name, "$MEMBER", next.member.displayName));
@@ -427,7 +438,7 @@ client.defineCommand("moneyleaderboard", async msg => {
     if (member.user.money == 0) break;
     embed.addField(msg.lang.commands.moneyleaderboard.info("$POS", i+1, "$USERNAME", member.displayName),
     msg.lang.commands.moneyleaderboard.display("$AMOUNT", member.user.money, "$CURRENCY", config.currency));
-    if (i == 20) break;
+    if (i == 19) break;
   }
   msg.channel.send("", embed);
 }, {guildOnly: true, largeGuilds: false, maxArgs: 0, info: {show: true, type: "misc"}});
@@ -448,7 +459,6 @@ client.defineCommand("ban", async (msg, args, argstr) => {
         await msg.channel.send(msg.lang.commands.ban.reason());
         let msg3 = await msg.channel.waitResponse(10000, msg3 => msg.author.id == msg3.author.id);
         if (msg3) reason = msg3.content;
-        let name = member.displayName;
         await member.ban(reason);
         msg.channel.send(msg.lang.commands.ban.done("$USER", name, "$REASON", reason));
         msg.guild.sendModLog(msg.lang.commands.ban.modlog("$MOD", msg.member, "$USER", name, "$REASON", reason));
@@ -537,7 +547,7 @@ client.defineCommand("roleinfo", (msg, args, argstr) => {
   }
 }, {guildOnly: true, info: {show: true, type: "utility"}});
 
-client.defineCommand("prune", async (msg, args) => {
+client.defineCommand(["prune", "clear"], async (msg, args) => {
   let nb = 100;
   if (args.length == 1) {
     let res = tools.validNumber(args[0], 0, 100, true);
@@ -557,7 +567,7 @@ client.defineCommand("prune", async (msg, args) => {
 
 // MUSIC
 
-client.defineCommand("join", async msg => {
+client.defineCommand(["join", "voice"], async msg => {
   if (!msg.member.voiceChannelID)
     msg.channel.send(msg.lang.commands.join.notInVoiceChannel());
   else if (msg.member.voiceChannelID == msg.guild.me.voiceChannelID)
@@ -588,7 +598,7 @@ client.defineCommand("leave", async msg => {
 
 client.defineCommand("request", async (msg, args) => {
   if (!msg.guild.playlist.connected)
-    msg.channel.send(msg.lang.music.notConnected())
+    msg.channel.send(msg.lang.music.notConnected());
   else if (!msg.guild.playlist.streaming) {
     msg.guild.musicChannel = msg.channel;
     if (["https://www.youtube.com/watch?", "https://youtu.be/", "https://youtube.com/watch?"].some(val => args[0].startsWith(val))) {
@@ -658,7 +668,7 @@ client.defineCommand(["stream", "radio"], async (msg, args) => {
     if (stream === undefined)
       msg.channel.send(msg.lang.errors.wrongSyntax("$PREFIX", msg.prefix, "$COMMAND", "stream"));
     else {
-      msg.guild.playlist.stream(stream);
+      msg.guild.playlist.stream(stream, {passes: 3});
       if (stream) {
         msg.channel.send(msg.lang.commands.stream.nowStreaming("$NAME", stream.name));
       } else msg.channel.send(msg.lang.commands.stream.stopStreaming());
@@ -690,13 +700,13 @@ client.defineCommand("resume", msg => {
   }
 }, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
-client.defineCommand("skip", msg => {
+client.defineCommand(["skip", "next"], msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
     msg.guild.musicChannel = msg.channel;
     let current = msg.guild.playlist.current;
-    msg.guild.playlist.next();
+    msg.guild.playlist.next({passes: 3});
     msg.channel.send(msg.lang.commands.skip.skipped("$TITLE", current.title));
   } else if (msg.guild.playlist.streaming)
     msg.channel.send(msg.lang.music.noStreaming("$PREFIX", msg.prefix));
@@ -751,10 +761,8 @@ client.defineCommand("volume", (msg, args) => {
   else {
     msg.guild.musicChannel = msg.channel;
     let volume = args[0];
-    if (tools.validNumber(volume, 0, msg.guild.playlist.maxVolume).valid) {
+    if (tools.validNumber(volume, 0, msg.guild.playlist.maxVolume*100).valid) {
       msg.guild.playlist.volume = volume/100;
-      if (volume < 0) volume = 0;
-      if (volume/100 > msg.guild.playlist.maxVolume) volume = msg.guild.playlist.maxVolume*100;
       msg.channel.send(msg.lang.commands.volume.volumeSet("$VOLUME", volume));
     } else msg.channel.send(msg.lang.commands.volume.invalidVolume());
   }
@@ -786,7 +794,7 @@ client.defineCommand("plloop", msg => {
   else msg.channel.send(msg.lang.music.notPlaying())
 }, {dj: true, maxArgs: 0, guildOnly: true, info: {show: true, type: "music"}});
 
-client.defineCommand("current", msg => {
+client.defineCommand(["current", "playing"], msg => {
   if (!msg.guild.playlist.connected)
     msg.channel.send(msg.lang.music.notConnected())
   else if (msg.guild.playlist.playing) {
