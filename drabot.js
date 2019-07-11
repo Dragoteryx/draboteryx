@@ -826,8 +826,8 @@ client.defineCommand(["current", "playing"], msg => {
     let time = msg.guild.playlist.time;
   	let info = tools.defaultEmbed();
   	if (current.type == "youtube") {
-  		info.setThumbnail(current.thumbnailURL)
-  		.addField(msg.lang.commands.current.title(), current.title, true)
+  		//info.setThumbnail(current.thumbnailURL)
+  		info.addField(msg.lang.commands.current.title(), current.title, true)
   		.addField(msg.lang.commands.current.author(), current.author.name + " (" + current.author.channelURL + ")", true)
   		.addField(msg.lang.commands.current.description(), current.description.length > 1024 ? current.description.substring(0, 1021) + "..." : current.description, true)
   		.addField(msg.lang.misc.url(), current.url, true)

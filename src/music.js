@@ -302,6 +302,7 @@ class MusicFile {
 
 async function fetchYoutubeVideo(url) {
   let info = await ytdl.getInfo(url);
+  console.dir(info, {depth: 1});
   return new YoutubeVideo({
     title: info.title,
     url: url,
@@ -311,8 +312,8 @@ async function fetchYoutubeVideo(url) {
       avatarURL: info.author.avatar,
       channelURL: info.author.channel_url
     },
-    thumbnailURL: info.thumbnail_url,
-    maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
+    //thumbnailURL: info.thumbnail_url,
+    //maxResThumbnailURL: info.thumbnail_url.replace("default.jpg", "maxresdefault.jpg"),
     length: Number(info.length_seconds)*1000,
     keywords: info.keywords,
     type: "youtube"
